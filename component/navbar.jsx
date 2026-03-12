@@ -101,17 +101,18 @@ export default function Navbar() {
           <div
             className={`absolute top-1/2 -translate-y-1/2 flex gap-4
             transition-all duration-500
-            ${scrolled ? 'right-16' : '-right-[520px]'}`}
+            ${scrolled ? 'right-250' : '-right-[520px]'}`}
           >
             <CTAButton text="CONTACT NOW" />
 
-            <Link href="/franchise/login">
+            <Link href="/franchise/signup">
               <CTAButton text="FRANCHISE LOGIN" />
             </Link>
-
-            <Link href="/admin/login">
+            <Link href="/login">
               <CTAButton text="LOGIN" />
             </Link>
+
+
           </div>
         </div>
 

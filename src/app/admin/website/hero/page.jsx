@@ -66,27 +66,27 @@ export default function HeroCMSPage() {
   }, [])
 
   /* ---------------- IMAGE UPLOAD ---------------- */const uploadImage = async (file) => {
-  try {
-   const uploaded = await storage.createFile(
-  BUCKET_ID,
-  ID.unique(),
-  file
-)
+    try {
+      const uploaded = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        file
+      )
 
-const url = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+      const url = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
 
-setForm(prev => ({
-  ...prev,
-  heroBgImage: url,
-}))
+      setForm(prev => ({
+        ...prev,
+        heroBgImage: url,
+      }))
 
 
-    alert('Image uploaded ✅')
-  } catch (err) {
-    console.error(err)
-    alert('Image upload failed')
+      alert('Image uploaded ✅')
+    } catch (err) {
+      console.error(err)
+      alert('Image upload failed')
+    }
   }
-}
 
   /* ---------------- SAVE HERO ---------------- */
   const saveHero = async () => {
