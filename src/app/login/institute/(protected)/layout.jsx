@@ -13,40 +13,38 @@ export default function InstituteLayout({ children }) {
   const [userEmail, setUserEmail] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      try {
-        const user = await account.get()
-        setUserEmail(user.email)
+useEffect(() => {
+  const checkAccess = async () => {
+    try {
+      const user = await account.get()
+      setUserEmail(user.email)
 
-        // Admin access
-        if (user.email === 'bnmiindia@gmail.com') {
-          setLoading(false)
-          return
-        }
-
-        // Franchise approved check
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          'franchise_approved',
-          [Query.equal('email', user.email)]
-        )
-
-        if (!res.documents.length) {
-          await account.deleteSession('current')
-          router.replace('/login')
-          return
-        }
-
+      if (user.email === 'bnmiindia@gmail.com') {
         setLoading(false)
-
-      } catch {
-        router.replace('/login')
+        return
       }
-    }
 
-    checkAccess()
-  }, [])
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        'franchise_approved',
+        [Query.equal('email', user.email)]
+      )
+
+      if (!res.documents.length) {
+        await account.deleteSession('current')
+        router.replace('/login/institute')
+        return
+      }
+
+      setLoading(false)
+
+    } catch {
+      router.replace('/login/institute')
+    }
+  }
+
+  checkAccess()
+}, [router])
 
  const logout = async () => {
   await account.deleteSessions()

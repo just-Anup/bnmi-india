@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
@@ -8,41 +9,41 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function PrintCertificate() {
-
   const [student, setStudent] = useState(null);
   const [franchiseName, setFranchiseName] = useState("");
 
   useEffect(() => {
+    // ✅ Fixed: localStorage is only accessed inside useEffect (client-side only)
+    if (typeof window === "undefined") return;
 
     const data = localStorage.getItem("certificateStudent");
+    if (!data) return;
 
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStudent(parsed);
+    const parsed = JSON.parse(data);
+    setStudent(parsed);
 
+    // ✅ Fixed: only call loadFranchise if createdById exists
+    if (parsed.createdById) {
       loadFranchise(parsed.createdById);
+    } else if (parsed.franchiseName) {
+      // fallback to stored franchiseName if no createdById
+      setFranchiseName(parsed.franchiseName);
     }
-
   }, []);
 
   const loadFranchise = async (userId) => {
-
     try {
-
       const res = await databases.listDocuments(
         DATABASE_ID,
         "franchise_approved",
         [Query.equal("userId", userId)]
       );
-
       if (res.documents.length > 0) {
         setFranchiseName(res.documents[0].instituteName);
       }
-
     } catch (err) {
       console.log("Franchise error:", err);
     }
-
   };
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
@@ -58,9 +59,7 @@ export default function PrintCertificate() {
   const printPage = () => window.print();
 
   return (
-
     <div className="p-10">
-
       <button
         onClick={printPage}
         className="bg-blue-600 text-white px-6 py-2 mb-6"
@@ -69,18 +68,15 @@ export default function PrintCertificate() {
       </button>
 
       <div className="relative w-[900px] h-[1200px] mx-auto">
-
         {/* Template */}
-        <img
-          src="/certi.png"
-          className="absolute w-full h-full"
-        />
+        <img src="/certi.png" className="absolute w-full h-full" alt="certificate template" />
 
         {/* Student Photo */}
         {photoUrl && (
           <img
             src={photoUrl}
-            className="absolute top-[440px] left-[410px] h-[120px] w-[120px] h-[120px] object-cover"
+            className="absolute top-[440px] left-[410px] w-[120px] h-[120px] object-cover"
+            alt="student photo"
           />
         )}
 
@@ -99,21 +95,20 @@ export default function PrintCertificate() {
           {student.marks}
         </div>
 
-       <div className="absolute bottom-[200px] left-[120px] text-lg font-semibold">
-  {student.instituteName}
-</div>
+        {/* ✅ Fixed: use franchiseName state instead of student.instituteName */}
+        <div className="absolute bottom-[200px] left-[120px] text-lg font-semibold">
+          {franchiseName || student.instituteName || student.franchiseName}
+        </div>
 
         {/* Signature */}
         {signatureUrl && (
           <img
             src={signatureUrl}
             className="absolute bottom-[180px] right-[180px] w-[120px]"
+            alt="signature"
           />
         )}
-
       </div>
-
     </div>
-
   );
 }
