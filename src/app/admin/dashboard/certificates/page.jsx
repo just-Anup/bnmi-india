@@ -1,4 +1,5 @@
 "use client";
+
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
@@ -14,18 +15,22 @@ export default function CertificateApprovalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!databases || !DATABASE_ID) return;
     loadCertificates();
   }, []);
 
+
   const loadCertificates = async () => {
     try {
+
+      if (!databases || !DATABASE_ID) return;
 
       const res = await databases.listDocuments(
         DATABASE_ID,
         CERT_COLLECTION
       );
 
-      setCertificates(res.documents);
+      setCertificates(res.documents || []);
 
     } catch (err) {
       console.log("Load certificates error:", err);
@@ -33,7 +38,6 @@ export default function CertificateApprovalPage() {
       setLoading(false);
     }
   };
-
   const approveCertificate = async (id) => {
     try {
 
@@ -72,32 +76,40 @@ export default function CertificateApprovalPage() {
     }
   };
 
-const printCertificate = (cert) => {
+  const printCertificate = (cert) => {
 
-  const data = {
-    studentName: cert.studentName,
-    marks: cert.marks,
-    grade: cert.grade,
-    franchiseName: cert.franchiseName || "BNMI Franchise",
-    signatureId: cert.signatureId || "",
-    photoId: cert.photoId || ""
-  };
+    const data = {
+      studentName: cert.studentName,
+      marks: cert.marks,
+      grade: cert.grade,
+      franchiseName: cert.franchiseName || "BNMI Franchise",
+      signatureId: cert.signatureId || "",
+      photoId: cert.photoId || ""
+    };
+
+    localStorage.setItem(
+      "certificateStudent",
+      JSON.stringify(data)
+    );
+
+   if (typeof window !== "undefined") {
 
   localStorage.setItem(
     "certificateStudent",
     JSON.stringify(data)
   );
 
-    window.open("/login/institute/certificate/print", "_blank");
+  window.open("/login/institute/certificate/print", "_blank");
+
+}
 
   };
 
   const getPhoto = (photoId) => {
 
-    if (!photoId) return null;
+    if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT) return null;
 
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
-
   };
 
   if (loading) {
