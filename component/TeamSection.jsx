@@ -14,42 +14,31 @@ export default function TeamSlider() {
 
   const slideWidth = 300
 
- useEffect(() => {
-  const fetchTeam = async () => {
-    try {
-
-      if (!databases || !DATABASE_ID) return   // FIX
-
+  useEffect(() => {
+    const fetchTeam = async () => {
       const res = await databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
         [Query.orderAsc('order')]
       )
-console.log(res)
       setTeam(res.documents)
-
-    } catch (error) {
-      console.error('Team load failed:', error)
     }
-  }
 
-  fetchTeam()
-}, [])
- const next = () => {
-  if (!team.length) return
-  setIndex((prev) => (prev + 1) % team.length)
-}
+    fetchTeam()
+  }, [])
 
-const prev = () => {
-  if (!team.length) return
-  setIndex((prev) => (prev - 1 + team.length) % team.length)
-}
-useEffect(() => {
-  if (!team.length) return
+  const next = () =>
+    setIndex((prev) => (prev + 1) % team.length)
 
-  const timer = setInterval(next, 4000)
-  return () => clearInterval(timer)
-}, [team])
+  const prev = () =>
+    setIndex((prev) =>
+      (prev - 1 + team.length) % team.length
+    )
+
+  useEffect(() => {
+    const timer = setInterval(next, 4000)
+    return () => clearInterval(timer)
+  }, [team])
 
   if (!team.length) return null
 

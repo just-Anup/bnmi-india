@@ -32,7 +32,7 @@ export default function Navbar() {
         WEBSITE_COLLECTION,
         [Query.limit(1)]
       )
-
+console.log(res.documents)
       if (res.documents.length) {
         setNavbarData(res.documents[0])
       }
