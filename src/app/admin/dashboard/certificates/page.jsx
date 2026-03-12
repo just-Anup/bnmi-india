@@ -237,3 +237,4 @@ const printCertificate = (cert) => {
     </div>
   );
 }
+export const dynamic = "force-dynamic";

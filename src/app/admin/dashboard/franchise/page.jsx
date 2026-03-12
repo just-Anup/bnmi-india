@@ -7,6 +7,7 @@ import { account, databases } from '@/lib/appwrite'
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
 export default function Dashboard() {
+  
   const router = useRouter()
 
   const [pending, setPending] = useState([])
@@ -222,3 +223,4 @@ function Tab({ label, active, onClick }) {
     </button>
   )
 }
+export const dynamic = "force-dynamic";
