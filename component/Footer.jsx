@@ -16,14 +16,20 @@ export default function Footer() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.limit(1)]
-      )
+      try {
+        if (!databases || !DATABASE_ID) return
 
-      if (res.documents.length) {
-        setData(res.documents[0])
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID,
+          [Query.limit(1)]
+        )
+
+        if (res.documents.length) {
+          setData(res.documents[0])
+        }
+      } catch (error) {
+        console.error('Footer fetch failed:', error)
       }
     }
 
@@ -55,7 +61,6 @@ export default function Footer() {
   return (
     <footer ref={footerRef} className="bg-[#111] text-white relative">
 
-      {/* ===== CTA STRIP ===== */}
       <div className="bg-[#19b9f1] py-12 px-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h3 className="text-3xl font-bold text-black">
@@ -71,11 +76,9 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ===== MAIN FOOTER ===== */}
       <div className="bg-[#1e1e1e] py-20 px-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
 
-          {/* ABOUT */}
           <div className="footer-anim">
             <h2 className="text-3xl font-bold mb-6">
               <span className="text-[#19b9f1]">M</span>oran
@@ -96,7 +99,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* LINKS */}
           <div className="footer-anim">
             <h4 className="font-bold text-lg mb-6">LINKS EXPLORE</h4>
             <ul className="space-y-3 text-gray-400 text-sm">
@@ -109,7 +111,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* CONTACT */}
           <div className="footer-anim">
             <h4 className="font-bold text-lg mb-6">CONTACT</h4>
 
@@ -133,7 +134,6 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* NEWSLETTER */}
           <div className="footer-anim">
             <h4 className="font-bold text-lg mb-6">Newsletter</h4>
 
@@ -155,7 +155,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* BOTTOM */}
       <div className="bg-[#111] py-6 text-center text-gray-500 text-sm">
         © Copyright 2026 BNMI
       </div>

@@ -12,26 +12,30 @@ export default function Hero() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchHero = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.limit(1)]
-        )
+  const fetchHero = async () => {
+    try {
 
-        if (res.documents.length > 0) {
-          setHero(res.documents[0])
-        }
-      } catch (error) {
-        console.error('Hero fetch failed:', error)
-      } finally {
-        setLoading(false)
+      if (!databases || !DATABASE_ID) return   // FIX
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.limit(1)]
+      )
+
+      if (res.documents.length > 0) {
+        setHero(res.documents[0])
       }
-    }
 
-    fetchHero()
-  }, [])
+    } catch (error) {
+      console.error('Hero fetch failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchHero()
+}, [])
 
   if (loading) return null
   if (!hero) return null
@@ -66,3 +70,4 @@ export default function Hero() {
     </section>
   )
 }
+

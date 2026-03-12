@@ -22,25 +22,28 @@ export default function Navbar() {
 
   /* ---------------- FETCH CMS DATA ---------------- */
   useEffect(() => {
-    const fetchNavbar = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          WEBSITE_COLLECTION,
-          [Query.limit(1)]
-        )
+  const fetchNavbar = async () => {
+    try {
 
-        if (res.documents.length) {
-          setNavbarData(res.documents[0])
-        }
-      } catch (error) {
-        console.error('Navbar CMS load failed:', error)
+      if (!databases) return   // IMPORTANT FIX
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        WEBSITE_COLLECTION,
+        [Query.limit(1)]
+      )
+
+      if (res.documents.length) {
+        setNavbarData(res.documents[0])
       }
+
+    } catch (error) {
+      console.error('Navbar CMS load failed:', error)
     }
+  }
 
-    fetchNavbar()
-  }, [])
-
+  fetchNavbar()
+}, [])
   return (
     <header
       className={`${scrolled ? 'fixed' : 'absolute'} top-0 left-0 w-full z-50`}

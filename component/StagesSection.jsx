@@ -16,8 +16,12 @@ export default function StagesSection() {
   const [data, setData] = useState(null)
   const sectionRef = useRef(null)
 
-  useEffect(() => {
-    const fetchData = async () => {
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+
+      if (!databases || !DATABASE_ID) return   // FIX
+
       const res = await databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
@@ -27,10 +31,14 @@ export default function StagesSection() {
       if (res.documents.length) {
         setData(res.documents[0])
       }
-    }
 
-    fetchData()
-  }, [])
+    } catch (error) {
+      console.error('Stages load failed:', error)
+    }
+  }
+
+  fetchData()
+}, [])
 
   useEffect(() => {
     if (!sectionRef.current) return

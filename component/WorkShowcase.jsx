@@ -18,7 +18,10 @@ export default function WorkShowcase() {
     loadCategories()
   }, [])
 
-  const loadCategories = async () => {
+const loadCategories = async () => {
+  try {
+
+    if (!databases || !DATABASE_ID) return   // FIX
 
     const res = await databases.listDocuments(
       DATABASE_ID,
@@ -28,7 +31,10 @@ export default function WorkShowcase() {
 
     setCategories(res.documents)
 
+  } catch (error) {
+    console.error("Categories load failed:", error)
   }
+}
 
   const getImage = (imageId) => {
 

@@ -14,24 +14,27 @@ export default function ServicesSection() {
   const itemsPerView = 4
 
   /* ---------------- FETCH SERVICES ---------------- */
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.orderAsc('order')]
-        )
+useEffect(() => {
+  const fetchServices = async () => {
+    try {
 
-        setServices(res.documents)
-      } catch (error) {
-        console.error('Services load failed:', error)
-      }
+      if (!databases || !DATABASE_ID) return   // FIX
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.orderAsc('order')]
+      )
+
+      setServices(res.documents)
+
+    } catch (error) {
+      console.error('Services load failed:', error)
     }
+  }
 
-    fetchServices()
-  }, [])
-
+  fetchServices()
+}, [])
   const maxIndex =
     services.length > 0
       ? Math.ceil(services.length / itemsPerView) - 1

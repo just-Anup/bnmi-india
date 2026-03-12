@@ -15,21 +15,26 @@ export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState([])
 
   useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.orderAsc('order')]
-        )
-        setTestimonials(res.documents)
-      } catch (err) {
-        console.error(err)
-      }
-    }
+  const fetchTestimonials = async () => {
+    try {
 
-    fetchTestimonials()
-  }, [])
+      if (!databases || !DATABASE_ID) return   // FIX
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.orderAsc('order')]
+      )
+
+      setTestimonials(res.documents)
+
+    } catch (err) {
+      console.error('Testimonials load failed:', err)
+    }
+  }
+
+  fetchTestimonials()
+}, [])
 
   const slideTo = (i) => {
     const width = 620
