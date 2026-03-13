@@ -35,7 +35,7 @@ export default function AdminSidebar() {
           href="/admin/website/navbar"
           className="block text-center bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition"
         >
-          Website Management
+          Website Managements
         </Link>
       </div>
 

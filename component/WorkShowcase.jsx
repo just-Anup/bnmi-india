@@ -73,7 +73,7 @@ const loadCategories = async () => {
 
               <img
                 src={getImage(item.imageId)}
-                className="w-full h-[380px] object-cover"
+                className="w-[400px] h-[290px] object-cover"
               />
 
               <div
@@ -109,3 +109,5 @@ const loadCategories = async () => {
   )
 
 }
+
+

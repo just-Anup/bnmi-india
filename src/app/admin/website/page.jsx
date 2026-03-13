@@ -1,140 +1,243 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { databases } from '../../../lib/appwrite'
-import { ID, Query } from 'appwrite'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts"
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = 'website'
+import {
+  DollarSign,
+  ShoppingCart,
+  CreditCard,
+  FileText
+} from "lucide-react"
 
-export default function WebsiteSettingsPage() {
-  const [docId, setDocId] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+const barData = [
+  { name: "28 Jan", sales: 75, purchase: 45 },
+  { name: "29 Jan", sales: 85, purchase: 55 },
+  { name: "30 Jan", sales: 100, purchase: 58 },
+  { name: "31 Jan", sales: 97, purchase: 56 },
+  { name: "1 Feb", sales: 87, purchase: 61 },
+  { name: "2 Feb", sales: 105, purchase: 58 },
+  { name: "3 Feb", sales: 90, purchase: 63 },
+  { name: "4 Feb", sales: 115, purchase: 60 },
+  { name: "5 Feb", sales: 95, purchase: 66 }
+]
 
-  const [form, setForm] = useState({
-    siteName: '',
-    heroTitle: '',
-    heroSubtitle: '',
-    footerText: '',
-    contactEmail: '',
-  })
+const pieData = [
+  { name: "First Time", value: 65 },
+  { name: "Return", value: 35 }
+]
 
-  // 🔹 Fetch or create website settings
-  useEffect(() => {
-    const initSettings = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.limit(1)]
-        )
+const COLORS = ["#22c55e", "#f97316"]
 
-        // ✅ If document exists
-        if (res.documents.length > 0) {
-          const doc = res.documents[0]
-          setDocId(doc.$id)
-
-          setForm({
-            siteName: doc.siteName || '',
-            heroTitle: doc.heroTitle || '',
-            heroSubtitle: doc.heroSubtitle || '',
-            footerText: doc.footerText || '',
-            contactEmail: doc.contactEmail || '',
-          })
-        } 
-        // 🆕 If no document → create one
-        else {
-          const newDoc = await databases.createDocument(
-            DATABASE_ID,
-            COLLECTION_ID,
-            ID.unique(),
-            {
-              siteName: '',
-              heroTitle: '',
-              heroSubtitle: '',
-              footerText: '',
-              contactEmail: '',
-            }
-          )
-
-          setDocId(newDoc.$id)
-          setForm({
-            siteName: '',
-            heroTitle: '',
-            heroSubtitle: '',
-            footerText: '',
-            contactEmail: '',
-          })
-        }
-      } catch (err) {
-        console.error('Website init failed:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    initSettings()
-  }, [])
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  const saveSettings = async () => {
-    if (!docId) {
-      alert('Website document not ready yet')
-      return
-    }
-
-    setSaving(true)
-    try {
-      await databases.updateDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        docId,
-        form
-      )
-      alert('Website settings saved ✅')
-    } catch (err) {
-      console.error('Save failed:', err)
-      alert('Save failed — check console')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (loading) return <p className="p-10">Loading website settings...</p>
+export default function Dashboard() {
 
   return (
-    <div className="p-10 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Website Settings</h1>
+    <div className="p-8 bg-gray-100 min-h-screen">
 
-      {Object.entries({
-        siteName: 'Site Name',
-        heroTitle: 'Hero Title',
-        heroSubtitle: 'Hero Subtitle',
-        footerText: 'Footer Text',
-        contactEmail: 'Contact Email',
-      }).map(([key, label]) => (
-        <div key={key} className="mb-4">
-          <label className="block font-medium mb-1">{label}</label>
-          <input
-            name={key}
-            value={form[key]}
-            onChange={handleChange}
-            className="w-full border px-4 py-2"
-          />
+      <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
+      <p className="text-gray-500 mb-8">Your main content goes here...</p>
+
+
+      {/* Top Cards */}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+
+        <StatCard
+          title="Total Enquiry"
+          amount="25,000"
+          color="bg-orange-50"
+          icon={<DollarSign />}
+        />
+
+        <StatCard
+          title="Total Admissions"
+          amount="1,800"
+          percent="+22%"
+          color="bg-green-50"
+          icon={<ShoppingCart />}
+        />
+
+        <StatCard
+          title="Certificates Issued"
+          amount="9,000"
+          percent="+10%" b   
+          color="bg-blue-50"
+          icon={<CreditCard />}
+        />
+
+        <StatCard
+          title="Invoice Due"
+          amount="$25,000"
+          percent="+35%"
+          color="bg-yellow-50"
+          icon={<FileText />}
+        />
+
+      </div>
+
+
+      {/* Second Row */}
+
+      <div className="grid md:grid-cols-3 gap-6 mb-6">
+
+        <MiniCard
+          title="Total Profit"
+          amount="$25,458"
+          percent="+35%"
+        />
+
+        <MiniCard
+          title="Total Payment Returns"
+          amount="$45,458"
+          percent="-20%"
+        />
+
+        <MiniCard
+          title="Total Expenses"
+          amount="$34,458"
+          percent="-20%"
+        />
+
+      </div>
+
+
+      {/* Charts Section */}
+
+      <div className="grid md:grid-cols-2 gap-6">
+
+        {/* Bar Chart */}
+
+        <div className="bg-white rounded-xl shadow p-6">
+
+          <h2 className="text-lg font-semibold mb-4">
+            Sales vs Purchase
+          </h2>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={barData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="sales" fill="#f97316" />
+              <Bar dataKey="purchase" fill="#fb923c" />
+            </BarChart>
+          </ResponsiveContainer>
+
         </div>
-      ))}
 
-      <button
-        onClick={saveSettings}
-        disabled={saving}
-        className="mt-4 bg-black text-white px-6 py-2"
-      >
-        {saving ? 'Saving...' : 'Save Changes'}
-      </button>
+
+        {/* Donut Chart */}
+
+        <div className="bg-white rounded-xl shadow p-6">
+
+          <h2 className="text-lg font-semibold mb-4">
+            Overall Information
+          </h2>
+
+          <PieChart width={300} height={300}>
+
+            <Pie
+              data={pieData}
+              innerRadius={70}
+              outerRadius={100}
+              dataKey="value"
+            >
+
+              {pieData.map((entry, index) => (
+                <Cell key={index} fill={COLORS[index]} />
+              ))}
+
+            </Pie>
+
+          </PieChart>
+
+          <div className="flex justify-around mt-6">
+
+            <div className="text-center">
+              <p className="text-2xl font-bold">5.5K</p>
+              <p className="text-green-600 text-sm">First Time</p>
+            </div>
+
+            <div className="text-center">
+              <p className="text-2xl font-bold">3.5K</p>
+              <p className="text-orange-600 text-sm">Return</p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
   )
+}
+
+
+/* Stat Card */
+
+function StatCard({ title, amount, percent, icon, color }) {
+
+  return (
+
+    <div className={`${color} p-6 rounded-xl border`}>
+
+      <div className="flex items-center justify-between mb-3">
+
+        <p className="text-gray-600">{title}</p>
+
+        <div className="bg-white p-2 rounded">
+          {icon}
+        </div>
+
+      </div>
+
+      <h2 className="text-2xl font-bold">
+        {amount}
+      </h2>
+
+      <p className="text-green-600 text-sm">
+        {percent} since last month
+      </p>
+
+    </div>
+
+  )
+}
+
+
+/* Mini Card */
+
+function MiniCard({ title, amount, percent }) {
+
+  return (
+
+    <div className="bg-white p-6 rounded-xl shadow">
+
+      <h3 className="text-2xl font-bold">
+        {amount}
+      </h3>
+
+      <p className="text-gray-500 mb-4">
+        {title}
+      </p>
+
+      <p className="text-sm text-green-600">
+        {percent} vs Last Month
+      </p>
+
+    </div>
+
+  )
+
 }
