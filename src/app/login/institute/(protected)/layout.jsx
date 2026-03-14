@@ -38,7 +38,9 @@ useEffect(() => {
 
       setLoading(false)
 
-    } catch {
+    } catch (err) {
+      // ✅ Add this so you can see what's actually failing
+      console.error('Layout auth check failed:', err)
       router.replace('/login/institute')
     }
   }
