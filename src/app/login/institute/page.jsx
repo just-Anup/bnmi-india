@@ -18,43 +18,43 @@ export default function InstituteLogin() {
   const [loading, setLoading] = useState(false)
 
   const login = async (e) => {
+  e.preventDefault()
+  setLoading(true)
 
-    e.preventDefault()
-    setLoading(true)
+  try {
+    await account.deleteSession('current').catch(() => {})
 
-    try {
+    // 1. Create session
+    await account.createEmailPasswordSession(email, password)
 
-      await account.deleteSession('current').catch(() => {})
+    // 2. Verify session actually exists
+    const user = await account.get()
+    console.log('Session confirmed:', user.email)
 
-      await account.createEmailPasswordSession(email, password)
+    // 3. Check franchise approval
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      'franchise_approved',
+      [Query.equal('email', email)]
+    )
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        'franchise_approved',
-        [Query.equal('email', email)]
-      )
-
-      if (!res.documents.length) {
-
-        alert('Your franchise is not approved yet')
-
-        await account.deleteSession('current')
-        setLoading(false)
-        return
-      }
-
-      router.push('/login/institute/dashboard')
-
-    } catch (error) {
-
-      console.error(error)
-      alert(error?.message || 'Invalid credentials')
-
+    if (!res.documents.length) {
+      alert('Your franchise is not approved yet')
+      await account.deleteSession('current')
+      setLoading(false)
+      return
     }
 
-    setLoading(false)
+    // 4. ✅ Full reload so cookie is sent properly
+    window.location.href = '/login/institute/dashboard'
 
+  } catch (error) {
+    console.error(error)
+    alert(error?.message || 'Invalid credentials')
   }
+
+  setLoading(false)
+}
 
   return (
 
