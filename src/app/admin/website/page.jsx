@@ -44,7 +44,7 @@ export default function Dashboard() {
     <div className="p-8 bg-gray-100 min-h-screen">
 
       <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
-      <p className="text-gray-500 mb-8">Your main content goes here...</p>
+      <p className="text-gray-500 mb-8">Welcome To BNMI Dashboard</p>
 
 
       {/* Top Cards */}
@@ -69,15 +69,13 @@ export default function Dashboard() {
         <StatCard
           title="Certificates Issued"
           amount="9,000"
-          percent="+10%" b   
           color="bg-blue-50"
           icon={<CreditCard />}
         />
 
         <StatCard
-          title="Invoice Due"
-          amount="$25,000"
-          percent="+35%"
+          title="Course Section"
+          amount="Total Course : 610"
           color="bg-yellow-50"
           icon={<FileText />}
         />
@@ -90,21 +88,9 @@ export default function Dashboard() {
       <div className="grid md:grid-cols-3 gap-6 mb-6">
 
         <MiniCard
-          title="Total Profit"
-          amount="$25,458"
+          title="Franchises "
+          amount="TOTAL : 206"
           percent="+35%"
-        />
-
-        <MiniCard
-          title="Total Payment Returns"
-          amount="$45,458"
-          percent="-20%"
-        />
-
-        <MiniCard
-          title="Total Expenses"
-          amount="$34,458"
-          percent="-20%"
         />
 
       </div>
@@ -119,7 +105,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow p-6">
 
           <h2 className="text-lg font-semibold mb-4">
-            Sales vs Purchase
+            Enquiry vs Admissions (Last 7 Days)
           </h2>
 
           <ResponsiveContainer width="100%" height={300}>
@@ -206,10 +192,6 @@ function StatCard({ title, amount, percent, icon, color }) {
         {amount}
       </h2>
 
-      <p className="text-green-600 text-sm">
-        {percent} since last month
-      </p>
-
     </div>
 
   )
@@ -232,9 +214,7 @@ function MiniCard({ title, amount, percent }) {
         {title}
       </p>
 
-      <p className="text-sm text-green-600">
-        {percent} vs Last Month
-      </p>
+    
 
     </div>
 
