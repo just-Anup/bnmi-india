@@ -10,11 +10,44 @@ export default function CourseCMS() {
 
   const [courses, setCourses] = useState([])
 
+  const awardList = [
+    "CERTIFICATE",
+    "DIPLOMA",
+    "ADVANCE CERTIFICATE",
+    "ADVANCE DIPLOMA",
+    "MASTER DIPLOMA",
+    "CERTIFICATE IN POST GRADUATE DIPLOMA",
+    "PROFESSIONAL DIPLOMA",
+    "ALL INDIA CERTIFICATE",
+    "MASTER CERTIFICATE",
+    "CERTIFICATE BASIC DIPLOMA",
+    "ADVANCE",
+    "CERTIFICATE IN PROFESSIONAL DIPLOMA",
+    "POST GRADUATE",
+    "POST GRADUATE DIPLOMA",
+    "BASIC",
+    "CERTIFICATE COURSE",
+    "CERTIFICATION",
+    "PRE-VOCATIONAL COURSE",
+    "PERSONAL"
+  ]
+
+  const institutePlans = {
+    "ARUNACHAL PRADESH": 499,
+    "HOJAI": 499,
+    "BIHAR": 450,
+    "COMPUTER 450": 450,
+    "BEAUTY 590": 590,
+    "BEAUTY": 500,
+    "2DAYS": 299
+  }
+
   const [form, setForm] = useState({
     courseCode: '',
-    courseName: '',
-    duration: '',
-    examFees: ''
+    award: '',
+    courseTitle: '',
+    institutePlan: '',
+    duration: ''
   })
 
   const fetchCourses = async () => {
@@ -42,10 +75,14 @@ export default function CourseCMS() {
 
   const addCourse = async () => {
 
-    if (!form.courseCode || !form.courseName || !form.duration || !form.examFees) {
+    if (!form.courseCode || !form.award || !form.courseTitle || !form.institutePlan || !form.duration) {
       alert("Please fill all fields")
       return
     }
+
+    const courseName = `${form.award} IN ${form.courseTitle}`
+
+    const examFees = institutePlans[form.institutePlan]
 
     await databases.createDocument(
       DATABASE_ID,
@@ -53,9 +90,11 @@ export default function CourseCMS() {
       ID.unique(),
       {
         courseCode: form.courseCode,
-        courseName: form.courseName,
+        courseName: courseName,
         duration: form.duration,
-        examFees: Number(form.examFees),
+        examFees: examFees,
+        award: form.award,
+        institutePlan: form.institutePlan,
         status: "Active"
       }
     )
@@ -64,9 +103,10 @@ export default function CourseCMS() {
 
     setForm({
       courseCode: '',
-      courseName: '',
-      duration: '',
-      examFees: ''
+      award: '',
+      courseTitle: '',
+      institutePlan: '',
+      duration: ''
     })
 
     fetchCourses()
@@ -91,8 +131,6 @@ export default function CourseCMS() {
         Course Management
       </h2>
 
-      {/* Add Course Form */}
-
       <div className="bg-white shadow p-6 rounded-lg mb-8">
 
         <h3 className="text-lg font-semibold mb-4">
@@ -110,29 +148,44 @@ export default function CourseCMS() {
             className="border p-2 rounded"
           />
 
+          <select
+            name="award"
+            value={form.award}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            <option value="">--select award--</option>
+            {awardList.map((a,i)=>(
+              <option key={i} value={a}>{a}</option>
+            ))}
+          </select>
+
           <input
             type="text"
-            name="courseName"
+            name="courseTitle"
             placeholder="Course Name"
-            value={form.courseName}
+            value={form.courseTitle}
             onChange={handleChange}
             className="border p-2 rounded"
           />
+
+          <select
+            name="institutePlan"
+            value={form.institutePlan}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            <option value="">--select institute plan--</option>
+            {Object.keys(institutePlans).map((plan,i)=>(
+              <option key={i} value={plan}>{plan}</option>
+            ))}
+          </select>
 
           <input
             type="text"
             name="duration"
             placeholder="Duration (Example: 6 Months)"
             value={form.duration}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="number"
-            name="examFees"
-            placeholder="Exam Fees"
-            value={form.examFees}
             onChange={handleChange}
             className="border p-2 rounded"
           />
@@ -147,9 +200,6 @@ export default function CourseCMS() {
         </button>
 
       </div>
-
-
-      {/* Course List */}
 
       <div className="bg-white shadow p-6 rounded-lg">
 

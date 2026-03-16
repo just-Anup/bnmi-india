@@ -1,7 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
-import { Client, Users, Databases, ID, Query } from 'node-appwrite'
+import { Client, Users, Databases, ID } from 'node-appwrite'
 
 export async function POST(req) {
 
@@ -19,50 +19,45 @@ export async function POST(req) {
 
     const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-    let userId = null
+    console.log("Creating auth user...")
 
-    /* 1️⃣ CREATE OR FIND AUTH USER */
+    let newUser = null
+
+    /* 1️⃣ CREATE AUTH USER */
 
     try {
 
-      const newUser = await users.create(
+      newUser = await users.create(
         ID.unique(),
         franchiseData.email,
         franchiseData.password,
         franchiseData.name
       )
 
-      userId = newUser.$id
-
     } catch (err) {
 
-      console.log("User already exists, fetching userId")
-
-      const existingUsers = await users.list([
-        Query.equal('email', franchiseData.email)
-      ])
-
-      if (existingUsers.total > 0) {
-        userId = existingUsers.users[0].$id
-      }
+      console.log("User already exists, skipping creation")
 
     }
 
-    /* 2️⃣ SAVE APPROVED FRANCHISE */
+    console.log("Auth user created:", newUser?.$id)
+
+    /* 2️⃣ SAVE TO APPROVED COLLECTION */
 
     await databases.createDocument(
       DATABASE_ID,
       "franchise_approved",
       ID.unique(),
       {
+        ...franchiseData,
         instituteName: franchiseData.instituteName,
         email: franchiseData.email,
-        userId: userId,
+        userId: newUser?.$id || "",
         createdAt: new Date().toISOString()
       }
     )
 
-    /* 3️⃣ DELETE FROM REQUESTS */
+    /* 3️⃣ DELETE FROM PENDING REQUESTS */
 
     await databases.deleteDocument(
       DATABASE_ID,
@@ -74,7 +69,7 @@ export async function POST(req) {
 
   } catch (error) {
 
-    console.error("APPROVE ERROR:", error)
+    console.error("APPROVE ERROR FULL:", error)
 
     return NextResponse.json({
       success: false,
