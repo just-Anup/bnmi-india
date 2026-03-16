@@ -1,12 +1,10 @@
 'use client'
 
-
+import { useState, useEffect } from 'react'
 import { account, databases } from '@/lib/appwrite'
+import { useRouter } from 'next/navigation'
 import { Query } from 'appwrite'
 import { Eye, EyeOff } from 'lucide-react'
-import { useState, useEffect } from 'react'
-
-import { useRouter, useSearchParams } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
@@ -18,18 +16,22 @@ export default function InstituteLogin() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const searchParams = useSearchParams()
+
+  /* ---------------- AUTO FILL FROM URL ---------------- */
 
   useEffect(() => {
 
-  const urlEmail = searchParams.get('email')
-  const urlPassword = searchParams.get('password')
+    const params = new URLSearchParams(window.location.search)
 
-  if (urlEmail) setEmail(urlEmail)
-  if (urlPassword) setPassword(urlPassword)
+    const urlEmail = params.get('email')
+    const urlPassword = params.get('password')
 
-}, [searchParams])
+    if (urlEmail) setEmail(urlEmail)
+    if (urlPassword) setPassword(urlPassword)
 
+  }, [])
+
+  /* ---------------- LOGIN ---------------- */
 
   const login = async (e) => {
 
@@ -38,7 +40,7 @@ export default function InstituteLogin() {
 
     try {
 
-      await account.deleteSession('current').catch(() => {})
+      await account.deleteSession('current').catch(()=>{})
 
       await account.createEmailPasswordSession(email, password)
 
@@ -55,6 +57,7 @@ export default function InstituteLogin() {
         await account.deleteSession('current')
         setLoading(false)
         return
+
       }
 
       router.push('/login/institute/dashboard')
@@ -99,12 +102,11 @@ export default function InstituteLogin() {
               placeholder="Enter your email"
               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e)=>setEmail(e.target.value)}
               required
             />
 
           </div>
-
 
           {/* Password */}
 
@@ -119,20 +121,19 @@ export default function InstituteLogin() {
               placeholder="Enter your password"
               className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-black"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e)=>setPassword(e.target.value)}
               required
             />
 
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={()=>setShowPassword(!showPassword)}
               className="absolute right-3 top-[38px] text-gray-500"
             >
               {showPassword ? <EyeOff size={20}/> : <Eye size={20}/>}
             </button>
 
           </div>
-
 
           {/* Login Button */}
 
@@ -151,4 +152,5 @@ export default function InstituteLogin() {
     </div>
 
   )
+
 }

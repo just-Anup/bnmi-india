@@ -156,7 +156,7 @@ export default function Dashboard() {
 
   /* ---------------- LOGIN AS FRANCHISE ---------------- */
 
- const loginAsFranchise = (req) => {
+const loginAsFranchise = (req) => {
 
   const email = encodeURIComponent(req.email)
   const password = encodeURIComponent(req.password)
