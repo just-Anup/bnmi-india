@@ -8,24 +8,40 @@ import { useRouter } from 'next/navigation'
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION_ID = 'franchise_requests'
 
+/* ---------------- STATE + CITY LIST ---------------- */
+
 const statesAndCities = {
- "Assam": ["Guwahati","Dibrugarh","Silchar","Jorhat"],
-  "Arunachal Pradesh": ["Itanagar","Tawang","Pasighat"],
-  "Meghalaya": ["Shillong","Tura"],
-  "Nagaland": ["Kohima","Dimapur"],
+  "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat"],
+  "Arunachal Pradesh": ["Itanagar", "Tawang", "Pasighat"],
+  "Meghalaya": ["Shillong", "Tura"],
+  "Nagaland": ["Kohima", "Dimapur"],
   "Manipur": ["Imphal"],
   "Mizoram": ["Aizawl"],
   "Tripura": ["Agartala"],
-  "West Bengal": ["Kolkata","Siliguri","Durgapur"],
-  "Bihar": ["Patna","Gaya","Muzaffarpur"],
-  "Uttar Pradesh": ["Lucknow","Kanpur","Varanasi"],
+  "West Bengal": ["Kolkata", "Siliguri", "Durgapur"],
+  "Bihar": ["Patna", "Gaya", "Muzaffarpur"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi"],
   "Delhi": ["New Delhi"],
-  "Maharashtra": ["Mumbai","Pune","Nagpur"],
-  "Karnataka": ["Bangalore","Mysore"],
-  "Tamil Nadu": ["Chennai","Coimbatore","Madurai"],
-  "Kerala": ["Kochi","Trivandrum"],
-  "Rajasthan": ["Jaipur","Udaipur","Jodhpur"],
-  "Gujarat": ["Ahmedabad","Surat","Vadodara"]
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur"],
+  "Karnataka": ["Bangalore", "Mysore"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
+  "Kerala": ["Kochi", "Trivandrum"],
+  "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur"],
+  "Gujarat": ["Ahmedabad", "Surat", "Vadodara"]
+}
+
+/* ---------------- ATC CODE GENERATOR ---------------- */
+
+const generateATCCode = () => {
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let code = "ATC-"
+
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+
+  return code
 }
 
 export default function FranchiseSignup() {
@@ -42,22 +58,32 @@ export default function FranchiseSignup() {
     address: '',
     pincode: '',
     state: '',
-    city: ''
+    city: '',
+    mobile: ''
   })
 
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(false)
+
+  /* ---------------- STATE CHANGE ---------------- */
 
   const handleStateChange = (state) => {
     setForm({ ...form, state, city: '' })
     setCities(statesAndCities[state] || [])
   }
 
+  /* ---------------- SIGNUP ---------------- */
+
   const handleSignup = async (e) => {
+
     e.preventDefault()
     setLoading(true)
 
     try {
+
+      const atcCode = generateATCCode()
+
+      /* Create Appwrite Auth User */
 
       await account.create(
         ID.unique(),
@@ -65,6 +91,8 @@ export default function FranchiseSignup() {
         form.password,
         form.name
       )
+
+      /* Save Franchise Request */
 
       await databases.createDocument(
         DATABASE_ID,
@@ -74,7 +102,10 @@ export default function FranchiseSignup() {
           ...form,
           franchiseEmail: form.email,
           instituteName: form.instituteName,
-          status: 'pending'
+          atcCode: atcCode,
+          wallet: "0.00",
+          courierWallet: "0.00",
+          status: "pending"
         }
       )
 
@@ -82,14 +113,18 @@ export default function FranchiseSignup() {
       router.push('/login')
 
     } catch (error) {
+
       alert(error.message)
       console.error(error)
+
     }
 
     setLoading(false)
+
   }
 
   return (
+
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
       <form
@@ -98,10 +133,12 @@ export default function FranchiseSignup() {
       >
 
         <h2 className="text-2xl font-bold text-center">
-          Franchise Signup
+          Franchise Form
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
+
+          {/* Name */}
 
           <div>
             <label className="block font-medium mb-1">Full Name</label>
@@ -113,6 +150,8 @@ export default function FranchiseSignup() {
             />
           </div>
 
+          {/* Institute */}
+
           <div>
             <label className="block font-medium mb-1">Institute Name</label>
             <input
@@ -122,6 +161,8 @@ export default function FranchiseSignup() {
               required
             />
           </div>
+
+          {/* Email */}
 
           <div>
             <label className="block font-medium mb-1">Email</label>
@@ -133,6 +174,8 @@ export default function FranchiseSignup() {
             />
           </div>
 
+          {/* Password */}
+
           <div>
             <label className="block font-medium mb-1">Password</label>
             <input
@@ -142,6 +185,19 @@ export default function FranchiseSignup() {
               required
             />
           </div>
+
+          {/* Mobile */}
+
+          <div>
+            <label className="block font-medium mb-1">Mobile Number</label>
+            <input
+              type="text"
+              className="w-full border p-3"
+              onChange={(e)=>setForm({...form,mobile:e.target.value})}
+            />
+          </div>
+
+          {/* Designation */}
 
           <div>
             <label className="block font-medium mb-1">Designation</label>
@@ -159,6 +215,8 @@ export default function FranchiseSignup() {
             </select>
           </div>
 
+          {/* DOB */}
+
           <div>
             <label className="block font-medium mb-1">Date of Birth</label>
             <input
@@ -167,6 +225,8 @@ export default function FranchiseSignup() {
               onChange={(e)=>setForm({...form,dob:e.target.value})}
             />
           </div>
+
+          {/* Address */}
 
           <div className="col-span-2">
             <label className="block font-medium mb-1">Address</label>
@@ -177,6 +237,8 @@ export default function FranchiseSignup() {
             />
           </div>
 
+          {/* Pincode */}
+
           <div>
             <label className="block font-medium mb-1">Pincode</label>
             <input
@@ -186,6 +248,8 @@ export default function FranchiseSignup() {
             />
           </div>
 
+          {/* State */}
+
           <div>
             <label className="block font-medium mb-1">State</label>
             <select
@@ -193,23 +257,32 @@ export default function FranchiseSignup() {
               onChange={(e)=>handleStateChange(e.target.value)}
             >
               <option value="">Select State</option>
+
               {Object.keys(statesAndCities).map((state)=>(
                 <option key={state}>{state}</option>
               ))}
+
             </select>
           </div>
 
+          {/* City */}
+
           <div>
             <label className="block font-medium mb-1">City</label>
+
             <select
               className="w-full border p-3"
               onChange={(e)=>setForm({...form,city:e.target.value})}
             >
+
               <option value="">Select City</option>
+
               {cities.map((city)=>(
                 <option key={city}>{city}</option>
               ))}
+
             </select>
+
           </div>
 
         </div>
@@ -223,6 +296,7 @@ export default function FranchiseSignup() {
         </button>
 
       </form>
+
     </div>
   )
 }

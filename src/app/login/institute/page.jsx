@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+
 import { account, databases } from '@/lib/appwrite'
-import { useRouter } from 'next/navigation'
 import { Query } from 'appwrite'
 import { Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
@@ -16,6 +18,18 @@ export default function InstituteLogin() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+
+  const urlEmail = searchParams.get('email')
+  const urlPassword = searchParams.get('password')
+
+  if (urlEmail) setEmail(urlEmail)
+  if (urlPassword) setPassword(urlPassword)
+
+}, [searchParams])
+
 
   const login = async (e) => {
 
