@@ -67,62 +67,120 @@ export default function NavbarCMS() {
   }
 
   return (
-    <div className="max-w-4xl space-y-4">
-      <h1 className="text-2xl font-bold">Navbar CMS</h1>
 
-      <input
-        className="border p-3 w-full"
-        placeholder="Top Bar Text"
-        value={form.topBarText}
-        onChange={e => setForm({ ...form, topBarText: e.target.value })}
-      />
+    <div className="max-w-5xl mx-auto p-8">
 
-      <input
-        className="border p-3 w-full"
-        placeholder="Phone Number"
-        value={form.phone}
-        onChange={e => setForm({ ...form, phone: e.target.value })}
-      />
+      <div className="bg-white shadow-xl rounded-xl p-8 space-y-6">
 
-      {/* <textarea
-        className="border p-3 w-full h-40"
-        placeholder="Nav Menus JSON"
-        value={form.navMenus}
-        onChange={e => setForm({ ...form, navMenus: e.target.value })}
-      /> */}
+        <h1 className="text-3xl font-bold border-b pb-4">
+          Navbar CMS
+        </h1>
 
-      <div>
-        <label className="block font-medium mb-2">Upload Logo</label>
-        <input type="file" onChange={e => uploadLogo(e.target.files[0])} />
-        {form.logoUrl && <img src={form.logoUrl} className="h-14 mt-3" />}
+        {/* Top Bar Text */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Top Bar Text
+          </label>
+
+          <input
+            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Top Bar Text"
+            value={form.topBarText}
+            onChange={e => setForm({ ...form, topBarText: e.target.value })}
+          />
+        </div>
+
+        {/* Phone */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Phone Number
+          </label>
+
+          <input
+            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Phone Number"
+            value={form.phone}
+            onChange={e => setForm({ ...form, phone: e.target.value })}
+          />
+        </div>
+
+        {/* Logo Upload */}
+
+        <div className="space-y-3">
+
+          <label className="font-semibold text-gray-700">
+            Upload Logo
+          </label>
+
+          <input
+            type="file"
+            className="border rounded-lg p-3 w-full"
+            onChange={e => uploadLogo(e.target.files[0])}
+          />
+
+          {form.logoUrl && (
+            <img
+              src={form.logoUrl}
+              className="h-16 border rounded-lg mt-2"
+            />
+          )}
+
+        </div>
+
+        {/* Toggle Buttons */}
+
+        <div className="space-y-3">
+
+          <label className="flex items-center gap-3">
+
+            <input
+              type="checkbox"
+              checked={form.showFranchiseBtn}
+              onChange={e =>
+                setForm({ ...form, showFranchiseBtn: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+
+            <span className="text-gray-700">
+              Show Franchise Login
+            </span>
+
+          </label>
+
+          <label className="flex items-center gap-3">
+
+            <input
+              type="checkbox"
+              checked={form.showAdminBtn}
+              onChange={e =>
+                setForm({ ...form, showAdminBtn: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+
+            <span className="text-gray-700">
+              Show Admin Login
+            </span>
+
+          </label>
+
+        </div>
+
+        {/* Save Button */}
+
+        <button
+          onClick={saveNavbar}
+          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-medium"
+        >
+          Save Navbar
+        </button>
+
       </div>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={form.showFranchiseBtn}
-          onChange={e =>
-            setForm({ ...form, showFranchiseBtn: e.target.checked })
-          }
-        /> Show Franchise Login
-      </label>
-
-      <label>
-        <input
-          type="checkbox"
-          checked={form.showAdminBtn}
-          onChange={e =>
-            setForm({ ...form, showAdminBtn: e.target.checked })
-          }
-        /> Show Admin Login
-      </label>
-
-      <button
-        onClick={saveNavbar}
-        className="bg-black text-white px-6 py-3"
-      >
-        Save Navbar
-      </button>
     </div>
+
   )
 }

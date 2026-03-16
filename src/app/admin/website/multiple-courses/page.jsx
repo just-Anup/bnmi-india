@@ -74,33 +74,33 @@ console.log(err)
 
 return(
 
-<div className="p-10">
+<div className="min-h-screen bg-gray-50 flex justify-center items-start p-10">
 
-<h1 className="text-2xl font-bold mb-6">
+<div className="bg-white p-8 rounded-xl shadow-lg w-[650px]">
+
+<h1 className="text-3xl font-bold mb-6 text-gray-800">
 Multiple Course CMS
 </h1>
-
-<div className="bg-white p-6 rounded shadow w-[600px]">
 
 <input
 placeholder="Course Code"
 value={courseCode}
 onChange={(e)=>setCourseCode(e.target.value)}
-className="border p-2 w-full mb-3"
+className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
 />
 
 <input
 placeholder="Course Name"
 value={courseName}
 onChange={(e)=>setCourseName(e.target.value)}
-className="border p-2 w-full mb-3"
+className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
 />
 
 <input
 placeholder="Duration"
 value={duration}
 onChange={(e)=>setDuration(e.target.value)}
-className="border p-2 w-full mb-3"
+className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
 />
 
 <input
@@ -108,10 +108,14 @@ placeholder="Exam Fees"
 type="number"
 value={examFees}
 onChange={(e)=>setExamFees(e.target.value)}
-className="border p-2 w-full mb-4"
+className="border rounded-lg p-3 w-full mb-6 focus:ring-2 focus:ring-blue-500 outline-none"
 />
 
-<h2 className="font-bold mb-2">Subjects</h2>
+<h2 className="font-semibold text-lg mb-3 text-gray-700">
+Subjects
+</h2>
+
+<div className="space-y-2">
 
 {subjects.map((sub,index)=>(
 <input
@@ -119,25 +123,29 @@ key={index}
 placeholder="Subject Name"
 value={sub}
 onChange={(e)=>changeSubject(index,e.target.value)}
-className="border p-2 w-full mb-2"
+className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-green-500 outline-none"
 />
 ))}
 
+</div>
+
 <button
 onClick={addSubjectField}
-className="bg-green-600 text-white px-4 py-2 rounded mb-4"
+className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg mt-4 transition"
 >
 Add Subject
 </button>
 
-<br/>
+<div className="border-t mt-6 pt-6">
 
 <button
 onClick={saveCourse}
-className="bg-blue-600 text-white px-6 py-2 rounded"
+className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
 >
 Save Course
 </button>
+
+</div>
 
 </div>
 

@@ -14,7 +14,7 @@ export default function TestimonialsCMS() {
     name: '',
     role: '',
     text: '',
-    imageUrl: null, // 🔥 IMPORTANT: use null not ""
+    imageUrl: null,
   })
 
   const fetchTestimonials = async () => {
@@ -67,7 +67,7 @@ export default function TestimonialsCMS() {
           name: newTestimonial.name,
           role: newTestimonial.role,
           text: newTestimonial.text,
-          imageUrl: newTestimonial.imageUrl || null, // 🔥 safe
+          imageUrl: newTestimonial.imageUrl || null,
           order: testimonials.length + 1,
         }
       )
@@ -99,13 +99,23 @@ export default function TestimonialsCMS() {
   }
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <h1 className="text-2xl font-bold">Testimonials CMS</h1>
 
-      {/* ADD NEW */}
-      <div className="space-y-4 border p-6">
+    <div className="max-w-5xl mx-auto p-8 space-y-8">
+
+      <h1 className="text-3xl font-bold">
+        Testimonials CMS
+      </h1>
+
+      {/* ADD TESTIMONIAL CARD */}
+
+      <div className="bg-white shadow-lg rounded-xl p-8 space-y-5">
+
+        <h2 className="text-xl font-semibold">
+          Add Testimonial
+        </h2>
+
         <input
-          className="border p-3 w-full"
+          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
           placeholder="Name"
           value={newTestimonial.name}
           onChange={e =>
@@ -117,7 +127,7 @@ export default function TestimonialsCMS() {
         />
 
         <input
-          className="border p-3 w-full"
+          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
           placeholder="Role"
           value={newTestimonial.role}
           onChange={e =>
@@ -129,7 +139,7 @@ export default function TestimonialsCMS() {
         />
 
         <textarea
-          className="border p-3 w-full"
+          className="border rounded-lg p-3 w-full h-28 focus:ring-2 focus:ring-blue-500 outline-none"
           placeholder="Testimonial Text"
           value={newTestimonial.text}
           onChange={e =>
@@ -140,62 +150,89 @@ export default function TestimonialsCMS() {
           }
         />
 
-        <input
-          type="file"
-          onChange={e => uploadImage(e.target.files[0])}
-        />
+        <div className="space-y-2">
 
-        {/* PREVIEW SAFE */}
-        {newTestimonial.imageUrl && (
-          <img
-            src={newTestimonial.imageUrl}
-            alt="preview"
-            className="w-20 h-20 object-cover rounded"
+          <input
+            type="file"
+            className="border rounded-lg p-3 w-full"
+            onChange={e => uploadImage(e.target.files[0])}
           />
-        )}
+
+          {newTestimonial.imageUrl && (
+            <img
+              src={newTestimonial.imageUrl}
+              alt="preview"
+              className="w-24 h-24 object-cover rounded-lg border mt-2"
+            />
+          )}
+
+        </div>
 
         <button
           onClick={addTestimonial}
-          className="bg-black text-white px-6 py-2"
+          className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
         >
           Add Testimonial
         </button>
+
       </div>
 
-      {/* LIST */}
+      {/* TESTIMONIAL LIST */}
+
       <div className="space-y-4">
+
+        <h2 className="text-xl font-semibold">
+          Existing Testimonials
+        </h2>
+
         {testimonials.map(t => (
+
           <div
             key={t.$id}
-            className="border p-4 flex justify-between items-center"
+            className="bg-white border rounded-xl p-5 flex justify-between items-center shadow-sm"
           >
+
             <div className="flex gap-4 items-center">
-              {/* SAFE IMAGE RENDER */}
+
               {t.imageUrl && (
                 <img
                   src={t.imageUrl}
                   alt={t.name}
-                  className="w-16 h-16 object-cover rounded"
+                  className="w-16 h-16 object-cover rounded-lg"
                 />
               )}
 
               <div>
-                <h3 className="font-bold">{t.name}</h3>
+
+                <h3 className="font-bold text-lg">
+                  {t.name}
+                </h3>
+
                 <p className="text-sm text-gray-500">
                   {t.role}
                 </p>
+
+                <p className="text-sm text-gray-600 max-w-md mt-1">
+                  {t.text}
+                </p>
+
               </div>
+
             </div>
 
             <button
               onClick={() => deleteTestimonial(t.$id)}
-              className="text-red-500"
+              className="text-red-500 font-semibold hover:text-red-700"
             >
               Delete
             </button>
+
           </div>
+
         ))}
+
       </div>
+
     </div>
   )
 }

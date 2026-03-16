@@ -21,7 +21,6 @@ export default function HeroCMSPage() {
     heroBgImage: '',
   })
 
-  /* ---------------- INIT DOCUMENT ---------------- */
   useEffect(() => {
     const init = async () => {
       try {
@@ -65,7 +64,7 @@ export default function HeroCMSPage() {
     init()
   }, [])
 
-  /* ---------------- IMAGE UPLOAD ---------------- */const uploadImage = async (file) => {
+  const uploadImage = async (file) => {
     try {
       const uploaded = await storage.createFile(
         BUCKET_ID,
@@ -80,7 +79,6 @@ export default function HeroCMSPage() {
         heroBgImage: url,
       }))
 
-
       alert('Image uploaded ✅')
     } catch (err) {
       console.error(err)
@@ -88,7 +86,6 @@ export default function HeroCMSPage() {
     }
   }
 
-  /* ---------------- SAVE HERO ---------------- */
   const saveHero = async () => {
     if (!docId) return
 
@@ -110,63 +107,114 @@ export default function HeroCMSPage() {
     }
   }
 
-  if (loading) return <p className="p-6">Loading Hero CMS…</p>
+  if (loading) return <p className="p-10">Loading Hero CMS…</p>
 
   return (
-    <div className="max-w-4xl p-6">
-      <h1 className="text-2xl font-bold mb-6">Hero Section</h1>
 
-      <input
-        className="w-full border p-3 mb-4"
-        placeholder="Small Text"
-        value={form.heroSmallText}
-        onChange={(e) =>
-          setForm({ ...form, heroSmallText: e.target.value })
-        }
-      />
+    <div className="max-w-5xl mx-auto p-8">
 
-      <input
-        className="w-full border p-3 mb-4"
-        placeholder="Hero Title"
-        value={form.heroTitle}
-        onChange={(e) =>
-          setForm({ ...form, heroTitle: e.target.value })
-        }
-      />
+      <div className="bg-white shadow-xl rounded-xl p-8 space-y-6">
 
-      <input
-        className="w-full border p-3 mb-4"
-        placeholder="Hero Subtitle"
-        value={form.heroSubtitle}
-        onChange={(e) =>
-          setForm({ ...form, heroSubtitle: e.target.value })
-        }
-      />
+        <h1 className="text-3xl font-bold border-b pb-4">
+          Hero Section CMS
+        </h1>
 
-      {/* IMAGE UPLOAD */}
-      <div className="mb-4">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => uploadImage(e.target.files?.[0])}
-        />
-        {uploading && <p className="text-sm mt-2">Uploading image…</p>}
+        {/* Small Text */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Small Text
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Small Text"
+            value={form.heroSmallText}
+            onChange={(e) =>
+              setForm({ ...form, heroSmallText: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Hero Title */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Hero Title
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Hero Title"
+            value={form.heroTitle}
+            onChange={(e) =>
+              setForm({ ...form, heroTitle: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Subtitle */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Hero Subtitle
+          </label>
+
+          <input
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Hero Subtitle"
+            value={form.heroSubtitle}
+            onChange={(e) =>
+              setForm({ ...form, heroSubtitle: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Image Upload */}
+
+        <div className="space-y-3">
+
+          <label className="font-semibold text-gray-700">
+            Upload Background Image
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            className="border rounded-lg p-3 w-full"
+            onChange={(e) => uploadImage(e.target.files?.[0])}
+          />
+
+          {uploading && (
+            <p className="text-sm text-gray-500">Uploading image…</p>
+          )}
+
+        </div>
+
+        {/* Image Preview */}
+
+        {form.heroBgImage && (
+          <div className="border rounded-lg overflow-hidden">
+            <img
+              src={form.heroBgImage}
+              className="w-full h-52 object-cover"
+            />
+          </div>
+        )}
+
+        {/* Save Button */}
+
+        <button
+          onClick={saveHero}
+          disabled={saving}
+          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-medium"
+        >
+          {saving ? 'Saving…' : 'Save Hero'}
+        </button>
+
       </div>
 
-      {form.heroBgImage && (
-        <img
-          src={form.heroBgImage}
-          className="w-full h-48 object-cover rounded mb-4"
-        />
-      )}
-
-      <button
-        onClick={saveHero}
-        disabled={saving}
-        className="bg-black text-white px-6 py-3"
-      >
-        {saving ? 'Saving…' : 'Save Hero'}
-      </button>
     </div>
+
   )
 }

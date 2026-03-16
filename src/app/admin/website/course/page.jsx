@@ -18,15 +18,11 @@ export default function CourseCMS() {
     const [catImage, setCatImage] = useState(null)
     const [courseImage, setCourseImage] = useState(null)
 
-    /* CATEGORY FORM */
-
     const [categoryForm, setCategoryForm] = useState({
         name: "",
         slug: "",
         subtitle: ""
     })
-
-    /* COURSE FORM */
 
     const [courseForm, setCourseForm] = useState({
         title: "",
@@ -52,8 +48,6 @@ export default function CourseCMS() {
 
     }
 
-    /* HANDLE INPUT */
-
     const handleCategoryChange = (e) => {
         setCategoryForm({
             ...categoryForm,
@@ -67,8 +61,6 @@ export default function CourseCMS() {
             [e.target.name]: e.target.value
         })
     }
-
-    /* ADD CATEGORY */
 
     const addCategory = async () => {
 
@@ -122,8 +114,6 @@ export default function CourseCMS() {
 
     }
 
-    /* ADD COURSE */
-
     const addCourse = async () => {
 
         try {
@@ -175,9 +165,9 @@ export default function CourseCMS() {
             setCourseImage(null)
 
         } catch(err){
-  console.error("Appwrite Error:", err)
-  alert(err.message)
-}
+            console.error("Appwrite Error:", err)
+            alert(err.message)
+        }
     }
 
     const getImage = (imageId) => {
@@ -188,29 +178,28 @@ export default function CourseCMS() {
 
     return (
 
-        <div className="p-10 space-y-12">
+        <div className="p-10 space-y-12 bg-gray-50 min-h-screen">
 
-            <h1 className="text-2xl font-bold">
-                COURSE CMS PANEL
+            <h1 className="text-3xl font-bold text-gray-800">
+                Course CMS Panel
             </h1>
-
 
             {/* CATEGORY SECTION */}
 
-            <div className="bg-white p-6 rounded shadow">
+            <div className="bg-white p-8 rounded-xl shadow-lg">
 
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="text-xl font-semibold mb-6 text-gray-700">
                     Add Category
                 </h2>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
 
                     <input
                         name="name"
                         value={categoryForm.name}
                         onChange={handleCategoryChange}
                         placeholder="Category Name"
-                        className="border p-2"
+                        className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
 
                     <input
@@ -218,7 +207,7 @@ export default function CourseCMS() {
                         value={categoryForm.slug}
                         onChange={handleCategoryChange}
                         placeholder="Slug (computer)"
-                        className="border p-2"
+                        className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
 
                     <input
@@ -226,41 +215,44 @@ export default function CourseCMS() {
                         value={categoryForm.subtitle}
                         onChange={handleCategoryChange}
                         placeholder="Subtitle"
-                        className="border p-2"
+                        className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
 
                     <input
                         type="file"
                         onChange={(e) => setCatImage(e.target.files[0])}
-                        className="border p-2"
+                        className="border rounded-lg p-3"
                     />
 
                     <button
                         onClick={addCategory}
-                        className="col-span-2 bg-blue-600 text-white py-2 rounded"
+                        className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
                     >
                         Add Category
                     </button>
 
                 </div>
 
-
                 {/* CATEGORY LIST */}
 
-                <div className="mt-6 grid grid-cols-4 gap-4">
+                <div className="mt-8 grid grid-cols-4 gap-6">
 
                     {categories.map(cat => (
-                        <div key={cat.$id} className="border p-3 rounded text-center">
+                        <div key={cat.$id} className="border rounded-xl p-4 shadow-sm hover:shadow-md transition text-center">
 
                             {cat.imageId && (
                                 <img
                                     src={getImage(cat.imageId)}
-                                    className="h-24 w-full object-cover mb-2"
+                                    className="h-28 w-full object-cover rounded-lg mb-3"
                                 />
                             )}
 
-                            <p className="font-semibold">
+                            <p className="font-semibold text-gray-700">
                                 {cat.name}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                                {cat.subtitle}
                             </p>
 
                         </div>
@@ -273,27 +265,27 @@ export default function CourseCMS() {
 
             {/* COURSE SECTION */}
 
-            <div className="bg-white p-6 rounded shadow">
+            <div className="bg-white p-8 rounded-xl shadow-lg">
 
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="text-xl font-semibold mb-6 text-gray-700">
                     Add Course
                 </h2>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
 
                     <input
                         name="title"
                         value={courseForm.title}
                         onChange={handleCourseChange}
                         placeholder="Course Title"
-                        className="border p-2"
+                        className="border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"
                     />
 
                     <select
                         name="category"
                         value={courseForm.category}
                         onChange={handleCourseChange}
-                        className="border p-2"
+                        className="border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"
                     >
 
                         <option value="">Select Category</option>
@@ -311,7 +303,7 @@ export default function CourseCMS() {
                         value={courseForm.duration}
                         onChange={handleCourseChange}
                         placeholder="Course Duration"
-                        className="border p-2"
+                        className="border rounded-lg p-3"
                     />
 
                     <input
@@ -319,13 +311,13 @@ export default function CourseCMS() {
                         value={courseForm.fees}
                         onChange={handleCourseChange}
                         placeholder="Course Fees"
-                        className="border p-2"
+                        className="border rounded-lg p-3"
                     />
 
                     <input
                         type="file"
                         onChange={(e) => setCourseImage(e.target.files[0])}
-                        className="border p-2"
+                        className="border rounded-lg p-3"
                     />
 
                     <textarea
@@ -333,12 +325,12 @@ export default function CourseCMS() {
                         value={courseForm.description}
                         onChange={handleCourseChange}
                         placeholder="Course Description"
-                        className="border p-2 col-span-2"
+                        className="border rounded-lg p-3 col-span-2 h-32"
                     />
 
                     <button
                         onClick={addCourse}
-                        className="col-span-2 bg-green-600 text-white py-2 rounded"
+                        className="col-span-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition"
                     >
                         Add Course
                     </button>

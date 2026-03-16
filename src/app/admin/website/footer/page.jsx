@@ -42,54 +42,98 @@ export default function FooterCMS() {
     alert('Footer updated ✅')
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="p-10">Loading...</p>
 
   return (
-    <div className="max-w-4xl space-y-6">
-      <h1 className="text-2xl font-bold">Footer Settings</h1>
 
-      <textarea
-        className="border p-3 w-full"
-        placeholder="About Text"
-        value={form.footerAboutText || ''}
-        onChange={e =>
-          setForm({ ...form, footerAboutText: e.target.value })
-        }
-      />
+    <div className="max-w-5xl mx-auto p-8">
 
-      <textarea
-        className="border p-3 w-full"
-        placeholder="Address"
-        value={form.footerAddress || ''}
-        onChange={e =>
-          setForm({ ...form, footerAddress: e.target.value })
-        }
-      />
+      <div className="bg-white shadow-xl rounded-xl p-8 space-y-6">
 
-      <input
-        className="border p-3 w-full"
-        placeholder="Phone"
-        value={form.footerPhone || ''}
-        onChange={e =>
-          setForm({ ...form, footerPhone: e.target.value })
-        }
-      />
+        <h1 className="text-3xl font-bold border-b pb-4">
+          Footer Settings
+        </h1>
 
-      <input
-        className="border p-3 w-full"
-        placeholder="Email"
-        value={form.footerEmail || ''}
-        onChange={e =>
-          setForm({ ...form, footerEmail: e.target.value })
-        }
-      />
+        {/* About Text */}
 
-      <button
-        onClick={saveFooter}
-        className="bg-black text-white px-6 py-3"
-      >
-        Save Footer
-      </button>
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Footer About Text
+          </label>
+
+          <textarea
+            className="border rounded-lg p-3 w-full h-28 focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="About Text"
+            value={form.footerAboutText || ''}
+            onChange={e =>
+              setForm({ ...form, footerAboutText: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Address */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Address
+          </label>
+
+          <textarea
+            className="border rounded-lg p-3 w-full h-24 focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Address"
+            value={form.footerAddress || ''}
+            onChange={e =>
+              setForm({ ...form, footerAddress: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Phone */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Phone Number
+          </label>
+
+          <input
+            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Phone"
+            value={form.footerPhone || ''}
+            onChange={e =>
+              setForm({ ...form, footerPhone: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Email */}
+
+        <div className="space-y-2">
+          <label className="font-semibold text-gray-700">
+            Email Address
+          </label>
+
+          <input
+            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Email"
+            value={form.footerEmail || ''}
+            onChange={e =>
+              setForm({ ...form, footerEmail: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Save Button */}
+
+        <button
+          onClick={saveFooter}
+          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-medium"
+        >
+          Save Footer
+        </button>
+
+      </div>
+
     </div>
+
   )
 }

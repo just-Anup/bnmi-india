@@ -6,7 +6,7 @@ import { ID, Query } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION_ID = 'team'
-const BUCKET_ID = '6986e8a4001925504f6b' // change if using different bucket
+const BUCKET_ID = '6986e8a4001925504f6b'
 
 export default function TeamCMS() {
   const [team, setTeam] = useState([])
@@ -96,14 +96,23 @@ export default function TeamCMS() {
   }
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <h1 className="text-2xl font-bold">Team CMS</h1>
 
-      {/* ADD NEW */}
-      <div className="space-y-4 border p-6">
+    <div className="max-w-5xl mx-auto p-8 space-y-8">
+
+      <h1 className="text-3xl font-bold">
+        Team CMS
+      </h1>
+
+      {/* ADD MEMBER CARD */}
+
+      <div className="bg-white shadow-lg rounded-xl p-8 space-y-5">
+
+        <h2 className="text-xl font-semibold">
+          Add Team Member
+        </h2>
 
         <input
-          className="border p-3 w-full"
+          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
           placeholder="Member Name"
           value={newMember.name}
           onChange={e =>
@@ -112,7 +121,7 @@ export default function TeamCMS() {
         />
 
         <input
-          className="border p-3 w-full"
+          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
           placeholder="Role"
           value={newMember.role}
           onChange={e =>
@@ -120,59 +129,86 @@ export default function TeamCMS() {
           }
         />
 
-        <input
-          type="file"
-          onChange={e => uploadImage(e.target.files[0])}
-        />
+        <div className="space-y-2">
 
-        {newMember.imageUrl && (
-          <img
-            src={newMember.imageUrl}
-            alt="preview"
-            className="w-24 h-24 object-cover rounded"
+          <input
+            type="file"
+            className="border rounded-lg p-3 w-full"
+            onChange={e => uploadImage(e.target.files[0])}
           />
-        )}
+
+          {newMember.imageUrl && (
+            <img
+              src={newMember.imageUrl}
+              alt="preview"
+              className="w-28 h-28 object-cover rounded-lg border mt-2"
+            />
+          )}
+
+        </div>
 
         <button
           onClick={addMember}
-          className="bg-black text-white px-6 py-2"
+          className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
         >
           Add Member
         </button>
+
       </div>
 
-      {/* LIST */}
+      {/* TEAM LIST */}
+
       <div className="space-y-4">
+
+        <h2 className="text-xl font-semibold">
+          Team Members
+        </h2>
+
         {team.map(member => (
+
           <div
             key={member.$id}
-            className="border p-4 flex justify-between items-center"
+            className="bg-white border rounded-xl p-5 flex justify-between items-center shadow-sm"
           >
+
             <div className="flex gap-4 items-center">
+
               {member.imageUrl && (
                 <img
                   src={member.imageUrl}
                   alt={member.name}
-                  className="w-16 h-16 object-cover rounded"
+                  className="w-16 h-16 object-cover rounded-lg"
                 />
               )}
+
               <div>
-                <h3 className="font-bold">{member.name}</h3>
+
+                <h3 className="font-bold text-lg">
+                  {member.name}
+                </h3>
+
                 <p className="text-sm text-gray-500">
                   {member.role}
                 </p>
+
               </div>
+
             </div>
 
             <button
               onClick={() => deleteMember(member.$id)}
-              className="text-red-500"
+              className="text-red-500 font-semibold hover:text-red-700"
             >
               Delete
             </button>
+
           </div>
+
         ))}
+
       </div>
+
     </div>
+
   )
 }
