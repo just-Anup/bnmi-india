@@ -45,6 +45,7 @@ export default function Dashboard() {
 
       <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
       <p className="text-gray-500 mb-8">Welcome To BNMI Dashboard</p>
+this is the dash board page of the admin pannel 
 
 
       {/* Top Cards */}
