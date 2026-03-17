@@ -53,6 +53,12 @@ export default function AdminSidebar() {
           label="Certificate List"
           href="/admin/dashboard/certificates"
         />
+
+  <MenuItem
+          icon={<Image size={18} />}
+          label="Wallet List"
+          href="/admin/dashboard/wallet"
+        />
       
 
     

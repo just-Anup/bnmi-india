@@ -32,16 +32,19 @@ const statesAndCities = {
 
 /* ---------------- ATC CODE GENERATOR ---------------- */
 
-const generateATCCode = () => {
+const getStateCode = (state) => {
+  return state.substring(0, 2).toUpperCase()
+}
 
+const generateATCCode = (state) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  let code = "ATC-"
+  let code = ""
 
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
 
-  return code
+  return `${getStateCode(state)}-${code}`
 }
 
 export default function FranchiseSignup() {
