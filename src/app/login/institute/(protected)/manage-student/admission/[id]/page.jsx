@@ -239,6 +239,7 @@ const handleChange = (e) => {
           subjects: form.subjects,
           createdById: user.$id,
           createdByEmail: user.email,
+              franchiseEmail: user.email, 
           photoId,
           signatureId,
           createdAt: new Date().toISOString(),
