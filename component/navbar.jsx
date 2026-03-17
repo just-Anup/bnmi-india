@@ -95,13 +95,15 @@ console.log("NAVBAR DATA:", res)
           )}
 
           {/* ---------------- STATIC MENU ---------------- */}
-          <nav className="ml-auto hidden lg:flex gap-10 text-white font-semibold">
-            <Dropdown title="HOME" items={[{ label: 'Home', href: '/' }]} />
-            <Dropdown title="ABOUT US" items={[{ label: 'About', href: '/about' }]} />
-            <Dropdown title="COURSES" items={[{ label: 'Courses', href: '/courses' }]} />
-            <Dropdown title="CERTIFICATION" items={[{ label: 'Certification', href: '/certification' }]} />
-            <Dropdown title="VERIFICATION" items={[{ label: 'Verification', href: '/verification' }]} />
-          </nav>
+      <nav className="ml-auto hidden lg:flex gap-10 text-white font-semibold">
+
+  <Link href="/">HOME</Link>
+  <Link href="/about">ABOUT US</Link>
+  <Link href="/courses">COURSES</Link>
+  <Link href="/certification">CERTIFICATION</Link>
+  <Link href="/verify/verification">VERIFICATION</Link>
+
+</nav>
 
           {/* ---------------- CTA BUTTONS ---------------- */}
           <div

@@ -164,25 +164,51 @@ const deleteFranchise = async (req) => {
   }, [])
 
   /* ---------------- APPROVE ---------------- */
-
- const approveFranchise = async (req) => {
+const fixQR = async (req) => {
   try {
 
-    const verifyUrl = `${window.location.origin}/verify/${req.$id}`
+    const verifyUrl = `https://www.bnmiindia.org/verify/${req.$id}`
 
     const qrCode = await QRCode.toDataURL(verifyUrl)
 
+    await databases.updateDocument(
+      DATABASE_ID,
+      'franchise_approved',
+      req.$id,
+      { qrCode, verifyUrl }
+    )
+
+    alert("QR Updated")
+
+  } catch (err) {
+    console.error("FIX QR ERROR:", err)
+    alert("QR fix failed")
+  }
+}
+ const approveFranchise = async (req) => {
+  try {
+
+    // ✅ Always use LIVE DOMAIN
+const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${req.$id}`
+
+    // ✅ Generate QR
+    const qrCode = await QRCode.toDataURL(verifyUrl)
+
+    // ✅ Create approved document
     await databases.createDocument(
       DATABASE_ID,
       'franchise_approved',
       req.$id,
       {
         ...req,
-        qrCode: qrCode, // ✅ save QR image
-        verifyUrl: verifyUrl // optional
+        qrCode,
+        verifyUrl,
+        wallet: req.wallet || "0.00",
+        courierWallet: req.courierWallet || "0.00"
       }
     )
 
+    // ✅ Delete from pending
     await databases.deleteDocument(
       DATABASE_ID,
       'franchise_requests',
@@ -192,7 +218,8 @@ const deleteFranchise = async (req) => {
     fetchAll()
 
   } catch (error) {
-    console.error(error)
+    console.error("APPROVE ERROR:", error)
+    alert(error.message)
   }
 }
   /* ---------------- REJECT ---------------- */
@@ -451,6 +478,12 @@ const downloadCertificate = async () => {
     className="h-30 w-20 object-cover rounded mb-2"
   />
 )}
+<button
+  onClick={() => fixQR(req)}
+  className="px-3 py-1 bg-purple-500 text-white rounded"
+>
+  Fix QR
+</button>
     <button
       onClick={() => loginAsFranchise(req)}
       className="px-4 py-2 rounded-lg bg-blue-500 text-white h-16"
