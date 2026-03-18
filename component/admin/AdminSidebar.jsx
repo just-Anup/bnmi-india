@@ -65,11 +65,7 @@ export default function AdminSidebar() {
           label="About Section"
           href="/admin/website/about"
         />
-        <MenuItem
-          icon={<Image size={18} />}
-          label="course Section"
-          href="/admin/website/course"
-        />
+    
 
         <MenuItem
           icon={<Image size={18} />}
@@ -89,21 +85,7 @@ export default function AdminSidebar() {
           href="/admin/website/footer"
         />
 
-         <MenuItem
-          icon={<Image size={18} />}
-          label="Add Course Section"
-          href="/admin/website/addsingleccourse"
-        />
-         <MenuItem
-          icon={<Image size={18} />}
-          label="Multiple Course Section"
-          href="/admin/website/multiple-courses"
-        />
-         <MenuItem
-          icon={<Image size={18} />}
-          label="Typing Course Section"
-          href="/admin/website/typing-courses"
-        />
+      
 
       </nav>
 

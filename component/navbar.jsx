@@ -111,8 +111,9 @@ console.log("NAVBAR DATA:", res)
             transition-all duration-500
             ${scrolled ? 'right-250' : '-right-[520px]'}`}
           >
+            <Link href="/contact">
             <CTAButton text="CONTACT NOW" />
-
+</Link>
             <Link href="/franchise/signup">
               <CTAButton text="FRANCHISE LOGIN" />
             </Link>

@@ -35,7 +35,7 @@ export default function AdminSidebar() {
           href="/admin/website/navbar"
           className="block text-center bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition"
         >
-          Website Management
+          Admin Management
         </Link>
       </div>
 
@@ -60,7 +60,7 @@ export default function AdminSidebar() {
                 />
    <MenuItem
           icon={<Image size={18} />}
-          label="Add Course Section"
+          label="Single Course Section"
           href="/admin/website/addsingleccourse"
         />
          <MenuItem
@@ -87,6 +87,11 @@ export default function AdminSidebar() {
           icon={<Image size={18} />}
           label="upload Image"
           href="/admin/dashboard/upload-image"
+        />
+       <MenuItem
+          icon={<Image size={18} />}
+          label="Helpdesk List"
+          href="/admin/dashboard/helpdesk"
         />
       
 
