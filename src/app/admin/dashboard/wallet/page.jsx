@@ -62,7 +62,7 @@ export default function WalletPage() {
               <td className="space-x-2">
 
                 <button
-                  onClick={() => router.push(`/admin/dashboard/wallet/recharge?id=${item.$id}`)}
+                  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}`)}
                   className="bg-blue-500 text-white px-3 py-1"
                 >
                   Recharge

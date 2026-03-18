@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { databases } from "@/lib/appwrite"
 import { useRouter } from "next/navigation"
 
@@ -9,7 +9,9 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 export default function RechargePage({ params }) {
 
   const router = useRouter()
-  const id = params.id
+
+  // ✅ FIX HERE
+  const { id } = use(params)
 
   const [user, setUser] = useState(null)
   const [amount, setAmount] = useState("")
@@ -20,12 +22,10 @@ export default function RechargePage({ params }) {
   const [masterPassword, setMasterPassword] = useState("")
   const [enable, setEnable] = useState(false)
 
-  // 🔐 MASTER PASSWORD CHECK
   useEffect(() => {
     setEnable(masterPassword === "6969")
   }, [masterPassword])
 
-  // 📥 FETCH USER
   useEffect(() => {
 
     const fetchUser = async () => {
@@ -47,7 +47,6 @@ export default function RechargePage({ params }) {
 
   }, [id])
 
-  // 💰 HANDLE RECHARGE
   const handleRecharge = async () => {
 
     if (!amount) return alert("Enter amount")
