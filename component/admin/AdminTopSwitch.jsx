@@ -53,7 +53,26 @@ export default function AdminSidebar() {
           label="Certificate List"
           href="/admin/dashboard/certificates"
         />
-
+            <MenuItem
+                  icon={<Image size={18} />}
+                  label="course Section"
+                  href="/admin/website/course"
+                />
+   <MenuItem
+          icon={<Image size={18} />}
+          label="Add Course Section"
+          href="/admin/website/addsingleccourse"
+        />
+         <MenuItem
+          icon={<Image size={18} />}
+          label="Multiple Course Section"
+          href="/admin/website/multiple-courses"
+        />
+         <MenuItem
+          icon={<Image size={18} />}
+          label="Typing Course Section"
+          href="/admin/website/typing-courses"
+        />
   <MenuItem
           icon={<Image size={18} />}
           label="Wallet List"
