@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { databases } from "@/lib/appwrite"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-export default function RechargePage() {
+export default function RechargePage({ params }) {
 
-  const params = useSearchParams()
   const router = useRouter()
-
-  const id = params.get("id")
+  const id = params.id
 
   const [user, setUser] = useState(null)
   const [amount, setAmount] = useState("")
@@ -27,24 +25,29 @@ export default function RechargePage() {
     setEnable(masterPassword === "6969")
   }, [masterPassword])
 
-  // FETCH USER
+  // 📥 FETCH USER
   useEffect(() => {
 
     const fetchUser = async () => {
-
-      const res = await databases.getDocument(
-        DATABASE_ID,
-        "franchise_approved",
-        id
-      )
-
-      setUser(res)
+      try {
+        const res = await databases.getDocument(
+          DATABASE_ID,
+          "franchise_approved",
+          id
+        )
+        setUser(res)
+      } catch (err) {
+        console.error(err)
+        alert("User not found")
+        router.push("/admin/dashboard/wallet")
+      }
     }
 
     if (id) fetchUser()
 
   }, [id])
 
+  // 💰 HANDLE RECHARGE
   const handleRecharge = async () => {
 
     if (!amount) return alert("Enter amount")
@@ -53,7 +56,6 @@ export default function RechargePage() {
 
       const newBalance = Number(user.wallet || 0) + Number(amount)
 
-      // ✅ UPDATE WALLET
       await databases.updateDocument(
         DATABASE_ID,
         "franchise_approved",
@@ -64,7 +66,6 @@ export default function RechargePage() {
         }
       )
 
-      // ✅ SAVE TRANSACTION
       await databases.createDocument(
         DATABASE_ID,
         "wallet_transactions",
@@ -82,7 +83,6 @@ export default function RechargePage() {
       )
 
       alert("Recharge Successful")
-
       router.push("/admin/dashboard/wallet")
 
     } catch (err) {
@@ -94,7 +94,6 @@ export default function RechargePage() {
   if (!user) return <div className="p-10">Loading...</div>
 
   return (
-
     <div className="p-10">
 
       <h1 className="text-xl font-bold mb-6">
@@ -122,10 +121,10 @@ export default function RechargePage() {
           onChange={(e)=>setPaymentMode(e.target.value)}
           className="border p-3"
         >
-          <option>Select Payment Mode</option>
-          <option>Online</option>
-          <option>Cash</option>
-          <option>Cheque</option>
+          <option value="">Select Payment Mode</option>
+          <option value="Online">Online</option>
+          <option value="Cash">Cash</option>
+          <option value="Cheque">Cheque</option>
         </select>
 
         <input
