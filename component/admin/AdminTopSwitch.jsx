@@ -59,6 +59,16 @@ export default function AdminSidebar() {
           label="Wallet List"
           href="/admin/dashboard/wallet"
         />
+       <MenuItem
+          icon={<Image size={18} />}
+          label="courier-Wallet List"
+          href="/admin/dashboard/courier-wallet"
+        />
+       <MenuItem
+          icon={<Image size={18} />}
+          label="upload Image"
+          href="/admin/dashboard/upload-image"
+        />
       
 
     

@@ -101,7 +101,7 @@ export default function AddStudent() {
 
   };
 
-  const getFranchiseInfo = async () => {
+const getFranchiseInfo = async () => {
 
   const user = await account.get()
 
@@ -111,15 +111,16 @@ export default function AddStudent() {
     [Query.equal("email", user.email)]
   )
 
+  if (res.documents.length === 0) {
+    throw new Error("Franchise not found")
+  }
+
   return {
     franchiseId: res.documents[0].$id,
     instituteName: res.documents[0].instituteName,
     userId: user.$id
   }
-
 }
-  
-
   const calculateFees = (courseFees, discount) => {
 
   const fees = Number(courseFees) || 0;
@@ -191,76 +192,104 @@ const handleChange = (e) => {
   setForm({ ...form, [e.target.name]: e.target.value });
 };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
 
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!form.courseName) {
-      alert("Please select course");
-      return;
-    }
+  if (!form.courseName) {
+    alert("Please select course");
+    return;
+  }
 
-    if (!form.subjects) {
-      alert("Please enter subjects");
-      return;
-    }
+  if (!form.subjects) {
+    alert("Please enter subjects");
+    return;
+  }
 
-    try {
+  try {
 
-      const user = await account.get();
+    const user = await account.get();
 
-      let photoId = "";
-      let signatureId = "";
+    // ✅ ADD THIS LINE
+const franchise = await getFranchiseInfo()
+// 🔥 USE EXAM FEE
+const ADMISSION_FEE = Number(form.examFees || 0)
 
-      if (photo) {
-        const res = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          photo
-        );
-        photoId = res.$id;
-      }
+// VALIDATION
+if (!ADMISSION_FEE || ADMISSION_FEE <= 0) {
+  alert("Invalid exam fee for this course")
+  return
+}
 
-      if (signature) {
-        const res = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          signature
-        );
-        signatureId = res.$id;
-      }
+// GET FRANCHISE WALLET
+const franchiseDoc = await databases.getDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  franchise.franchiseId
+)
 
-      await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          ...form,
-          subjects: form.subjects,
-          createdById: user.$id,
-          createdByEmail: user.email,
-              franchiseEmail: user.email, 
-          photoId,
-          signatureId,
-          createdAt: new Date().toISOString(),
-          franchiseId: franchise.franchiseId,
-          instituteName: franchise.instituteName,
-          createdById: franchise.userId,
-          createdAt: new Date().toISOString()
-        }
-      );
+// CHECK BALANCE
+if ((Number(franchiseDoc.wallet) || 0) < ADMISSION_FEE) {
+  alert("Insufficient Wallet Balance")
+  return
+}
 
-      alert("Student Registered Successfully");
+// DEDUCT WALLET
+const newWallet = Number(franchiseDoc.wallet || 0) - ADMISSION_FEE
 
-      router.push("/login/institute/manage-student/admission");
+await databases.updateDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  franchise.franchiseId,
+  {
+    wallet: newWallet.toFixed(2)
+  }
+)
 
-    } catch (err) {
-      console.log(err);
-      alert(err.message);
-    }
+// SAVE TRANSACTION
+await databases.createDocument(
+  DATABASE_ID,
+  "wallet_transactions",
+  "unique()",
+  {
+    franchiseId: franchise.franchiseId,
+    amount: ADMISSION_FEE,
+    type: "deduct",
+    reason: "Student Admission",
+    studentName: form.studentName,
+    courseName: form.courseName,
+    remainingBalance: newWallet.toFixed(2),
+    date: new Date().toISOString()
+  }
+)
 
-  };
+// 🔥 NOW CREATE STUDENT
+await databases.createDocument(
+  DATABASE_ID,
+  COLLECTION_ID,
+  ID.unique(),
+  {
+    ...form,
+    franchiseEmail: user.email,
+    photoId,
+    signatureId,
+    franchiseId: franchise.franchiseId,
+    instituteName: franchise.instituteName,
+    createdById: franchise.userId,
+    createdAt: new Date().toISOString()
+  }
+)
 
+    alert("Student Registered Successfully");
+
+    router.push("/login/institute/manage-student/admission");
+
+  } catch (err) {
+    console.log(err);
+    alert(err.message);
+  }
+};
+ 
   return (
 
     <form onSubmit={handleSubmit} className="p-10 bg-gray-100 rounded">
