@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { databases } from "@/lib/appwrite"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-export default function RechargePageContent() {
+export default function RechargePage({ params }) {
 
-  const params = useSearchParams()
   const router = useRouter()
-
-  const id = params.get("id")
+  const id = params.id
 
   const [user, setUser] = useState(null)
   const [amount, setAmount] = useState("")
@@ -22,25 +20,35 @@ export default function RechargePageContent() {
   const [masterPassword, setMasterPassword] = useState("")
   const [enable, setEnable] = useState(false)
 
+  // 🔐 MASTER PASSWORD CHECK
   useEffect(() => {
     setEnable(masterPassword === "6969")
   }, [masterPassword])
 
+  // 📥 FETCH USER
   useEffect(() => {
 
     const fetchUser = async () => {
-      const res = await databases.getDocument(
-        DATABASE_ID,
-        "franchise_approved",
-        id
-      )
-      setUser(res)
+
+      try {
+        const res = await databases.getDocument(
+          DATABASE_ID,
+          "franchise_approved",
+          id
+        )
+        setUser(res)
+      } catch (err) {
+        console.error(err)
+        alert("User not found")
+        router.push("/admin/dashboard/wallet")
+      }
     }
 
     if (id) fetchUser()
 
   }, [id])
 
+  // 💰 HANDLE RECHARGE
   const handleRecharge = async () => {
 
     if (!amount) return alert("Enter amount")
@@ -49,6 +57,7 @@ export default function RechargePageContent() {
 
       const newBalance = Number(user.wallet || 0) + Number(amount)
 
+      // UPDATE WALLET
       await databases.updateDocument(
         DATABASE_ID,
         "franchise_approved",
@@ -59,6 +68,7 @@ export default function RechargePageContent() {
         }
       )
 
+      // SAVE TRANSACTION
       await databases.createDocument(
         DATABASE_ID,
         "wallet_transactions",
@@ -88,6 +98,7 @@ export default function RechargePageContent() {
 
   return (
     <div className="p-10">
+
       <h1 className="text-xl font-bold mb-6">
         Franchise Recharge
       </h1>
