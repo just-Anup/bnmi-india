@@ -6,175 +6,80 @@ import { useRouter } from "next/navigation"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-export default function RechargePage({ params }) {
+export default function WalletPage() {
 
+  const [data, setData] = useState([])
   const router = useRouter()
-  const id = params.id
 
-  const [user, setUser] = useState(null)
-  const [amount, setAmount] = useState("")
-  const [paymentMode, setPaymentMode] = useState("")
-  const [rechargeBy, setRechargeBy] = useState("")
-  const [leadBy, setLeadBy] = useState("")
-  const [remarks, setRemarks] = useState("")
-  const [masterPassword, setMasterPassword] = useState("")
-  const [enable, setEnable] = useState(false)
+  const fetchData = async () => {
 
-  // 🔐 MASTER PASSWORD CHECK
-  useEffect(() => {
-    setEnable(masterPassword === "6969")
-  }, [masterPassword])
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved"
+    )
 
-  // 📥 FETCH USER
-  useEffect(() => {
-
-    const fetchUser = async () => {
-
-      try {
-        const res = await databases.getDocument(
-          DATABASE_ID,
-          "franchise_approved",
-          id
-        )
-        setUser(res)
-      } catch (err) {
-        console.error(err)
-        alert("User not found")
-        router.push("/admin/dashboard/wallet")
-      }
-    }
-
-    if (id) fetchUser()
-
-  }, [id])
-
-  // 💰 HANDLE RECHARGE
-  const handleRecharge = async () => {
-
-    if (!amount) return alert("Enter amount")
-
-    try {
-
-      const newBalance = Number(user.wallet || 0) + Number(amount)
-
-      // UPDATE WALLET
-      await databases.updateDocument(
-        DATABASE_ID,
-        "franchise_approved",
-        id,
-        {
-          wallet: newBalance.toFixed(2),
-          lastRecharge: new Date().toLocaleString()
-        }
-      )
-
-      // SAVE TRANSACTION
-      await databases.createDocument(
-        DATABASE_ID,
-        "wallet_transactions",
-        "unique()",
-        {
-          franchiseId: id,
-          amount,
-          type: "add",
-          paymentMode,
-          rechargeBy,
-          leadBy,
-          remarks,
-          date: new Date().toISOString()
-        }
-      )
-
-      alert("Recharge Successful")
-      router.push("/admin/dashboard/wallet")
-
-    } catch (err) {
-      console.error(err)
-      alert("Recharge failed")
-    }
+    setData(res.documents)
   }
 
-  if (!user) return <div className="p-10">Loading...</div>
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   return (
+
     <div className="p-10">
 
-      <h1 className="text-xl font-bold mb-6">
-        Franchise Recharge
+      <h1 className="text-2xl font-bold mb-6">
+        Franchise Wallet
       </h1>
 
-      <div className="grid grid-cols-2 gap-6">
+      <table className="w-full border">
 
-        <input
-          placeholder="Enter Amount"
-          value={amount}
-          onChange={(e)=>setAmount(e.target.value)}
-          className="border p-3"
-        />
+        <thead className="bg-yellow-200">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Last Recharge</th>
+            <th>Balance</th>
+            <th>Action</th>
+          </tr>
+        </thead>
 
-        <input value="FRANCHISE" disabled className="border p-3" />
+        <tbody>
 
-        <input
-          value={user.instituteName}
-          disabled
-          className="border p-3"
-        />
+          {data.map((item, i) => (
+            <tr key={item.$id} className="border text-center">
 
-        <select
-          onChange={(e)=>setPaymentMode(e.target.value)}
-          className="border p-3"
-        >
-          <option>Select Payment Mode</option>
-          <option>Online</option>
-          <option>Cash</option>
-          <option>Cheque</option>
-        </select>
+              <td>{i + 1}</td>
+              <td>{item.instituteName}</td>
+              <td>{item.mobile}</td>
+              <td>{item.email}</td>
+              <td>{item.lastRecharge || "-"}</td>
+              <td>₹{item.wallet || "0.00"}</td>
 
-        <input
-          placeholder="Recharge By"
-          onChange={(e)=>setRechargeBy(e.target.value)}
-          className="border p-3"
-        />
+              <td className="space-x-2">
 
-        <input
-          placeholder="Lead By"
-          onChange={(e)=>setLeadBy(e.target.value)}
-          className="border p-3"
-        />
+                <button
+                  onClick={() => router.push(`/admin/dashboard/wallet/recharge?id=${item.$id}`)}
+                  className="bg-blue-500 text-white px-3 py-1"
+                >
+                  Recharge
+                </button>
 
-        <input
-          placeholder="Master Password"
-          type="password"
-          onChange={(e)=>setMasterPassword(e.target.value)}
-          className="border p-3 col-span-2"
-        />
+                <button className="bg-purple-500 text-white px-3 py-1">
+                  View History
+                </button>
 
-        <textarea
-          placeholder="Remarks"
-          onChange={(e)=>setRemarks(e.target.value)}
-          className="border p-3 col-span-2"
-        />
+              </td>
 
-      </div>
+            </tr>
+          ))}
 
-      <div className="mt-6 flex gap-4">
+        </tbody>
 
-        <button
-          onClick={()=>router.back()}
-          className="bg-yellow-400 px-4 py-2"
-        >
-          Cancel
-        </button>
-
-        <button
-          disabled={!enable}
-          onClick={handleRecharge}
-          className={`px-4 py-2 text-white ${enable ? "bg-blue-600" : "bg-gray-400"}`}
-        >
-          Make Payment
-        </button>
-
-      </div>
+      </table>
 
     </div>
   )
