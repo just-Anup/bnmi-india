@@ -12,12 +12,10 @@ export default function WalletPage() {
   const router = useRouter()
 
   const fetchData = async () => {
-
     const res = await databases.listDocuments(
       DATABASE_ID,
       "franchise_approved"
     )
-
     setData(res.documents)
   }
 
@@ -27,59 +25,108 @@ export default function WalletPage() {
 
   return (
 
-    <div className="p-10">
+    <div className="p-6 bg-gray-50 min-h-screen">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Franchise Wallet
-      </h1>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-semibold text-gray-800">
+          Franchise Wallet
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Manage franchise balances and transactions
+        </p>
+      </div>
 
-      <table className="w-full border">
+      {/* Card */}
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
 
-        <thead className="bg-yellow-200">
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Mobile</th>
-            <th>Email</th>
-            <th>Last Recharge</th>
-            <th>Balance</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <div className="overflow-x-auto">
 
-        <tbody>
+          <table className="w-full text-sm">
 
-          {data.map((item, i) => (
-            <tr key={item.$id} className="border text-center">
+            {/* Table Head */}
+            <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+              <tr>
+                <th className="p-4 text-left">#</th>
+                <th className="p-4 text-left">Name</th>
+                <th className="p-4 text-left">Mobile</th>
+                <th className="p-4 text-left">Email</th>
+                <th className="p-4 text-left">Last Recharge</th>
+                <th className="p-4 text-left">Balance</th>
+                <th className="p-4 text-center">Action</th>
+              </tr>
+            </thead>
 
-              <td>{i + 1}</td>
-              <td>{item.instituteName}</td>
-              <td>{item.mobile}</td>
-              <td>{item.email}</td>
-              <td>{item.lastRecharge || "-"}</td>
-              <td>₹{item.wallet || "0.00"}</td>
+            {/* Table Body */}
+            <tbody>
 
-              <td className="space-x-2">
-
-                <button
-                  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}`)}
-                  className="bg-blue-500 text-white px-3 py-1"
+              {data.map((item, i) => (
+                <tr
+                  key={item.$id}
+                  className="border-t hover:bg-gray-50 transition"
                 >
-                  Recharge
-                </button>
 
-                <button className="bg-purple-500 text-white px-3 py-1">
-                  View History
-                </button>
+                  <td className="p-4 font-medium text-gray-700">
+                    {i + 1}
+                  </td>
 
-              </td>
+                  <td className="p-4 font-semibold text-gray-800">
+                    {item.instituteName}
+                  </td>
 
-            </tr>
-          ))}
+                  <td className="p-4 text-gray-600">
+                    {item.mobile}
+                  </td>
 
-        </tbody>
+                  <td className="p-4 text-gray-600">
+                    {item.email}
+                  </td>
 
-      </table>
+                  <td className="p-4 text-gray-500">
+                    {item.lastRecharge || "-"}
+                  </td>
+
+                  {/* Balance Badge */}
+                  <td className="p-4">
+                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                      ₹{item.wallet || "0.00"}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="p-4 text-center space-x-2">
+
+                    <button
+                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
+                      Recharge
+                    </button>
+
+                    <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition">
+                      History
+                    </button>
+
+                  </td>
+
+                </tr>
+              ))}
+
+              {data.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="p-6 text-center text-gray-400">
+                    No franchise data found
+                  </td>
+                </tr>
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
 
     </div>
   )
