@@ -84,7 +84,7 @@ useEffect(() => {
         <NavItem href="/login/institute/certificate" label="Certificates" />
         <NavItem href="/login/institute/wallet" label="My Wallet" />
         <NavItem href="/login/institute/courier-wallet" label="Courier Wallet" />
-        <NavItem href="/login/institute/templates" label="Upload Background" />
+        <NavItem href="/login/institute/background-upload" label="Upload Background" />
         <NavItem href="/login/institute/attendance" label="Manage Attendance" />
         <NavItem href="/login/institute/support" label="Help Support" />
         <NavItem href="/login/institute/marketing" label="Marketing Material" />

@@ -56,22 +56,22 @@ export default function AdminSidebar() {
             <MenuItem
                   icon={<Image size={18} />}
                   label="course Section"
-                  href="/admin/website/course"
+                  href="/admin/dashboard/course"
                 />
    <MenuItem
           icon={<Image size={18} />}
           label="Single Course Section"
-          href="/admin/website/addsingleccourse"
+          href="/admin/dashboard/addsingleccourse" 
         />
          <MenuItem
           icon={<Image size={18} />}
           label="Multiple Course Section"
-          href="/admin/website/multiple-courses"
+          href="/admin/dashboard/multiple-courses"
         />
          <MenuItem
           icon={<Image size={18} />}
           label="Typing Course Section"
-          href="/admin/website/typing-courses"
+          href="/admin/dashboard/typing-courses"
         />
   <MenuItem
           icon={<Image size={18} />}
@@ -92,6 +92,11 @@ export default function AdminSidebar() {
           icon={<Image size={18} />}
           label="Helpdesk List"
           href="/admin/dashboard/helpdesk"
+        />
+       <MenuItem
+          icon={<Image size={18} />}
+          label="Marketing List"
+          href="/admin/dashboard/marketing-material"
         />
       
 
