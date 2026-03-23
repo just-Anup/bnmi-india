@@ -109,7 +109,7 @@ export default function AdmissionForm() {
 
                 {/* GENDER */}
 
-                <div className="absolute top-[624px] left-[230px] text-lg">
+                <div className="absolute top-[624px] left-[550px] text-lg">
                     {student.gender || ""}
                 </div>
 

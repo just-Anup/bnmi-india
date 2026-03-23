@@ -43,10 +43,7 @@ export default function AddCourseHome() {
                         label="Add Typing Course"
                         href="/login/institute/add-course/typing/add"
                     />
-                    <NavBtn
-                        label="Add Typing Course"
-                        href="/login/institute/add-course/typing/add"
-                    />
+                    
                     <NavBtn
                         label="Semester Course List"
                         href="/login/institute/add-course/semester-course"

@@ -74,6 +74,18 @@ export default function ExamPage() {
 
   };
 
+  const handleCheckbox = (id) => {
+  setSelectedIds((prev) => {
+    if (prev.includes(id)) {
+      // remove if already selected
+      return prev.filter((item) => item !== id);
+    } else {
+      // add if not selected
+      return [...prev, id];
+    }
+  });
+};
+
   return (
 
     <div className="p-10 bg-gray-100 min-h-screen">

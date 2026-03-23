@@ -86,17 +86,17 @@ export default function PrintCertificate() {
         </div>
 
         {/* Grade */}
-        <div className="absolute top-[770px] left-[560px] text-xl">
+        <div className="absolute top-[770px] left-[560px] text-xl font-bold">
           {student.grade}
         </div>
 
         {/* Marks */}
-        <div className="absolute top-[770px] left-[680px] text-xl">
+        <div className="absolute top-[770px] left-[680px] text-xl font-bold">
           {student.marks}
         </div>
 
         {/* ✅ Fixed: use franchiseName state instead of student.instituteName */}
-        <div className="absolute bottom-[200px] left-[120px] text-lg font-semibold">
+        <div className="absolute bottom-[455px] left-[400px] text-lg font-bold">
           {franchiseName || student.instituteName || student.franchiseName}
         </div>
 

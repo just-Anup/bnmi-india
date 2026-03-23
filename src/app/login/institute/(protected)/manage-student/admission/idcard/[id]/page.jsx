@@ -59,7 +59,7 @@ export default function IDCard() {
           {student.mobile}
         </div>
 
-        <div className="absolute top-[550px] left-[140px] text-lg">
+        <div className="absolute top-[426px] left-[150px] text-lg">
           {student.rollNumber}
         </div>
 

@@ -71,7 +71,7 @@ export default function RechargePage({ params }) {
         "unique()",
         {
           franchiseId: id,
-          amount,
+          amount: Number(amount),
           type: "add",
           paymentMode,
           rechargeBy,

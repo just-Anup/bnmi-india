@@ -22,9 +22,10 @@ export default function AddStudent() {
   const [photo, setPhoto] = useState(null);
   const [signature, setSignature] = useState(null);
   const [courses, setCourses] = useState([]);
-
+  
+  
   const [form, setForm] = useState({
-
+    
     rollNumber: "",
     abbreviation: "Mr.",
     relationType: "S/O",
@@ -65,7 +66,9 @@ export default function AddStudent() {
     status: "Active"
 
   });
-
+  const username = form.mobile || form.email
+const password = form.aadhar?.slice(-4) || "1234"
+  
   useEffect(() => {
     loadCourses("single");
   }, []);
@@ -151,144 +154,213 @@ const handleFeesReceived = (value) => {
 
 };
 
-  const handleCourseChange = async (e) => {
+ const handleCourseChange = async (e) => {
+  try {
 
-  const courseId = e.target.value;
+    const courseId = e.target.value
+    const course = courses.find(c => c.$id === courseId)
 
-  const course = courses.find(c => c.$id === courseId);
+    if (!course) return
 
-  if (!course) return;
+    let subjectsText = ""
 
-  let subjectsText = "";
+    if (form.courseType === "single") {
 
-  if (form.courseType === "single") {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "course_subjects",
+        [Query.equal("courseId", courseId)]
+      )
 
-    const res = await databases.listDocuments(
+      subjectsText = res.documents
+        .map(s => s.subjectName)
+        .join(", ")
+
+    } else {
+      subjectsText = course.subjects || ""
+    }
+
+    // 🔥 FETCH PLAN
+    const user = await account.get()
+
+    const resPlan = await databases.listDocuments(
       DATABASE_ID,
-      "course_subjects",
-      [Query.equal("courseId", courseId)]
-    );
+      "franchise_approved",
+      [Query.equal("email", user.email)]
+    )
 
-    subjectsText = res.documents
-      .map(s => s.subjectName)
-      .join(", ");
+    const plan = resPlan.documents[0]?.plan
 
-  } else {
+    const institutePlans = {
+      "HOJAI": 400,
+      "BIHAR": 499,
+      "ARUNACHAL PRADESH": 499,
+      "BEAUTY": 500
+    }
 
-    subjectsText = course.subjects || "";
+    const dynamicFee = institutePlans[plan] || 0
 
+    setForm({
+      ...form,
+      courseName: course.courseName || course.courseCode,
+      subjects: subjectsText,
+      courseFees: course.courseFees || 0,
+      examFees: dynamicFee
+    })
+
+  } catch (err) {
+    console.error("COURSE CHANGE ERROR:", err)
+    alert("Error loading course data")
   }
-
-  setForm({
-    ...form,
-    courseName: course.courseName || course.courseCode,
-    subjects: subjectsText,
-    courseFees: course.courseFees || 0,
-    examFees: course.examFees || 0
-  });
-
-};
+}
 const handleChange = (e) => {
   setForm({ ...form, [e.target.name]: e.target.value });
 };
 
 const handleSubmit = async (e) => {
 
-  e.preventDefault();
-
-  if (!form.courseName) {
-    alert("Please select course");
-    return;
-  }
-
-  if (!form.subjects) {
-    alert("Please enter subjects");
-    return;
-  }
+  e.preventDefault()
 
   try {
 
-    const user = await account.get();
+    const user = await account.get()
 
-    // ✅ ADD THIS LINE
-const franchise = await getFranchiseInfo()
-// 🔥 USE EXAM FEE
-const ADMISSION_FEE = Number(form.examFees || 0)
+    // ✅ GET FRANCHISE INFO
+    const franchise = await getFranchiseInfo()
 
-// VALIDATION
-if (!ADMISSION_FEE || ADMISSION_FEE <= 0) {
-  alert("Invalid exam fee for this course")
-  return
+    // ✅ VALIDATE COURSE
+    if (!form.courseName) {
+      alert("Please select course")
+      return
+    }
+
+    if (!form.subjects) {
+      alert("Subjects missing")
+      return
+    }
+
+    // ✅ VALIDATE EXAM FEE
+    const ADMISSION_FEE = Number(form.examFees || 0)
+
+    if (!ADMISSION_FEE || ADMISSION_FEE <= 0) {
+      alert("Invalid exam fee for this course")
+      return
+    }
+
+    // ✅ UPLOAD FILES (INSIDE TRY)
+    let photoId = null
+    let signatureId = null
+
+    if (photo) {
+      const uploadPhoto = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        photo
+      )
+      photoId = uploadPhoto.$id
+    }
+
+    if (signature) {
+      const uploadSign = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        signature
+      )
+      signatureId = uploadSign.$id
+    }
+
+    // ✅ CREATE FINAL DATA (SAFE WAY)
+const finalData = {
+  ...form,
+
+  // ✅ Ensure numbers
+  feesReceived: Number(form.feesReceived || 0),
+  balance: Number(form.balance || 0),
+
+  // ✅ Auto set admission date if empty
+  admissionDate: form.admissionDate
+    ? form.admissionDate
+    : new Date().toISOString().split("T")[0]
 }
 
-// GET FRANCHISE WALLET
-const franchiseDoc = await databases.getDocument(
-  DATABASE_ID,
-  "franchise_approved",
-  franchise.franchiseId
-)
 
-// CHECK BALANCE
-if ((Number(franchiseDoc.wallet) || 0) < ADMISSION_FEE) {
-  alert("Insufficient Wallet Balance")
-  return
-}
+    // ✅ GET WALLET
+    const franchiseDoc = await databases.getDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      franchise.franchiseId
+    )
 
-// DEDUCT WALLET
-const newWallet = Number(franchiseDoc.wallet || 0) - ADMISSION_FEE
+    const currentWallet = Number(franchiseDoc.wallet || 0)
 
-await databases.updateDocument(
-  DATABASE_ID,
-  "franchise_approved",
-  franchise.franchiseId,
-  {
-    wallet: newWallet.toFixed(2)
-  }
-)
+    // ✅ CHECK BALANCE
+    if (currentWallet < ADMISSION_FEE) {
+      alert("Insufficient Wallet Balance")
+      return
+    }
 
-// SAVE TRANSACTION
-await databases.createDocument(
-  DATABASE_ID,
-  "wallet_transactions",
-  "unique()",
-  {
-    franchiseId: franchise.franchiseId,
-    amount: ADMISSION_FEE,
-    type: "deduct",
-    reason: "Student Admission",
-    studentName: form.studentName,
-    courseName: form.courseName,
-    remainingBalance: newWallet.toFixed(2),
-    date: new Date().toISOString()
-  }
-)
+    // ✅ DEDUCT WALLET
+    const newWallet = currentWallet - ADMISSION_FEE
 
-// 🔥 NOW CREATE STUDENT
-await databases.createDocument(
+    await databases.updateDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      franchise.franchiseId,
+      {
+        wallet: newWallet.toFixed(2)
+      }
+    )
+
+    // ✅ SAVE TRANSACTION
+    await databases.createDocument(
+      DATABASE_ID,
+      "wallet_transactions",
+      ID.unique(),
+      {
+        franchiseId: franchise.franchiseId,
+        amount: ADMISSION_FEE,
+        type: "deduct",
+        reason: "Student Admission",
+        studentName: form.studentName,
+        courseName: form.courseName,
+        remainingBalance: newWallet.toFixed(2),
+        date: new Date().toISOString()
+      }
+    )
+
+    // ✅ CREATE STUDENT
+   await databases.createDocument(
   DATABASE_ID,
   COLLECTION_ID,
   ID.unique(),
   {
-    ...form,
+    ...finalData, // ✅ USE THIS
+ username, // ✅ ADD
+    password, // ✅ ADD
     franchiseEmail: user.email,
     photoId,
     signatureId,
     franchiseId: franchise.franchiseId,
     instituteName: franchise.instituteName,
+
     createdById: franchise.userId,
+    createdByName: franchise.instituteName, // ✅ IMPORTANT FIX
+
     createdAt: new Date().toISOString()
   }
 )
+    alert("Student Registered Successfully")
 
-    alert("Student Registered Successfully");
-
-    router.push("/login/institute/manage-student/admission");
+    router.push("/login/institute/manage-student/admission")
 
   } catch (err) {
-    console.log(err);
-    alert(err.message);
+
+    console.error("ADMISSION ERROR:", err)
+
+    alert(err?.message || "Admission failed")
+
   }
-};
+}
  
   return (
 
@@ -590,7 +662,17 @@ await databases.createDocument(
           />
 
         </div>
-
+        <div>
+         <label className="block mb-1 font-semibold">
+            Address
+          </label>
+        <textarea
+  name="address"
+  value={form.address}
+  onChange={handleChange}
+  className="border p-2 w-full"
+/>
+</div>
         <div>
 
           <label className="block mb-1 font-semibold">
@@ -607,6 +689,20 @@ await databases.createDocument(
 
         </div>
 
+        <div><label className="block mb-1 font-semibold">
+            Address
+          </label>
+<select
+  name="gender"
+  value={form.gender}
+  onChange={handleChange}
+  className="border p-2 w-full"
+>
+  <option value="">Select Gender</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
+</select>
+  </div>
         <div>
 
           <label className="block mb-1 font-semibold">
@@ -738,13 +834,12 @@ await databases.createDocument(
           <label className="block mb-1 font-semibold">
             Exam Fees
           </label>
-
-          <input
-            name="examFees"
-            value={form.examFees}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
+<input
+  name="examFees"
+  value={form.examFees}
+  readOnly
+  className="border p-2 w-full bg-gray-200"
+/>
 
         </div>
 

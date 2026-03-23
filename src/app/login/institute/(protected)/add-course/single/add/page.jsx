@@ -9,7 +9,8 @@ const MASTER_COLLECTION = 'courses_master'
 const SINGLE_COLLECTION = 'courses_single'
 
 export default function AddCourseSingle() {
-
+  
+  const [examFee, setExamFee] = useState(0)
   const [courses, setCourses] = useState([])
   const [selectedCourses, setSelectedCourses] = useState({})
 
@@ -30,10 +31,32 @@ export default function AddCourseSingle() {
     }
 
   }
+  useEffect(() => {
+  const fetchPlan = async () => {
+
+    const user = await account.get()
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", user.email)]
+    )
+
+    const plan = res.documents[0]?.plan
+
+    const fee = institutePlans[plan] || 0
+
+    setExamFee(fee)
+  }
+
+  fetchPlan()
+}, [])
 
   useEffect(() => {
     fetchCourses()
   }, [])
+
+
 
   const handleCheck = (course) => {
 
@@ -81,7 +104,18 @@ export default function AddCourseSingle() {
 
     try {
 
-      const user = await account.get()
+    const user = await account.get()
+
+const res = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", user.email)]
+)
+
+const franchise = res.documents[0]
+
+const userPlan = franchise?.plan
+const examFee = institutePlans[userPlan] || 0
 
       for (const course of selected) {
 
@@ -99,7 +133,7 @@ export default function AddCourseSingle() {
             courseCode: course.courseCode,
             courseName: course.courseName,
             duration: course.duration,
-            examFees: course.examFees,
+            examFees: examFee,
             courseFees: Number(course.courseFees),
             minimumFees: Number(course.minimumFees),
             status: "Active",
@@ -119,6 +153,15 @@ export default function AddCourseSingle() {
     }
 
   }
+
+
+  const institutePlans = {
+  "HOJAI": 400,
+  "BIHAR": 499,
+  "ARUNACHAL PRADESH": 499,
+  "BEAUTY": 500
+}
+
 
   return (
 
@@ -190,9 +233,9 @@ export default function AddCourseSingle() {
                     {course.duration}
                   </td>
 
-                  <td className="border border-gray-800 p-2">
-                    {course.examFees}
-                  </td>
+                 <td className="border border-gray-800 p-2">
+  ₹{examFee}
+</td>
 
                   <td className="border border-gray-800 p-2">
 

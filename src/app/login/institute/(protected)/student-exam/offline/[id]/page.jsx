@@ -20,13 +20,11 @@ export default function ResultPage() {
   const [marks, setMarks] = useState([]);
 
   useEffect(() => {
-    loadStudent();
-  }, []);
+    if (id) loadStudent();
+  }, [id]);
 
   const loadStudent = async () => {
-
     try {
-
       const res = await databases.getDocument(
         DATABASE_ID,
         ADMISSION_COLLECTION,
@@ -38,11 +36,9 @@ export default function ResultPage() {
       let subjectList = [];
 
       if (res.subjects) {
-
         subjectList = res.subjects
           .split(",")
           .map(s => s.trim());
-
       }
 
       setSubjects(subjectList);
@@ -57,15 +53,11 @@ export default function ResultPage() {
       setMarks(initialMarks);
 
     } catch (err) {
-
       console.log(err);
-
     }
-
   };
 
   const updateMarks = (index, field, value) => {
-
     const updated = [...marks];
 
     updated[index][field] = Number(value);
@@ -75,34 +67,22 @@ export default function ResultPage() {
       Number(updated[index].practical || 0);
 
     setMarks(updated);
-
   };
 
   const calculateTotal = () => {
-
-    let total = 0;
-
-    marks.forEach(m => {
-      total += m.total;
-    });
-
-    return total;
-
+    return marks.reduce((sum, m) => sum + m.total, 0);
   };
 
   const calculatePercentage = () => {
-
     const total = calculateTotal();
     const maxMarks = subjects.length * 100;
 
     if (maxMarks === 0) return 0;
 
     return Math.round((total / maxMarks) * 100);
-
   };
 
   const calculateGrade = () => {
-
     const percentage = calculatePercentage();
 
     if (percentage >= 80) return "A";
@@ -110,62 +90,95 @@ export default function ResultPage() {
     if (percentage >= 40) return "C";
 
     return "F";
-
   };
 
   const saveResult = async () => {
 
-    try {
+  if (!student) {
+    alert("Student not loaded");
+    return;
+  }
 
-      const user = await account.get();
+  if (marks.length === 0) {
+    alert("No subjects available");
+    return;
+  }
 
-      const totalMarks = calculateTotal();
-      const percentage = calculatePercentage();
-      const grade = calculateGrade();
+  try {
 
+    const user = await account.get();
+
+    console.log("Student:", student);
+    console.log("Marks:", marks);
+
+    const totalMarks = calculateTotal();
+    const percentage = calculatePercentage();
+    const grade = calculateGrade();
+
+    const resultDoc = await databases.createDocument(
+      DATABASE_ID,
+      RESULT_COLLECTION,
+      ID.unique(),
+      {
+        studentId: id,
+        studentName: student.studentName || "",
+        course: student.courseName || "",
+        photoId: student.photoId || "",
+        subjects: subjects.join(", "),
+        marks: JSON.stringify(marks),
+        totalMarks: Number(totalMarks),
+        percentage: Number(percentage),
+        grade,
+
+        franchiseId: student.franchiseId || "",
+        instituteName: student.instituteName || "",
+
+        createdById: user.$id,
+        createdAt: new Date().toISOString()
+      }
+    );
+
+    // SUBJECT MARKS
+    for (const m of marks) {
       await databases.createDocument(
         DATABASE_ID,
-        RESULT_COLLECTION,
+        "exam_subject_marks",
         ID.unique(),
         {
           studentId: id,
-          studentName: student.studentName,
-          course: student.courseName,
-          photoId: student.photoId,
-          subjects: subjects.join(", "),
-          marks: JSON.stringify(marks),
-          totalMarks,
-          percentage,
-          grade,
-
-          franchiseId: student.franchiseId,
-          instituteName: student.instituteName,
+          resultId: resultDoc.$id,
+          subject: m.subject || "",
+          theory: Number(m.theory || 0),
+          practical: Number(m.practical || 0),
+          total: Number(m.theory || 0) + Number(m.practical || 0),
 
           createdById: user.$id,
           createdAt: new Date().toISOString()
         }
-      )
-
-      alert("Result Saved Successfully");
-
-      router.push("/login/institute/student-exam/offline");
-
-    } catch (err) {
-
-      console.log(err);
-      alert("Error saving result");
-
+      );
     }
 
-  };
+    alert("Result Saved Successfully");
+    router.push("/login/institute/student-exam/offline");
 
-  if (!student) {
-    return <div className="p-10 bg-black text-white min-h-screen">Loading...</div>
+  } catch (err) {
+    console.error("SAVE ERROR:", err);
+    alert(err?.message || "Error saving result");
   }
-
-  const photoUrl = student.photoId
+};
+  // ✅ SAFE PHOTO URL
+  const photoUrl = student?.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
+
+  // ✅ LOADING STATE
+  if (!student) {
+    return (
+      <div className="p-10 text-white bg-black min-h-screen">
+        Loading student data...
+      </div>
+    );
+  }
 
   return (
 
@@ -189,7 +202,6 @@ export default function ResultPage() {
           )}
 
           <div>
-
             <p className="text-lg font-semibold">
               Student Name : {student.studentName}
             </p>
@@ -197,7 +209,6 @@ export default function ResultPage() {
             <p>
               Course : {student.courseName}
             </p>
-
           </div>
 
         </div>
@@ -213,13 +224,11 @@ export default function ResultPage() {
           <thead className="bg-orange-500 text-black">
 
             <tr>
-
-              <th className="border border-gray-800 p-3">Subject</th>
-              <th className="border border-gray-800 p-3">Max Marks</th>
-              <th className="border border-gray-800 p-3">Theory Marks</th>
-              <th className="border border-gray-800 p-3">Practical Marks</th>
-              <th className="border border-gray-800 p-3">Total</th>
-
+              <th className="border p-3">Subject</th>
+              <th className="border p-3">Max Marks</th>
+              <th className="border p-3">Theory</th>
+              <th className="border p-3">Practical</th>
+              <th className="border p-3">Total</th>
             </tr>
 
           </thead>
@@ -231,48 +240,33 @@ export default function ResultPage() {
               const total = marks[index]?.total || 0;
 
               return (
+                <tr key={index}>
+                  <td className="border p-3">{sub}</td>
+                  <td className="border p-3">100</td>
 
-                <tr key={index} className="border-t border-gray-800 hover:bg-[#1a1a1a]">
-
-                  <td className="border border-gray-800 p-3">
-                    {sub}
-                  </td>
-
-                  <td className="border border-gray-800 p-3">
-                    100
-                  </td>
-
-                  <td className="border border-gray-800 p-3">
-
+                  <td className="border p-3">
                     <input
                       type="number"
-                      className="border border-gray-700 bg-black text-white p-2 w-24 rounded"
+                      className="border p-2 w-24 bg-black text-white"
                       onChange={(e) =>
                         updateMarks(index, "theory", e.target.value)
                       }
                     />
-
                   </td>
 
-                  <td className="border border-gray-800 p-3">
-
+                  <td className="border p-3">
                     <input
                       type="number"
-                      className="border border-gray-700 bg-black text-white p-2 w-24 rounded"
+                      className="border p-2 w-24 bg-black text-white"
                       onChange={(e) =>
                         updateMarks(index, "practical", e.target.value)
                       }
                     />
-
                   </td>
 
-                  <td className="border border-gray-800 p-3 font-semibold">
-                    {total}
-                  </td>
-
+                  <td className="border p-3 font-bold">{total}</td>
                 </tr>
-
-              )
+              );
 
             })}
 
@@ -284,38 +278,26 @@ export default function ResultPage() {
 
         <div className="mt-6 grid grid-cols-3 gap-6">
 
-          <div className="bg-black border border-gray-800 p-4 rounded">
-
+          <div className="p-4 border">
             <p>Total Marks</p>
-            <p className="text-xl font-bold">
-              {calculateTotal()}
-            </p>
-
+            <p className="text-xl">{calculateTotal()}</p>
           </div>
 
-          <div className="bg-black border border-gray-800 p-4 rounded">
-
+          <div className="p-4 border">
             <p>Percentage</p>
-            <p className="text-xl font-bold">
-              {calculatePercentage()} %
-            </p>
-
+            <p className="text-xl">{calculatePercentage()} %</p>
           </div>
 
-          <div className="bg-black border border-gray-800 p-4 rounded">
-
+          <div className="p-4 border">
             <p>Grade</p>
-            <p className="text-xl font-bold">
-              {calculateGrade()}
-            </p>
-
+            <p className="text-xl">{calculateGrade()}</p>
           </div>
 
         </div>
 
         <button
           onClick={saveResult}
-          className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-3 rounded mt-6"
+          className="bg-orange-500 px-6 py-3 mt-6 rounded"
         >
           Save Result
         </button>

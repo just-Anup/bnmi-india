@@ -11,6 +11,124 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 export default function CertificateApprovalPage() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+const printMarksheet = async (cert) => {
+
+  try {
+
+    console.log("CERT:", cert)
+
+    let studentData = null
+
+    // ✅ FETCH STUDENT
+    if (cert.studentId) {
+
+      studentData = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      )
+
+    } else {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_admissions",
+        [Query.equal("studentName", cert.studentName)]
+      )
+
+      if (!res.documents.length) {
+        alert("Student not found")
+        return
+      }
+
+      studentData = res.documents[0]
+    }
+
+    // ✅ SAFE MARK PARSE (FIXED)
+    let parsedMarks = []
+
+    try {
+
+      if (typeof cert.marks === "string") {
+
+        const parsed = JSON.parse(cert.marks)
+
+        if (Array.isArray(parsed)) {
+          parsedMarks = parsed
+        }
+
+      } else if (Array.isArray(cert.marks)) {
+
+        parsedMarks = cert.marks
+
+      } else {
+
+        parsedMarks = [{
+          theory: cert.marks || 0,
+          practical: 0
+        }]
+      }
+
+    } catch (err) {
+
+      console.log("MARK PARSE ERROR:", err)
+
+      parsedMarks = [{
+        theory: cert.marks || 0,
+        practical: 0
+      }]
+    }
+
+    // ✅ CALCULATE TOTALS
+    let theoryTotal = 0
+    let practicalTotal = 0
+
+    parsedMarks.forEach(m => {
+      theoryTotal += Number(m.theory || 0)
+      practicalTotal += Number(m.practical || 0)
+    })
+
+    // ✅ COURSE PERIOD (SAFE)
+    let coursePeriod = "N/A"
+
+    try {
+      const examData = JSON.parse(localStorage.getItem("hallticketExam") || "{}")
+
+      if (examData.startTime && examData.endTime) {
+        coursePeriod = `${examData.startTime} - ${examData.endTime}`
+      }
+    } catch {}
+
+    // ✅ FINAL DATA
+    const data = {
+  studentName: studentData.studentName || "",
+  fatherName: studentData.fatherName || "",
+  surname: studentData.surname || "",
+  motherName: studentData.motherName || "",
+  course: studentData.courseName || "",
+  dob: studentData.dob || "",
+  coursePeriod,
+  instituteName: studentData.instituteName || "",
+
+  // 🔥 IMPORTANT CHANGE
+  marksArray: parsedMarks,  // ✅ full subject data
+
+  grade: cert.grade || "",
+  marksheetNo: cert.$id || ""
+}
+    console.log("FINAL DATA:", data)
+
+    localStorage.setItem("marksheetStudent", JSON.stringify(data))
+
+    window.open("/login/institute/certificate/marksheet", "_blank")
+
+  } catch (err) {
+
+    console.error("MARKSHEET ERROR:", err)
+    alert("Failed to generate marksheet")
+
+  }
+}
 
   useEffect(() => {
     if (!databases || !DATABASE_ID) return;
@@ -148,12 +266,21 @@ export default function CertificateApprovalPage() {
                       </>
                     )}
                     {c.status === "approved" && (
-                      <button
-                        onClick={() => printCertificate(c)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded"
-                      >
-                        Print Certificate
-                      </button>
+                      <div className="flex gap-2">
+  <button
+    onClick={() => printCertificate(c)}
+    className="bg-blue-600 text-white px-3 py-1 rounded"
+  >
+    View Certificate
+  </button>
+
+  <button
+    onClick={() => printMarksheet(c)}
+    className="bg-purple-600 text-white px-3 py-1 rounded"
+  >
+    View Marksheet
+  </button>
+</div>
                     )}
                   </td>
                 </tr>

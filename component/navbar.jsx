@@ -100,7 +100,7 @@ console.log("NAVBAR DATA:", res)
   <Link href="/">HOME</Link>
   <Link href="/about">ABOUT US</Link>
   <Link href="/courses">COURSES</Link>
-  <Link href="/certification">CERTIFICATION</Link>
+  <Link href="/certificate-demo">CERTIFICATION</Link>
   <Link href="/verify/verification">VERIFICATION</Link>
 
 </nav>
@@ -117,7 +117,7 @@ console.log("NAVBAR DATA:", res)
             <Link href="/franchise/signup">
               <CTAButton text="FRANCHISE LOGIN" />
             </Link>
-            <Link href="/login">
+            <Link href="/login/institute">
               <CTAButton text="LOGIN" />
             </Link>
 

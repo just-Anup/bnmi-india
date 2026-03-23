@@ -1,188 +1,146 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { databases, account, ID } from '@/lib/appwrite'
-import { Query } from 'appwrite'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from "react";
+import { databases, account, ID } from "@/lib/appwrite";
+import { Query } from "appwrite";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function SubjectPage() {
 
-    const params = useParams()
-    const router = useRouter()
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-    const courseCode = params.courseCode
+  const courseId = params.courseId;
+  const courseName = searchParams.get("name");
+  const courseCode = searchParams.get("code");
 
-    const [subjects, setSubjects] = useState([])
-    const [selectedSubjects, setSelectedSubjects] = useState([])
-    const [courseFees, setCourseFees] = useState("")
-    const [minimumFees, setMinimumFees] = useState("")
-    const [loading, setLoading] = useState(true)
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [courseFees, setCourseFees] = useState("");
+  const [minimumFees, setMinimumFees] = useState("");
 
-    useEffect(() => {
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
 
-        if (!courseCode) return
+  const fetchSubjects = async () => {
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "subjects_master",
+      [Query.equal("courseCode", courseCode)]
+    );
 
-        fetchSubjects()
+    setSubjects(res.documents);
+  };
 
-    }, [courseCode])
+  const toggleSubject = (name) => {
+    setSelectedSubjects(prev =>
+      prev.includes(name)
+        ? prev.filter(s => s !== name)
+        : [...prev, name]
+    );
+  };
 
-    const fetchSubjects = async () => {
+  const saveCourse = async () => {
 
-        try {
-
-            const res = await databases.listDocuments(
-                DATABASE_ID,
-                "subjects_master",
-                [
-                    Query.equal("courseCode", courseCode)
-                ]
-            )
-
-            setSubjects(res.documents)
-            setLoading(false)
-
-        } catch (error) {
-
-            console.log("Error loading subjects:", error)
-            setLoading(false)
-
-        }
-
+    if (selectedSubjects.length === 0) {
+      alert("Select at least one subject");
+      return;
     }
 
-    const toggleSubject = (subjectName) => {
+    const user = await account.get();
 
-        if (selectedSubjects.includes(subjectName)) {
+    await databases.createDocument(
+      DATABASE_ID,
+      "franchise_multiple_courses",
+      ID.unique(),
+      {
+        courseId,
+        courseName,
+        courseCode,
+        subjects: selectedSubjects.join(", "),
+        courseFees: Number(courseFees),
+        minimumFees: Number(minimumFees),
+        franchiseEmail: user.email,
+        createdById: user.$id,
+        status: "Active"
+      }
+    );
 
-            setSelectedSubjects(
-                selectedSubjects.filter(sub => sub !== subjectName)
-            )
+    alert("Course Saved");
+    router.push("/login/institute/add-course/multiple/list");
+  };
 
-        } else {
+  return (
 
-            setSelectedSubjects([
-                ...selectedSubjects,
-                subjectName
-            ])
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 text-white">
 
-        }
+      <div className="w-full max-w-lg bg-[#121212] border border-gray-800 rounded-2xl shadow-xl p-8">
 
-    }
+        <h1 className="text-2xl font-bold mb-2">
+          {courseName}
+        </h1>
 
-    const saveCourse = async () => {
+        <p className="text-gray-400 mb-6">
+          Select subjects and configure fees
+        </p>
 
-        try {
+        {/* SUBJECT LIST */}
+        <div className="max-h-52 overflow-y-auto mb-6 space-y-2">
 
-            if (selectedSubjects.length === 0) {
-                alert("Select at least one subject")
-                return
-            }
+          {subjects.map(s => (
 
-            const user = await account.get()
+            <label
+              key={s.$id}
+              className="flex items-center gap-3 p-2 rounded hover:bg-[#1a1a1a] cursor-pointer"
+            >
 
-            await databases.createDocument(
-                DATABASE_ID,
-                "franchise_multiple_courses",
-                ID.unique(),
-                {
-                    courseCode: courseCode,
-                    subjects: selectedSubjects.join(", "),
-                    courseFees: Number(courseFees),
-                    minimumFees: Number(minimumFees),
+              <input
+                type="checkbox"
+                onChange={() => toggleSubject(s.subjectName)}
+                className="accent-orange-500"
+              />
 
-                    franchiseEmail: user.email,
-                    createdById: user.$id,
+              <span>{s.subjectName}</span>
 
-                    status: "Active"
-                }
-            )
+            </label>
 
-            alert("Course saved successfully")
-
-            router.push("/login/institute/add-course/multiple/list")
-
-        } catch (error) {
-
-            console.log(error)
-            alert(error.message)
-
-        }
-
-    }
-
-    if (loading) {
-        return <div className="p-10 bg-black text-white min-h-screen">Loading subjects...</div>
-    }
-
-    return (
-
-        <div className="p-10 bg-black min-h-screen text-white">
-
-            <h1 className="text-2xl font-bold mb-6">
-                Select Subjects for {courseCode}
-            </h1>
-
-            <div className="bg-[#121212] border border-gray-800 p-6 rounded shadow w-[500px]">
-
-                <h2 className="font-semibold mb-4">Available Subjects</h2>
-
-                {subjects.length === 0 ? (
-
-                    <p className="text-gray-400">No subjects found for this course</p>
-
-                ) : (
-
-                    subjects.map(subject => (
-
-                        <div key={subject.$id} className="mb-2 flex items-center">
-
-                            <input
-                                type="checkbox"
-                                onChange={() => toggleSubject(subject.subjectName)}
-                                className="mr-2 accent-orange-500"
-                            />
-
-                            <span>{subject.subjectName}</span>
-
-                        </div>
-
-                    ))
-
-                )}
-
-                <div className="mt-6">
-
-                    <input
-                        type="number"
-                        placeholder="Course Fees"
-                        value={courseFees}
-                        onChange={(e) => setCourseFees(e.target.value)}
-                        className="border border-gray-700 bg-black text-white p-2 w-full mb-3 rounded"
-                    />
-
-                    <input
-                        type="number"
-                        placeholder="Minimum Fees"
-                        value={minimumFees}
-                        onChange={(e) => setMinimumFees(e.target.value)}
-                        className="border border-gray-700 bg-black text-white p-2 w-full rounded"
-                    />
-
-                </div>
-
-                <button
-                    onClick={saveCourse}
-                    className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 mt-6 rounded"
-                >
-                    Save Course
-                </button>
-
-            </div>
+          ))}
 
         </div>
 
-    )
+        {/* INPUTS */}
+        <div className="space-y-4">
 
+          <input
+            type="number"
+            placeholder="Course Fees"
+            onChange={(e) => setCourseFees(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none"
+          />
+
+          <input
+            type="number"
+            placeholder="Minimum Fees"
+            onChange={(e) => setMinimumFees(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none"
+          />
+
+        </div>
+
+        {/* BUTTON */}
+        <button
+          onClick={saveCourse}
+          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 transition py-3 rounded-lg font-semibold text-black shadow-lg"
+        >
+          Save Course
+        </button>
+
+      </div>
+
+    </div>
+  );
 }

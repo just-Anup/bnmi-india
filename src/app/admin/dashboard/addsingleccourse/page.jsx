@@ -32,31 +32,18 @@ export default function CourseCMS() {
     "PERSONAL"
   ]
 
-  const institutePlans = {
-    "ARUNACHAL PRADESH": 499,
-    "HOJAI": 499,
-    "BIHAR": 450,
-    "COMPUTER 450": 450,
-    "BEAUTY 590": 590,
-    "BEAUTY": 500,
-    "2DAYS": 299
-  }
-
   const [form, setForm] = useState({
     courseCode: '',
     award: '',
     courseTitle: '',
-    institutePlan: '',
     duration: ''
   })
 
   const fetchCourses = async () => {
-
     const res = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION_ID
     )
-
     setCourses(res.documents)
   }
 
@@ -65,24 +52,20 @@ export default function CourseCMS() {
   }, [])
 
   const handleChange = (e) => {
-
     setForm({
       ...form,
       [e.target.name]: e.target.value
     })
-
   }
 
   const addCourse = async () => {
 
-    if (!form.courseCode || !form.award || !form.courseTitle || !form.institutePlan || !form.duration) {
+    if (!form.courseCode || !form.award || !form.courseTitle || !form.duration) {
       alert("Please fill all fields")
       return
     }
 
     const courseName = `${form.award} IN ${form.courseTitle}`
-
-    const examFees = institutePlans[form.institutePlan]
 
     await databases.createDocument(
       DATABASE_ID,
@@ -92,9 +75,7 @@ export default function CourseCMS() {
         courseCode: form.courseCode,
         courseName: courseName,
         duration: form.duration,
-        examFees: examFees,
         award: form.award,
-        institutePlan: form.institutePlan,
         status: "Active"
       }
     )
@@ -105,7 +86,6 @@ export default function CourseCMS() {
       courseCode: '',
       award: '',
       courseTitle: '',
-      institutePlan: '',
       duration: ''
     })
 
@@ -131,6 +111,7 @@ export default function CourseCMS() {
         Course Management
       </h2>
 
+      {/* ADD COURSE */}
       <div className="bg-white shadow p-6 rounded-lg mb-8">
 
         <h3 className="text-lg font-semibold mb-4">
@@ -169,18 +150,6 @@ export default function CourseCMS() {
             className="border p-2 rounded"
           />
 
-          <select
-            name="institutePlan"
-            value={form.institutePlan}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          >
-            <option value="">--select institute plan--</option>
-            {Object.keys(institutePlans).map((plan,i)=>(
-              <option key={i} value={plan}>{plan}</option>
-            ))}
-          </select>
-
           <input
             type="text"
             name="duration"
@@ -201,6 +170,7 @@ export default function CourseCMS() {
 
       </div>
 
+      {/* COURSE LIST */}
       <div className="bg-white shadow p-6 rounded-lg">
 
         <h3 className="text-lg font-semibold mb-4">
@@ -215,7 +185,6 @@ export default function CourseCMS() {
               <th className="p-2 border">Code</th>
               <th className="p-2 border">Course Name</th>
               <th className="p-2 border">Duration</th>
-              <th className="p-2 border">Exam Fees</th>
               <th className="p-2 border">Action</th>
             </tr>
 
@@ -237,10 +206,6 @@ export default function CourseCMS() {
 
                 <td className="p-2 border">
                   {course.duration}
-                </td>
-
-                <td className="p-2 border">
-                  ₹{course.examFees}
                 </td>
 
                 <td className="p-2 border">

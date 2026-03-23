@@ -85,10 +85,18 @@ useEffect(() => {
         <NavItem href="/login/institute/wallet" label="My Wallet" />
         <NavItem href="/login/institute/courier-wallet" label="Courier Wallet" />
         <NavItem href="/login/institute/background-upload" label="Upload Background" />
-        <NavItem href="/login/institute/attendance" label="Manage Attendance" />
-        <NavItem href="/login/institute/support" label="Help Support" />
+
+
+<DropdownMenu label="Manage Attendance">
+  <NavItem href="/login/institute/manage-attendance/batch" label="Batches" />
+  <NavItem href="/login/institute/manage-attendance/attendance" label="Attendance" />
+  <NavItem href="/login/institute/manage-attendance/report" label="Attendance Report" />
+  <NavItem href="/login/institute/manage-attendance/student-wise" label="Student Wise Report" />
+</DropdownMenu>
+
+        <NavItem href="/login/institute/help-support" label="Help Support" />
         <NavItem href="/login/institute/marketing" label="Marketing Material" />
-        <NavItem href="/login/institute/recharge" label="Recharge Request" />
+        <NavItem href="/login/institute/recharge-request" label="Recharge Request" />
 
         <button
           onClick={logout}

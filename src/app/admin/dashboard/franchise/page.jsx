@@ -366,7 +366,13 @@ const saveEdit = async () => {
     )
   }
 
-  
+  /*...franchise plan ..*/
+  const institutePlans = {
+  "HOJAI": 400,
+  "BIHAR": 499,
+  "ARUNACHAL PRADESH": 499,
+  "BEAUTY": 500
+}
 
 const downloadCertificate = async () => {
 
@@ -581,6 +587,23 @@ const downloadCertificate = async () => {
             className="w-full border p-3 rounded-lg"
           />
         </div>
+<div>
+  <label className="text-sm font-medium">Select Plan</label>
+  <select
+    value={editData.plan || ""}
+    onChange={(e)=>setEditData({...editData, plan:e.target.value})}
+    className="w-full border p-3 rounded-lg"
+  >
+    <option value="">--Select Plan--</option>
+
+    {Object.keys(institutePlans).map((plan, i) => (
+      <option key={i} value={plan}>
+        {plan} (₹{institutePlans[plan]})
+      </option>
+    ))}
+
+  </select>
+</div>
 
         <div>
           <label className="text-sm font-medium">State</label>
