@@ -70,8 +70,8 @@ export default function AdminSidebar() {
         />
          <MenuItem
           icon={<Image size={18} />}
-          label="Typing Course Section"
-          href="/admin/dashboard/typing-courses"
+          label="Beauty Course Section"
+          href="/admin/dashboard/beauty-course"
         />
   <MenuItem
           icon={<Image size={18} />}

@@ -15,7 +15,7 @@ const institutePlans = {
   "BEAUTY": 500
 }
 
-export default function TypingAddPage() {
+export default function AddBeautyCourse() {
 
   const [courses, setCourses] = useState([])
   const [examFee, setExamFee] = useState(0)
