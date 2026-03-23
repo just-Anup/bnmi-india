@@ -7,8 +7,32 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
 export default function CMS(){
 
+const awardList = [
+"CERTIFICATE",
+"DIPLOMA",
+"ADVANCE CERTIFICATE",
+"ADVANCE DIPLOMA",
+"MASTER DIPLOMA",
+"CERTIFICATE IN POST GRADUATE DIPLOMA",
+"PROFESSIONAL DIPLOMA",
+"ALL INDIA CERTIFICATE",
+"MASTER CERTIFICATE",
+"CERTIFICATE BASIC DIPLOMA",
+"ADVANCE",
+"CERTIFICATE IN PROFESSIONAL DIPLOMA",
+"POST GRADUATE",
+"POST GRADUATE DIPLOMA",
+"BASIC",
+"CERTIFICATE COURSE",
+"CERTIFICATION",
+"PRE-VOCATIONAL COURSE",
+"PERSONAL"
+]
+
 const [courseCode,setCourseCode]=useState("")
-const [courseName,setCourseName]=useState("")
+const [courseTitle,setCourseTitle]=useState("")
+const [award,setAward]=useState("")
+const [customAward,setCustomAward]=useState("")
 const [duration,setDuration]=useState("")
 const [examFees,setExamFees]=useState("")
 const [subjects,setSubjects]=useState([""])
@@ -27,6 +51,15 @@ const saveCourse=async()=>{
 
 try{
 
+const finalAward = award === "OTHER" ? customAward : award
+
+if(!courseCode || !courseTitle || !finalAward || !duration){
+alert("Please fill all fields")
+return
+}
+
+const courseName = `${finalAward} IN ${courseTitle}`
+
 await databases.createDocument(
 DATABASE_ID,
 "courses_master_multiple",
@@ -35,6 +68,7 @@ ID.unique(),
 courseCode:courseCode,
 courseName:courseName,
 duration:duration,
+award: finalAward,
 examFees:Number(examFees),
 status:"Active"
 }
@@ -61,7 +95,9 @@ subjectName:subject
 alert("Course Added")
 
 setCourseCode("")
-setCourseName("")
+setCourseTitle("")
+setAward("")
+setCustomAward("")
 setDuration("")
 setExamFees("")
 setSubjects([""])
@@ -86,21 +122,43 @@ Multiple Course CMS
 placeholder="Course Code"
 value={courseCode}
 onChange={(e)=>setCourseCode(e.target.value)}
-className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+className="border rounded-lg p-3 w-full mb-4"
 />
+
+<select
+value={award}
+onChange={(e)=>setAward(e.target.value)}
+className="border rounded-lg p-3 w-full mb-4"
+>
+<option value="">-- Select Award --</option>
+{awardList.map((a,i)=>(
+<option key={i} value={a}>{a}</option>
+))}
+<option value="OTHER">Other</option>
+</select>
+
+{/* Show input if OTHER selected */}
+{award === "OTHER" && (
+<input
+placeholder="Enter New Award"
+value={customAward}
+onChange={(e)=>setCustomAward(e.target.value)}
+className="border rounded-lg p-3 w-full mb-4"
+/>
+)}
 
 <input
 placeholder="Course Name"
-value={courseName}
-onChange={(e)=>setCourseName(e.target.value)}
-className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+value={courseTitle}
+onChange={(e)=>setCourseTitle(e.target.value)}
+className="border rounded-lg p-3 w-full mb-4"
 />
 
 <input
-placeholder="Duration"
+placeholder="Duration (Example: 6 Months)"
 value={duration}
 onChange={(e)=>setDuration(e.target.value)}
-className="border rounded-lg p-3 w-full mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+className="border rounded-lg p-3 w-full mb-4"
 />
 
 <input
@@ -108,7 +166,7 @@ placeholder="Exam Fees"
 type="number"
 value={examFees}
 onChange={(e)=>setExamFees(e.target.value)}
-className="border rounded-lg p-3 w-full mb-6 focus:ring-2 focus:ring-blue-500 outline-none"
+className="border rounded-lg p-3 w-full mb-6"
 />
 
 <h2 className="font-semibold text-lg mb-3 text-gray-700">
@@ -123,7 +181,7 @@ key={index}
 placeholder="Subject Name"
 value={sub}
 onChange={(e)=>changeSubject(index,e.target.value)}
-className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-green-500 outline-none"
+className="border rounded-lg p-3 w-full"
 />
 ))}
 
@@ -131,7 +189,7 @@ className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-green-500 outlin
 
 <button
 onClick={addSubjectField}
-className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg mt-4 transition"
+className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg mt-4"
 >
 Add Subject
 </button>
@@ -140,7 +198,7 @@ Add Subject
 
 <button
 onClick={saveCourse}
-className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
 >
 Save Course
 </button>

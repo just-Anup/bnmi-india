@@ -35,13 +35,13 @@ export default function AddCourseHome() {
                     />
 
                     <NavBtn
-                        label="List Typing Course"
-                        href="/login/institute/add-course/typing/list"
+                        label="List Beauty Course"
+                        href="/login/institute/add-course/beauty/list"
                     />
 
                     <NavBtn
-                        label="Add Typing Course"
-                        href="/login/institute/add-course/typing/add"
+                        label="Add Beauty Course"
+                        href="/login/institute/add-course/beauty/add"
                     />
                     
                     <NavBtn

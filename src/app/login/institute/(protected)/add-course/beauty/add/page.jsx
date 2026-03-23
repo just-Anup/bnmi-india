@@ -108,7 +108,7 @@ export default function TypingAddPage() {
               <td className="p-3 border border-gray-800">
 
                 <Link
-          href={`/login/institute/add-course/typing/subjects/${course.$id}`}
+          href={`/login/institute/add-course/beauty/subjects/${course.$id}`}
                   className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded font-semibold"
                 >
                   Add Subjects
