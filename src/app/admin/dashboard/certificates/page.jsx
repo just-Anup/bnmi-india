@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const CERT_COLLECTION = "certificates";
@@ -10,126 +11,132 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function CertificateApprovalPage() {
   const [certificates, setCertificates] = useState([]);
+
+
+
   const [loading, setLoading] = useState(true);
 const printMarksheet = async (cert) => {
 
   try {
 
-    console.log("CERT:", cert)
-
-    let studentData = null
+    let studentData = null;
+    let franchiseData = null;
 
     // ✅ FETCH STUDENT
     if (cert.studentId) {
-
       studentData = await databases.getDocument(
         DATABASE_ID,
         "student_admissions",
         cert.studentId
-      )
-
+      );
     } else {
-
       const res = await databases.listDocuments(
         DATABASE_ID,
         "student_admissions",
         [Query.equal("studentName", cert.studentName)]
-      )
+      );
 
       if (!res.documents.length) {
-        alert("Student not found")
-        return
+        alert("Student not found");
+        return;
       }
 
-      studentData = res.documents[0]
+      studentData = res.documents[0];
     }
 
-    // ✅ SAFE MARK PARSE (FIXED)
-    let parsedMarks = []
+    // ✅ FETCH FRANCHISE
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
+
+    // ===============================
+    // ✅ FIXED MARKS LOGIC (IMPORTANT)
+    // ===============================
+
+    let parsedMarks = [];
 
     try {
 
-      if (typeof cert.marks === "string") {
+      // CASE 1: JSON string (multiple subjects)
+      if (typeof cert.marks === "string" && cert.marks.startsWith("[")) {
+        parsedMarks = JSON.parse(cert.marks);
+      }
 
-        const parsed = JSON.parse(cert.marks)
-
-        if (Array.isArray(parsed)) {
-          parsedMarks = parsed
-        }
-
-      } else if (Array.isArray(cert.marks)) {
-
-        parsedMarks = cert.marks
-
-      } else {
-
+      // CASE 2: single number ("70")
+      else if (!isNaN(cert.marks)) {
         parsedMarks = [{
-          theory: cert.marks || 0,
+          subject: cert.course || studentData.courseName || "Subject",
+          theory: Number(cert.marks),
           practical: 0
-        }]
+        }];
+      }
+
+      // CASE 3: already array
+      else if (Array.isArray(cert.marks)) {
+        parsedMarks = cert.marks;
       }
 
     } catch (err) {
-
-      console.log("MARK PARSE ERROR:", err)
-
-      parsedMarks = [{
-        theory: cert.marks || 0,
-        practical: 0
-      }]
+      console.log("MARK PARSE ERROR:", err);
     }
 
-    // ✅ CALCULATE TOTALS
-    let theoryTotal = 0
-    let practicalTotal = 0
+    // ✅ FORMAT MARKS
+    const formattedMarks = parsedMarks.map((m, index) => ({
 
-    parsedMarks.forEach(m => {
-      theoryTotal += Number(m.theory || 0)
-      practicalTotal += Number(m.practical || 0)
-    })
+      subject: m.subject || `Subject ${index + 1}`,
 
-    // ✅ COURSE PERIOD (SAFE)
-    let coursePeriod = "N/A"
+      objective: Number(m.theory || m.objective || 0),
+      practical: Number(m.practical || 0),
 
-    try {
-      const examData = JSON.parse(localStorage.getItem("hallticketExam") || "{}")
+      total:
+        Number(m.theory || m.objective || 0) +
+        Number(m.practical || 0)
 
-      if (examData.startTime && examData.endTime) {
-        coursePeriod = `${examData.startTime} - ${examData.endTime}`
-      }
-    } catch {}
+    }));
 
+    // ===============================
     // ✅ FINAL DATA
+    // ===============================
+
     const data = {
-  studentName: studentData.studentName || "",
-  fatherName: studentData.fatherName || "",
-  surname: studentData.surname || "",
-  motherName: studentData.motherName || "",
-  course: studentData.courseName || "",
-  dob: studentData.dob || "",
-  coursePeriod,
-  instituteName: studentData.instituteName || "",
+      studentName: studentData.studentName,
+      fatherName: studentData.fatherName,
+      surname: studentData.surname,
+      motherName: studentData.motherName,
 
-  // 🔥 IMPORTANT CHANGE
-  marksArray: parsedMarks,  // ✅ full subject data
+      course: studentData.courseName,
+      dob: studentData.dob,
 
-  grade: cert.grade || "",
-  marksheetNo: cert.$id || ""
-}
-    console.log("FINAL DATA:", data)
+      instituteName: studentData.instituteName,
 
-    localStorage.setItem("marksheetStudent", JSON.stringify(data))
+      marksArray: formattedMarks, // ✅ FIXED
 
-    window.open("/login/institute/certificate/marksheet", "_blank")
+      grade: cert.grade || "",
+      marksheetNo: cert.$id || "",
+
+      // ✅ SIGNATURE
+      franchiseSignature: franchiseData?.signature || ""
+    };
+
+    console.log("FINAL MARKSHEET DATA:", data);
+
+    localStorage.setItem("marksheetStudent", JSON.stringify(data));
+
+    window.open("/login/institute/certificate/marksheet", "_blank");
 
   } catch (err) {
 
-    console.error("MARKSHEET ERROR:", err)
-    alert("Failed to generate marksheet")
+    console.error("MARKSHEET ERROR:", err);
+    alert("Failed to generate marksheet");
 
   }
-}
-
+};
   useEffect(() => {
     if (!databases || !DATABASE_ID) return;
     loadCertificates();
@@ -171,27 +178,81 @@ const printMarksheet = async (cert) => {
     }
   };
 
-  const printCertificate = (cert) => {
-    // ✅ Fixed: included createdById and instituteName so PrintCertificate page works
+const printCertificate = async (cert) => {
+
+  try {
+
+    let studentData = null;
+    let franchiseData = null;
+
+    // ✅ FETCH STUDENT
+    if (cert.studentId) {
+
+      studentData = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
+
+    } else {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_admissions",
+        [Query.equal("studentName", cert.studentName)]
+      );
+
+      if (!res.documents.length) {
+        alert("Student not found");
+        return;
+      }
+
+      studentData = res.documents[0];
+    }
+
+    // ✅ FETCH FRANCHISE (IMPORTANT)
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
+
+    // ✅ FINAL DATA
     const data = {
-      studentName: cert.studentName,
+      studentName: studentData.studentName || "",
       marks: cert.marks,
       grade: cert.grade,
-      course: cert.course,
-      franchiseName: cert.franchiseName || "BNMI Franchise",
-      signatureId: cert.signatureId || "",
-      photoId: cert.photoId || "",
-      createdById: cert.createdById || "",       // ✅ was missing
-      instituteName: cert.instituteName || "",   // ✅ was missing
+      course: studentData.courseName || "",
+
+      // ✅ STUDENT SIGNATURE
+      signatureId: studentData.signatureId || "",
+
+      // ✅ FRANCHISE SIGNATURE (FULL URL)
+      franchiseSignature: franchiseData?.signature || "",
+
+      photoId: studentData.photoId || "",
+
+      instituteName: studentData.instituteName || "",
+      createdById: studentData.createdById || ""
     };
 
-    // ✅ Fixed: removed duplicate localStorage call, kept window check
-    if (typeof window !== "undefined") {
-      localStorage.setItem("certificateStudent", JSON.stringify(data));
-      window.open("/login/institute/certificate/print", "_blank");
-    }
-  };
+    console.log("FINAL CERT DATA:", data);
 
+    localStorage.setItem("certificateStudent", JSON.stringify(data));
+
+    window.open("/login/institute/certificate/print", "_blank");
+
+  } catch (err) {
+
+    console.error("CERT ERROR:", err);
+    alert("Failed to open certificate");
+
+  }
+};
   const getPhoto = (photoId) => {
     if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT) return null;
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;

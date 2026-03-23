@@ -101,12 +101,11 @@ export default function HallTicketPage() {
         .filter(s => selected.includes(s.$id))
       .map(s => ({
   ...s,
+  username: s.rollNumber || s.studentName,
+  password: s.aadhar?.slice(-4) || "1234567890",
 
-  username: s.studentName, // ✅ FIXED
-  password: s.aadhar?.slice(-4) || "123456890",
-
-  duration: s.duration,
-  signatureId: s.signatureId
+  signatureId: s.signatureId, // ✅ MUST BE HERE
+  duration: s.duration
 }))
 
       if (selectedStudents.length === 0) {

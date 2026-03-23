@@ -74,6 +74,8 @@ export default function CertificatePage() {
 
                 await databases.createDocument(
                     DATABASE_ID,
+
+                    
                     CERT_COLLECTION,
                     ID.unique(),
                     {
@@ -86,6 +88,7 @@ export default function CertificatePage() {
                         certificateNo: "BNMI-" + Date.now(),
                         status: "pending",
                         createdAt: new Date().toISOString()
+
                     }
                 );
 

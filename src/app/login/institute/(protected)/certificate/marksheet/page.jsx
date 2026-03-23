@@ -28,6 +28,8 @@ export default function PrintMarksheet() {
     return sum + Number(m.total || 0)
   }, 0)
 
+  const franchiseSign = student.franchiseSignature || null;
+
   return (
 
     <div className="p-10 bg-white">
@@ -46,45 +48,45 @@ export default function PrintMarksheet() {
 
         {/* LEFT SIDE */}
 
-        <div className="absolute top-[320px] left-[180px]">
+        <div className="absolute top-[325px] left-[330px]">
           {student.studentName}
         </div>
 
-        <div className="absolute top-[360px] left-[180px]">
+        <div className="absolute top-[346px] left-[330px]">
           {student.fatherName}
         </div>
 
-        <div className="absolute top-[400px] left-[180px]">
+        <div className="absolute top-[367px] left-[330px]">
           {student.surname}
         </div>
 
-        <div className="absolute top-[440px] left-[180px]">
+        <div className="absolute top-[388px] left-[330px]">
           {student.motherName}
         </div>
 
-        <div className="absolute top-[480px] left-[180px]">
+        <div className="absolute top-[410px] left-[330px]">
           {student.course}
         </div>
 
-        <div className="absolute top-[520px] left-[180px]">
+        <div className="absolute top-[450px] left-[330px]">
           {student.instituteName}
         </div>
 
         {/* RIGHT SIDE */}
 
-        <div className="absolute top-[320px] left-[600px]">
+        <div className="absolute top-[325px] left-[680px]">
           1 Year
         </div>
 
-        <div className="absolute top-[360px] left-[600px]">
+        <div className="absolute top-[348px] left-[680px]">
           {student.marksheetNo}
         </div>
 
-        <div className="absolute top-[400px] left-[600px]">
+        <div className="absolute top-[369px] left-[680px]">
           {student.dob}
         </div>
 
-        <div className="absolute top-[440px] left-[600px]">
+        <div className="absolute top-[390px] left-[680px]">
           {student.coursePeriod}
         </div>
 
@@ -92,46 +94,56 @@ export default function PrintMarksheet() {
 
         {marksArray.map((m, index) => {
 
-          const top = 650 + index * 40
+  const top = 650 + index * 40;
 
-          return (
-            <div key={index}>
+  return (
+    <div key={index}>
 
-              <div className="absolute" style={{ top, left: 100 }}>
-                {m.subject}
-              </div>
+      {/* SUBJECT */}
+      <div className="absolute" style={{ top: 550, left: 150 }}>
+        {m.subject || "-"}
+      </div>
 
-              <div className="absolute" style={{ top, left: 500 }}>
-                100
-              </div>
+      {/* MAX MARKS */}
+      <div className="absolute" style={{ top: 550, left: 530 }}>
+        100
+      </div>
 
-              <div className="absolute" style={{ top, left: 600 }}>
-                {m.theory}
-              </div>
+      {/* OBJECTIVE */}
+      <div className="absolute" style={{ top: 550, left: 590 }}>
+        {m.objective || 0}
+      </div>
 
-              <div className="absolute" style={{ top, left: 700 }}>
-                {m.practical}
-              </div>
+      {/* PRACTICAL */}
+      <div className="absolute" style={{ top: 550, left: 660 }}>
+        {m.practical || 0}
+      </div>
 
-              <div className="absolute" style={{ top, left: 800 }}>
-                {m.total}
-              </div>
+      {/* TOTAL */}
+      <div className="absolute" style={{ top: 550, left: 720 }}>
+        {m.total || 0}
+      </div>
 
-            </div>
-          )
-        })}
-
+    </div>
+  );
+})}
         {/* TOTAL */}
 
-        <div className="absolute bottom-[250px] left-[750px] font-bold">
+        <div className="absolute bottom-[210px] left-[780px] font-bold">
           {total}
         </div>
 
         {/* GRADE */}
 
-        <div className="absolute bottom-[250px] left-[850px] font-bold">
+        <div className="absolute top-[550px] left-[780px] font-bold">
           {student.grade}
         </div>
+        {franchiseSign && (
+          <img
+            src={franchiseSign}
+            className="absolute bottom-[60px] left-[130px] w-[100px] object-contain"
+          />
+        )}
 
       </div>
 

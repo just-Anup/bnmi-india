@@ -225,10 +225,9 @@ const handleSubmit = async (e) => {
 
     const user = await account.get()
 
-    // ✅ GET FRANCHISE INFO
     const franchise = await getFranchiseInfo()
 
-    // ✅ VALIDATE COURSE
+    // ✅ VALIDATIONS
     if (!form.courseName) {
       alert("Please select course")
       return
@@ -239,50 +238,57 @@ const handleSubmit = async (e) => {
       return
     }
 
-    // ✅ VALIDATE EXAM FEE
     const ADMISSION_FEE = Number(form.examFees || 0)
 
     if (!ADMISSION_FEE || ADMISSION_FEE <= 0) {
-      alert("Invalid exam fee for this course")
+      alert("Invalid exam fee")
       return
     }
 
-    // ✅ UPLOAD FILES (INSIDE TRY)
-    let photoId = null
-    let signatureId = null
-
-    if (photo) {
-      const uploadPhoto = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        photo
-      )
-      photoId = uploadPhoto.$id
+    // 🔥 REQUIRE FILES
+    if (!photo) {
+      alert("Please upload photo")
+      return
     }
 
-    if (signature) {
-      const uploadSign = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        signature
-      )
-      signatureId = uploadSign.$id
+    if (!signature) {
+      alert("Please upload signature")
+      return
     }
 
-    // ✅ CREATE FINAL DATA (SAFE WAY)
-const finalData = {
-  ...form,
+    // ✅ FILE UPLOAD
+    let photoId = ""
+    let signatureId = ""
 
-  // ✅ Ensure numbers
-  feesReceived: Number(form.feesReceived || 0),
-  balance: Number(form.balance || 0),
+    const uploadPhoto = await storage.createFile(
+      BUCKET_ID,
+      ID.unique(),
+      photo
+    )
+    photoId = uploadPhoto.$id
 
-  // ✅ Auto set admission date if empty
-  admissionDate: form.admissionDate
-    ? form.admissionDate
-    : new Date().toISOString().split("T")[0]
-}
+    const uploadSign = await storage.createFile(
+      BUCKET_ID,
+      ID.unique(),
+      signature
+    )
+    signatureId = uploadSign.$id
 
+    console.log("Signature uploaded:", signatureId)
+
+    // ✅ USERNAME & PASSWORD (FIXED)
+    const username = form.rollNumber || form.studentName
+    const password = form.aadhar?.slice(-4) || "1234"
+
+    // ✅ FINAL DATA
+    const finalData = {
+      ...form,
+      feesReceived: Number(form.feesReceived || 0),
+      balance: Number(form.balance || 0),
+      admissionDate: form.admissionDate
+        ? form.admissionDate
+        : new Date().toISOString().split("T")[0]
+    }
 
     // ✅ GET WALLET
     const franchiseDoc = await databases.getDocument(
@@ -293,15 +299,14 @@ const finalData = {
 
     const currentWallet = Number(franchiseDoc.wallet || 0)
 
-    // ✅ CHECK BALANCE
     if (currentWallet < ADMISSION_FEE) {
       alert("Insufficient Wallet Balance")
       return
     }
 
-    // ✅ DEDUCT WALLET
     const newWallet = currentWallet - ADMISSION_FEE
 
+    // ✅ UPDATE WALLET
     await databases.updateDocument(
       DATABASE_ID,
       "franchise_approved",
@@ -311,7 +316,7 @@ const finalData = {
       }
     )
 
-    // ✅ SAVE TRANSACTION
+    // ✅ TRANSACTION
     await databases.createDocument(
       DATABASE_ID,
       "wallet_transactions",
@@ -328,27 +333,31 @@ const finalData = {
       }
     )
 
-    // ✅ CREATE STUDENT
-   await databases.createDocument(
-  DATABASE_ID,
-  COLLECTION_ID,
-  ID.unique(),
-  {
-    ...finalData, // ✅ USE THIS
- username, // ✅ ADD
-    password, // ✅ ADD
-    franchiseEmail: user.email,
-    photoId,
-    signatureId,
-    franchiseId: franchise.franchiseId,
-    instituteName: franchise.instituteName,
+    // ✅ CREATE STUDENT (FINAL)
+    await databases.createDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      ID.unique(),
+      {
+        ...finalData,
 
-    createdById: franchise.userId,
-    createdByName: franchise.instituteName, // ✅ IMPORTANT FIX
+        username,
+        password,
 
-    createdAt: new Date().toISOString()
-  }
-)
+        photoId,
+        signatureId,
+
+        franchiseEmail: user.email,
+        franchiseId: franchise.franchiseId,
+        instituteName: franchise.instituteName,
+
+        createdById: franchise.userId,
+        createdByName: franchise.instituteName,
+
+        createdAt: new Date().toISOString()
+      }
+    )
+
     alert("Student Registered Successfully")
 
     router.push("/login/institute/manage-student/admission")
@@ -356,7 +365,6 @@ const finalData = {
   } catch (err) {
 
     console.error("ADMISSION ERROR:", err)
-
     alert(err?.message || "Admission failed")
 
   }

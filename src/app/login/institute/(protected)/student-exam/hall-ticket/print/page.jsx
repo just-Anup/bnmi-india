@@ -52,13 +52,11 @@ export default function PrintHallTicket() {
           ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
           : null;
 
-       const signatureUrl = student.signatureId
+const signatureUrl = student.signatureId
   ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
   : null;
-
-const franchiseSign = franchise?.signatureId
-  ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${franchise.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-  : null;
+const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${franchise.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+ 
 
         return (
 
@@ -145,20 +143,24 @@ const franchiseSign = franchise?.signatureId
             </div>
 
             {/* STUDENT SIGNATURE */}
-            {signatureUrl && (
-              <img
-                src={signatureUrl}
-                className="absolute bottom-[150px] left-[120px] w-[140px] h-[60px] object-contain"
-              />
-            )}
+            {signatureUrl ? (
+  <img
+    src={signatureUrl}
+    className="absolute bottom-[280px] left-[490px] w-[140px] h-[60px] object-contain border"
+  />
+) : (
+  <div className="absolute bottom-[250px] left-[120px] text-red-500">
+    No Signature
+  </div>
+)}
 
             {/* FRANCHISE SIGNATURE */}
-            {franchiseSign && (
-              <img
-                src={franchiseSign}
-                className="absolute bottom-[150px] right-[120px] w-[160px] h-[60px] object-contain"
-              />
-            )}
+           {franchiseSign && (
+  <img
+    src={franchiseSign}
+    className="absolute bottom-[280px] right-[500px] w-[160px] h-[60px] object-contain"
+  />
+)}
 
           </div>
 
