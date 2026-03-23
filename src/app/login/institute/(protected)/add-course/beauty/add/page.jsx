@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { databases, account } from '@/lib/appwrite'
+import { databases, ID, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
-import Link from 'next/link'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-// ✅ PLAN MAP
 const institutePlans = {
   "HOJAI": 400,
   "BIHAR": 499,
@@ -17,114 +15,253 @@ const institutePlans = {
 
 export default function AddBeautyCourse() {
 
-  const [courses, setCourses] = useState([])
-  const [examFee, setExamFee] = useState(0)
+const [courses, setCourses] = useState([])
+const [examFee, setExamFee] = useState(0)
+const [selectedCourses, setSelectedCourses] = useState({})
 
-  useEffect(() => {
-    fetchCourses()
-    fetchPlan()
-  }, [])
+// ================= FETCH =================
+useEffect(() => {
+fetchCourses()
+fetchPlan()
+}, [])
 
-  // ✅ FETCH COURSES
-  const fetchCourses = async () => {
+const fetchCourses = async () => {
+try {
+const res = await databases.listDocuments(
+DATABASE_ID,
+"typing_courses_master"
+)
+setCourses(res.documents || [])
+} catch (err) {
+console.log(err)
+setCourses([])
+}
+}
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "typing_courses_master"
-    )
+const fetchPlan = async () => {
+try {
+const user = await account.get()
 
-    setCourses(res.documents)
-  }
+const res = await databases.listDocuments(
+DATABASE_ID,
+"franchise_approved",
+[Query.equal("email", user.email)]
+)
 
-  // ✅ FETCH USER PLAN
-  const fetchPlan = async () => {
+const plan = res.documents[0]?.plan
+setExamFee(institutePlans[plan] || 0)
 
-    try {
+} catch (err) {
+console.log(err)
+}
+}
 
-      const user = await account.get()
+// ================= SELECT =================
+const handleCheck = (course) => {
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("email", user.email)]
-      )
+if (!course || !course.$id) return
 
-      const plan = res.documents[0]?.plan
+setSelectedCourses(prev => {
 
-      const fee = institutePlans[plan] || 0
+if (prev[course.$id]) {
+const updated = { ...prev }
+delete updated[course.$id]
+return updated
+}
 
-      setExamFee(fee)
+return {
+...prev,
+[course.$id]: {
+...course,
+courseFees: '',
+minimumFees: ''
+}
+}
 
-    } catch (error) {
-      console.log("Plan fetch error:", error)
-    }
-  }
+})
+}
 
-  return (
+// ================= INPUT =================
+const handleInput = (id, field, value) => {
 
-    <div className="p-10 bg-black min-h-screen text-white">
+if (!id) return
 
-      <h1 className="text-2xl font-bold mb-6">
-        ADD TYPING COURSE
-      </h1>
+setSelectedCourses(prev => ({
+...prev,
+[id]: {
+...prev[id],
+[field]: value
+}
+}))
+}
 
-      <table className="w-full bg-[#121212] border border-gray-800 shadow rounded">
+// ================= ADD =================
+const addCourse = async () => {
 
-        <thead className="bg-orange-500 text-black">
+const selected = Object.values(selectedCourses)
 
-          <tr>
-            <th className="p-3 border border-gray-800">Code</th>
-            <th className="p-3 border border-gray-800">Name</th>
-            <th className="p-3 border border-gray-800">Duration</th>
-            <th className="p-3 border border-gray-800">Exam Fees</th>
-            <th className="p-3 border border-gray-800">Action</th>
-          </tr>
+if (selected.length === 0) {
+alert("Please select at least one course")
+return
+}
 
-        </thead>
+try {
 
-        <tbody>
+const user = await account.get()
 
-          {courses.map(course => (
+for (const course of selected) {
 
-            <tr key={course.$id} className="border-t border-gray-800 hover:bg-[#1a1a1a]">
+if (!course.courseFees || !course.minimumFees) {
+alert("Enter Course Fee & Minimum Fee")
+return
+}
 
-              <td className="p-3 border border-gray-800">
-                {course.courseCode}
-              </td>
+await databases.createDocument(
+DATABASE_ID,
+"franchise_typing_courses",
+ID.unique(),
+{
+courseId: course.$id,
+courseCode: course.courseCode,
+courseName: course.courseName,
+duration: course.duration,
+examFees: examFee,
+courseFees: Number(course.courseFees),
+minimumFees: Number(course.minimumFees),
+status: "Active",
+franchiseEmail: user.email
+}
+)
 
-              <td className="p-3 border border-gray-800">
-                {course.courseName}
-              </td>
+}
 
-              <td className="p-3 border border-gray-800">
-                {course.duration}
-              </td>
+alert("Course Added Successfully")
+setSelectedCourses({})
 
-              {/* ✅ UPDATED */}
-              <td className="p-3 border border-gray-800">
-                ₹{examFee}
-              </td>
+} catch (err) {
+console.log(err)
+alert(err.message)
+}
 
-              <td className="p-3 border border-gray-800">
+}
 
-                <Link
-          href={`/login/institute/add-course/beauty/subjects/${course.$id}`}
-                  className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded font-semibold"
-                >
-                  Add Subjects
-                </Link>
+// ================= UI =================
+return (
 
-              </td>
+<div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-10">
 
-            </tr>
+<div className="max-w-6xl mx-auto">
 
-          ))}
+{/* HEADER */}
+<div className="flex justify-between items-center mb-8">
 
-        </tbody>
+<h1 className="text-3xl font-bold tracking-wide">
+✨ Add Beauty Courses
+</h1>
 
-      </table>
+<button
+onClick={addCourse}
+className="bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-105 transition px-6 py-2 rounded-lg font-semibold shadow-lg"
+>
++ Add Selected
+</button>
 
-    </div>
+</div>
 
-  )
+{/* TABLE CARD */}
+<div className="bg-[#121212] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+
+<table className="w-full text-sm">
+
+<thead className="bg-orange-500 text-black">
+
+<tr>
+<th className="p-3">Select</th>
+<th className="p-3">Code</th>
+<th className="p-3">Course Name</th>
+<th className="p-3">Duration</th>
+<th className="p-3">Exam Fee</th>
+<th className="p-3">Course Fee</th>
+<th className="p-3">Minimum Fee</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{courses.length > 0 ? (
+
+courses.map((course) => {
+
+if (!course || !course.$id) return null
+
+return (
+
+<tr key={course.$id} className="border-t border-gray-800 hover:bg-[#1a1a1a] transition">
+
+<td className="text-center">
+<input
+type="checkbox"
+checked={!!selectedCourses[course.$id]}
+onChange={() => handleCheck(course)}
+className="accent-orange-500 scale-110"
+/>
+</td>
+
+<td className="p-3">{course.courseCode}</td>
+<td className="p-3">{course.courseName}</td>
+<td className="p-3">{course.duration}</td>
+
+<td className="p-3 text-orange-400 font-semibold">
+₹{examFee}
+</td>
+
+<td className="p-3">
+<input
+type="number"
+placeholder="Course Fee"
+disabled={!selectedCourses[course.$id]}
+onChange={(e)=>handleInput(course.$id,'courseFees',e.target.value)}
+className="bg-black border border-gray-700 p-2 w-28 rounded focus:ring-2 focus:ring-orange-500"
+/>
+</td>
+
+<td className="p-3">
+<input
+type="number"
+placeholder="Min Fee"
+disabled={!selectedCourses[course.$id]}
+onChange={(e)=>handleInput(course.$id,'minimumFees',e.target.value)}
+className="bg-black border border-gray-700 p-2 w-28 rounded focus:ring-2 focus:ring-orange-500"
+/>
+</td>
+
+</tr>
+
+)
+
+})
+
+) : (
+
+<tr>
+<td colSpan="7" className="text-center p-6 text-gray-400">
+No Courses Found
+</td>
+</tr>
+
+)}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+)
+
 }

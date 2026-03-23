@@ -1,127 +1,85 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { databases, account, ID } from '@/lib/appwrite'
-import { Query } from 'appwrite'
-import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { databases, ID, account } from '@/lib/appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
-export default function TypingSubjectPage() {
+export default function AddSubject({ params }) {
 
-    const params = useParams()
-    const router = useRouter()
+const courseId = params.id
 
-    const courseCode = params.courseCode
+const [subject, setSubject] = useState('')
+const [loading, setLoading] = useState(false)
 
-    const [subjects, setSubjects] = useState([])
-    const [selectedSubjects, setSelectedSubjects] = useState([])
-    const [courseFees, setCourseFees] = useState("")
-    const [minimumFees, setMinimumFees] = useState("")
+const saveSubject = async () => {
 
-    useEffect(() => {
+if (!subject.trim()) {
+alert("Enter subject name")
+return
+}
 
-        if (!courseCode) return
+try {
 
-        fetchSubjects()
+setLoading(true)
 
-    }, [courseCode])
+const user = await account.get()
 
-    const fetchSubjects = async () => {
+await databases.createDocument(
+DATABASE_ID,
+"course_subjects", // ✅ SAME AS SINGLE SYSTEM
+ID.unique(),
+{
+courseId: String(courseId),
+subjectName: subject,
+franchiseEmail: user.email
+}
+)
 
-        const res = await databases.listDocuments(
-            DATABASE_ID,
-            "typing_subjects_master",
-            [
-                Query.equal("courseCode", courseCode)
-            ]
-        )
+alert("Subject Added Successfully")
 
-        setSubjects(res.documents)
+setSubject("")
 
-    }
+} catch (err) {
+console.log(err)
+alert(err.message)
+} finally {
+setLoading(false)
+}
 
-    const toggleSubject = (name) => {
+}
 
-        if (selectedSubjects.includes(name)) {
+// ================= UI =================
+return (
 
-            setSelectedSubjects(selectedSubjects.filter(s => s !== name))
+<div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
 
-        } else {
+<div className="bg-[#121212] border border-gray-800 p-8 rounded-xl shadow-xl w-[400px]">
 
-            setSelectedSubjects([...selectedSubjects, name])
+<h2 className="text-xl font-bold mb-6 text-center">
+📚 Add Subject
+</h2>
 
-        }
+<input
+type="text"
+value={subject}
+onChange={(e)=>setSubject(e.target.value)}
+placeholder="Enter Subject Name"
+className="w-full border border-gray-700 bg-black p-3 rounded mb-4 focus:ring-2 focus:ring-orange-500"
+/>
 
-    }
+<button
+onClick={saveSubject}
+disabled={loading}
+className="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded font-semibold text-black"
+>
+{loading ? "Saving..." : "Save Subject"}
+</button>
 
-    const saveCourse = async () => {
+</div>
 
-        const user = await account.get()
+</div>
 
-        await databases.createDocument(
-            DATABASE_ID,
-            "franchise_typing_courses",
-            ID.unique(),
-            {
-                courseCode: courseCode,
-                subjects: selectedSubjects.join(", "),
-                courseFees: Number(courseFees),
-                minimumFees: Number(minimumFees),
-                franchiseEmail: user.email,
-                status: "Active"
-            }
-        )
-
-        router.push("/login/institute/add-course/typing/list")
-
-    }
-
-    return (
-
-        <div className="p-10 bg-black min-h-screen text-white">
-
-            <h1 className="text-xl font-bold mb-6">
-                Select Typing Subjects
-            </h1>
-
-            {subjects.map(sub => (
-                <div key={sub.$id} className="mb-2 flex items-center">
-
-                    <input
-                        type="checkbox"
-                        onChange={() => toggleSubject(sub.subjectName)}
-                        className="accent-orange-500"
-                    />
-
-                    <span className="ml-2">{sub.subjectName}</span>
-
-                </div>
-            ))}
-
-            <input
-                placeholder="Course Fees"
-                value={courseFees}
-                onChange={(e) => setCourseFees(e.target.value)}
-                className="border border-gray-700 bg-black text-white p-2 w-full mt-4 rounded"
-            />
-
-            <input
-                placeholder="Minimum Fees"
-                value={minimumFees}
-                onChange={(e) => setMinimumFees(e.target.value)}
-                className="border border-gray-700 bg-black text-white p-2 w-full mt-3 rounded"
-            />
-
-            <button
-                onClick={saveCourse}
-                className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 mt-4 rounded"
-            >
-                Save Course
-            </button>
-
-        </div>
-
-    )
+)
 
 }
