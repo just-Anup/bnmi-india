@@ -33,46 +33,55 @@ export default function InstituteLogin() {
 
   /* ---------------- LOGIN ---------------- */
 
-  const login = async (e) => {
+ const login = async (e) => {
 
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault()
+  setLoading(true)
 
-    try {
+  try {
 
-      await account.deleteSession('current').catch(()=>{})
+    await account.deleteSession('current').catch(() => {})
 
-      await account.createEmailPasswordSession(email, password)
+    await account.createEmailPasswordSession(email, password)
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        'franchise_approved',
-        [Query.equal('email', email)]
-      )
+    /* ---------------- ADMIN LOGIN ---------------- */
 
-      if (!res.documents.length) {
+    if (email === 'bnmiindia@gmail.com') {
 
-        alert('Your franchise is not approved yet')
-
-        await account.deleteSession('current')
-        setLoading(false)
-        return
-
-      }
-
-      router.push('/login/institute/dashboard')
-
-    } catch (error) {
-
-      console.error(error)
-      alert(error?.message || 'Invalid credentials')
-
+      localStorage.setItem("adminAuth", "true") // optional protection
+      router.push('/admin')
+      setLoading(false)
+      return
     }
 
-    setLoading(false)
+    /* ---------------- FRANCHISE LOGIN ---------------- */
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      'franchise_approved',
+      [Query.equal('email', email)]
+    )
+
+    if (!res.documents.length) {
+
+      alert('Your franchise is not approved yet')
+
+      await account.deleteSession('current')
+      setLoading(false)
+      return
+    }
+
+    router.push('/login/institute/dashboard')
+
+  } catch (error) {
+
+    console.error(error)
+    alert(error?.message || 'Invalid credentials')
 
   }
 
+  setLoading(false)
+}
   return (
 
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300">

@@ -14,54 +14,65 @@ export default function TestimonialsSection() {
   const [index, setIndex] = useState(0)
   const [testimonials, setTestimonials] = useState([])
 
+  const CARD_WIDTH = 460 // must match card width + gap
+
+  // ✅ Fetch Data
   useEffect(() => {
-  const fetchTestimonials = async () => {
-    try {
+    const fetchTestimonials = async () => {
+      try {
+        if (!databases || !DATABASE_ID) return
 
-      if (!databases || !DATABASE_ID) return   // FIX
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID,
+          [Query.orderAsc('order')]
+        )
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.orderAsc('order')]
-      )
-
-      setTestimonials(res.documents)
-
-    } catch (err) {
-      console.error('Testimonials load failed:', err)
+        setTestimonials(res?.documents || [])
+      } catch (err) {
+        console.error('Testimonials load failed:', err)
+        setTestimonials([])
+      }
     }
-  }
 
-  fetchTestimonials()
-}, [])
+    fetchTestimonials()
+  }, [])
 
+  // ✅ Slide Function
   const slideTo = (i) => {
-    const width = 620
     if (!containerRef.current) return
 
     gsap.to(containerRef.current, {
-      x: -width * i,
-      duration: 0.8,
+      x: -i * CARD_WIDTH,
+      duration: 0.7,
       ease: 'power3.out',
     })
 
     setIndex(i)
   }
 
-  const next = () =>
+  const next = () => {
+    if (!testimonials.length) return
     slideTo((index + 1) % testimonials.length)
+  }
 
-  const prev = () =>
+  const prev = () => {
+    if (!testimonials.length) return
     slideTo(
       (index - 1 + testimonials.length) %
         testimonials.length
     )
+  }
 
-  if (!testimonials.length) return null
+  // ✅ Safe Guard
+  if (!Array.isArray(testimonials) || testimonials.length === 0) {
+    return null
+  }
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+
+      {/* Heading */}
       <div className="text-center mb-16">
         <h2 className="text-4xl font-extrabold">
           What Says Our <br />
@@ -72,38 +83,41 @@ export default function TestimonialsSection() {
         </h2>
       </div>
 
-      {/* Arrows */}
+      {/* Left Button */}
       <button
         onClick={prev}
-        className="absolute left-6 top-1/2 -translate-y-1/2"
+        className="absolute left-6 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:scale-110 transition p-3 rounded-full"
       >
         ‹
       </button>
 
+      {/* Right Button */}
       <button
         onClick={next}
-        className="absolute right-6 top-1/2 -translate-y-1/2"
+        className="absolute right-6 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:scale-110 transition p-3 rounded-full"
       >
         ›
       </button>
 
-      <div className="overflow-hidden px-24">
+      {/* Slider */}
+      <div className="overflow-hidden px-10">
         <div
           ref={containerRef}
-          className="flex gap-10"
+          className="flex gap-6"
           style={{
-            width: testimonials.length * 620,
+            width: testimonials.length * CARD_WIDTH,
           }}
         >
-          {testimonials.map((t) => (
-            <TestimonialCard
-              key={t.$id}
-              name={t.name}
-              role={t.role}
-              image={t.imageUrl}
-              text={t.text}
-            />
-          ))}
+          {Array.isArray(testimonials) &&
+            testimonials.map((t) => (
+              <TestimonialCard
+                key={t.$id}
+                name={t.name}
+                role={t.role}
+                image={t.imageUrl}
+                text={t.text}
+              />
+            ))}
         </div>
       </div>
     </section>
