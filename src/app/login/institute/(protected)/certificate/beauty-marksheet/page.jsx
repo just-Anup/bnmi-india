@@ -15,76 +15,7 @@ export default function PrintMarksheet() {
       setStudent(parsed)
     }
   }, [])
-useEffect(() => {
 
-  const loadData = async () => {
-
-    const data = JSON.parse(localStorage.getItem("marksheetStudent"))
-
-    if (!data) return
-
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "course_subjects",
-      [Query.equal("courseId", data.courseId)]
-    )
-
-    const subjectList = res.documents.map(s => s.subjectName)
-
-    setStudent({
-      ...data,
-      subjects: subjectList
-    })
-
-  }
-
-  loadData()
-
-}, [])
-  const fetchSubjects = async (courseId) => {
-  try {
-
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "course_subjects",
-      [Query.equal("courseId", courseId)]
-    )
-
-    return res.documents || []
-
-  } catch (err) {
-    console.log(err)
-    return []
-  }
-}
-
-useEffect(() => {
-
-  const loadStudent = async () => {
-
-    const data = JSON.parse(localStorage.getItem("marksheetStudent"))
-
-    if (!data) return
-
-    const subjects = await fetchSubjects(data.courseId)
-
-    const subjectsWithMarks = subjects.map(sub => ({
-      subjectName: sub.subjectName,
-      theory: "",
-      practical: "",
-      total: ""
-    }))
-
-    setStudent({
-      ...data,
-      subjects: subjectsWithMarks
-    })
-
-  }
-
-  loadStudent()
-
-}, [])
   if (!student) return <div className="p-10">Loading...</div>
 
   const printPage = () => window.print()
@@ -113,7 +44,7 @@ useEffect(() => {
       <div className="relative w-[900px] h-[1200px] mx-auto">
 
         {/* TEMPLATE */}
-        <img src="/marksheet.jpeg" className="absolute w-full h-full" />
+        <img src="/beautymark.png" className="absolute w-full h-full" />
 
         {/* LEFT SIDE */}
 
@@ -196,20 +127,6 @@ useEffect(() => {
     </div>
   );
 })}
-
-<div className="mt-6">
-
-  <p className="font-semibold">Subjects Covered:</p>
-
-  <ul className="list-disc ml-6 mt-2">
-
-    {student?.subjects?.map((sub, i) => (
-      <li key={i}>{sub}</li>
-    ))}
-
-  </ul>
-
-</div>
         {/* TOTAL */}
 
         <div className="absolute bottom-[210px] left-[780px] font-bold">

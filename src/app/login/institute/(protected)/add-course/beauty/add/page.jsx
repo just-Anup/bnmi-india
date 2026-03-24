@@ -5,263 +5,279 @@ import { databases, ID, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+const MASTER_COLLECTION = 'beauty_courses_master'
+const BEAUTY_COLLECTION = 'beauty_courses_single'
 
-const institutePlans = {
+export default function addBeautycourse() {
+  
+  const [examFee, setExamFee] = useState(0)
+  const [courses, setCourses] = useState([])
+  const [selectedCourses, setSelectedCourses] = useState({})
+
+  const fetchCourses = async () => {
+
+    try {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        MASTER_COLLECTION,
+        [Query.orderDesc('$createdAt')]
+      )
+
+      setCourses(res.documents)
+
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+  useEffect(() => {
+  const fetchPlan = async () => {
+
+    const user = await account.get()
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", user.email)]
+    )
+
+    const plan = res.documents[0]?.plan
+
+    const fee = institutePlans[plan] || 0
+
+    setExamFee(fee)
+  }
+
+  fetchPlan()
+}, [])
+
+  useEffect(() => {
+    fetchCourses()
+  }, [])
+
+
+
+  const handleCheck = (course) => {
+
+    setSelectedCourses(prev => {
+
+      if (prev[course.$id]) {
+        const updated = { ...prev }
+        delete updated[course.$id]
+        return updated
+      }
+
+      return {
+        ...prev,
+        [course.$id]: {
+          ...course,
+          courseFees: '',
+          minimumFees: ''
+        }
+      }
+
+    })
+
+  }
+
+  const handleInput = (id, field, value) => {
+
+    setSelectedCourses(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value
+      }
+    }))
+
+  }
+
+  const addCourse = async () => {
+
+    const selected = Object.values(selectedCourses)
+
+    if (selected.length === 0) {
+      alert("Please select a course")
+      return
+    }
+
+    try {
+
+    const user = await account.get()
+
+const res = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", user.email)]
+)
+
+const franchise = res.documents[0]
+
+const userPlan = franchise?.plan
+const examFee = institutePlans[userPlan] || 0
+
+      for (const course of selected) {
+
+        if (!course.courseFees || !course.minimumFees) {
+          alert("Please enter Course Fee and Minimum Fee")
+          return
+        }
+
+        await databases.createDocument(
+          DATABASE_ID,
+        BEAUTY_COLLECTION,
+          ID.unique(),
+          {
+            courseId: course.$id,
+            courseCode: course.courseCode,
+            courseName: course.courseName,
+            duration: course.duration,
+            examFees: examFee,
+            courseFees: Number(course.courseFees),
+            minimumFees: Number(course.minimumFees),
+            status: "Active",
+            franchiseEmail: user.email
+          }
+        )
+      }
+
+      alert("Course Added Successfully")
+      setSelectedCourses({})
+
+    } catch (error) {
+
+      console.log("Add Course Error:", error)
+      alert(error.message)
+
+    }
+
+  }
+
+
+  const institutePlans = {
   "HOJAI": 400,
   "BIHAR": 499,
   "ARUNACHAL PRADESH": 499,
   "BEAUTY": 500
 }
 
-export default function AddBeautyCourse() {
 
-const [courses, setCourses] = useState([])
-const [examFee, setExamFee] = useState(0)
-const [selectedCourses, setSelectedCourses] = useState({})
+  return (
 
-// ================= FETCH =================
-useEffect(() => {
-fetchCourses()
-fetchPlan()
-}, [])
+    <div className="p-10 bg-black min-h-screen text-white">
 
-const fetchCourses = async () => {
-try {
-const res = await databases.listDocuments(
-DATABASE_ID,
-"typing_courses_master"
-)
-setCourses(res.documents || [])
-} catch (err) {
-console.log(err)
-setCourses([])
-}
-}
+      <div className="bg-[#121212] rounded-xl p-6 shadow-lg border border-gray-800">
 
-const fetchPlan = async () => {
-try {
-const user = await account.get()
+        <div className="flex justify-between mb-6">
 
-const res = await databases.listDocuments(
-DATABASE_ID,
-"franchise_approved",
-[Query.equal("email", user.email)]
-)
+          <h2 className="text-xl font-bold">
+            ADD COURSE WITH SINGLE SUBJECT
+          </h2>
 
-const plan = res.documents[0]?.plan
-setExamFee(institutePlans[plan] || 0)
+          <button
+            onClick={addCourse}
+            className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 rounded"
+          >
+            Add Course
+          </button>
 
-} catch (err) {
-console.log(err)
-}
-}
+        </div>
 
-// ================= SELECT =================
-const handleCheck = (course) => {
+        <div className="overflow-x-auto">
 
-if (!course || !course.$id) return
+          <table className="w-full border border-gray-800 text-sm">
 
-setSelectedCourses(prev => {
+            <thead className="bg-orange-500 text-black">
 
-if (prev[course.$id]) {
-const updated = { ...prev }
-delete updated[course.$id]
-return updated
-}
+              <tr>
 
-return {
-...prev,
-[course.$id]: {
-...course,
-courseFees: '',
-minimumFees: ''
-}
-}
+                <th className="border border-gray-800 p-2"></th>
+                <th className="border border-gray-800 p-2">Course Code</th>
+                <th className="border border-gray-800 p-2">Course Name</th>
+                <th className="border border-gray-800 p-2">Course Duration</th>
+                <th className="border border-gray-800 p-2">Exam Fees</th>
+                <th className="border border-gray-800 p-2">Course Fee</th>
+                <th className="border border-gray-800 p-2">Minimum Fee</th>
 
-})
-}
+              </tr>
 
-// ================= INPUT =================
-const handleInput = (id, field, value) => {
+            </thead>
 
-if (!id) return
+            <tbody>
 
-setSelectedCourses(prev => ({
-...prev,
-[id]: {
-...prev[id],
-[field]: value
-}
-}))
-}
+              {courses.map(course => (
 
-// ================= ADD =================
-const addCourse = async () => {
+                <tr key={course.$id} className="border border-gray-800 hover:bg-[#1a1a1a]">
 
-const selected = Object.values(selectedCourses)
+                  <td className="border border-gray-800 p-2 text-center">
 
-if (selected.length === 0) {
-alert("Please select at least one course")
-return
-}
+                    <input
+                      type="checkbox"
+                      checked={!!selectedCourses[course.$id]}
+                      onChange={() => handleCheck(course)}
+                      className="accent-orange-500"
+                    />
 
-try {
+                  </td>
 
-const user = await account.get()
+                  <td className="border border-gray-800 p-2">
+                    {course.courseCode}
+                  </td>
 
-for (const course of selected) {
+                  <td className="border border-gray-800 p-2">
+                    {course.courseName}
+                  </td>
 
-if (!course.courseFees || !course.minimumFees) {
-alert("Enter Course Fee & Minimum Fee")
-return
-}
+                  <td className="border border-gray-800 p-2">
+                    {course.duration}
+                  </td>
 
-await databases.createDocument(
-DATABASE_ID,
-"franchise_typing_courses",
-ID.unique(),
-{
-courseId: course.$id,
-courseCode: course.courseCode,
-courseName: course.courseName,
-duration: course.duration,
-examFees: examFee,
-courseFees: Number(course.courseFees),
-minimumFees: Number(course.minimumFees),
-status: "Active",
-franchiseEmail: user.email
-}
-)
-
-}
-
-alert("Course Added Successfully")
-setSelectedCourses({})
-
-} catch (err) {
-console.log(err)
-alert(err.message)
-}
-
-}
-
-// ================= UI =================
-return (
-
-<div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-10">
-
-<div className="max-w-6xl mx-auto">
-
-{/* HEADER */}
-<div className="flex justify-between items-center mb-8">
-
-<h1 className="text-3xl font-bold tracking-wide">
-✨ Add Beauty Courses
-</h1>
-
-<button
-onClick={addCourse}
-className="bg-gradient-to-r from-orange-500 to-orange-600 hover:scale-105 transition px-6 py-2 rounded-lg font-semibold shadow-lg"
->
-+ Add Selected
-</button>
-
-</div>
-
-{/* TABLE CARD */}
-<div className="bg-[#121212] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
-
-<table className="w-full text-sm">
-
-<thead className="bg-orange-500 text-black">
-
-<tr>
-<th className="p-3">Select</th>
-<th className="p-3">Code</th>
-<th className="p-3">Course Name</th>
-<th className="p-3">Duration</th>
-<th className="p-3">Exam Fee</th>
-<th className="p-3">Course Fee</th>
-<th className="p-3">Minimum Fee</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{courses.length > 0 ? (
-
-courses.map((course) => {
-
-if (!course || !course.$id) return null
-
-return (
-
-<tr key={course.$id} className="border-t border-gray-800 hover:bg-[#1a1a1a] transition">
-
-<td className="text-center">
-<input
-type="checkbox"
-checked={!!selectedCourses[course.$id]}
-onChange={() => handleCheck(course)}
-className="accent-orange-500 scale-110"
-/>
+                 <td className="border border-gray-800 p-2">
+  ₹{examFee}
 </td>
 
-<td className="p-3">{course.courseCode}</td>
-<td className="p-3">{course.courseName}</td>
-<td className="p-3">{course.duration}</td>
+                  <td className="border border-gray-800 p-2">
 
-<td className="p-3 text-orange-400 font-semibold">
-₹{examFee}
-</td>
+                    <input
+                      type="number"
+                      placeholder="Course Fee"
+                      className="border border-white bg-black text-white-400 p-1 w-28 rounded"
+                      disabled={!selectedCourses[course.$id]}
+                      onChange={(e) =>
+                        handleInput(course.$id,'courseFees',e.target.value)
+                      }
+                    />
 
-<td className="p-3">
-<input
-type="number"
-placeholder="Course Fee"
-disabled={!selectedCourses[course.$id]}
-onChange={(e)=>handleInput(course.$id,'courseFees',e.target.value)}
-className="bg-black border border-gray-700 p-2 w-28 rounded focus:ring-2 focus:ring-orange-500"
-/>
-</td>
+                  </td>
 
-<td className="p-3">
-<input
-type="number"
-placeholder="Min Fee"
-disabled={!selectedCourses[course.$id]}
-onChange={(e)=>handleInput(course.$id,'minimumFees',e.target.value)}
-className="bg-black border border-gray-700 p-2 w-28 rounded focus:ring-2 focus:ring-orange-500"
-/>
-</td>
+                  <td className="border border-gray-800 p-2">
 
-</tr>
+                    <input
+                      type="number"
+                      placeholder="Minimum Fee"
+                           className="border border-white bg-black text-white-400 p-1 w-28 rounded"
+                      disabled={!selectedCourses[course.$id]}
+                      onChange={(e) =>
+                        handleInput(course.$id,'minimumFees',e.target.value)
+                      }
+                    />
 
-)
+                  </td>
 
-})
+                </tr>
 
-) : (
+              ))}
 
-<tr>
-<td colSpan="7" className="text-center p-6 text-gray-400">
-No Courses Found
-</td>
-</tr>
+            </tbody>
 
-)}
+          </table>
 
-</tbody>
+        </div>
 
-</table>
+      </div>
 
-</div>
+    </div>
 
-</div>
-
-</div>
-
-)
-
+  )
 }

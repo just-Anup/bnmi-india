@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
@@ -10,346 +11,393 @@ const CERT_COLLECTION = "certificates";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function CertificateApprovalPage() {
+
   const [certificates, setCertificates] = useState([]);
-
-
-
   const [loading, setLoading] = useState(true);
-const printMarksheet = async (cert) => {
 
-  try {
-
-    let studentData = null;
-    let franchiseData = null;
-
-    // ✅ FETCH STUDENT
-    if (cert.studentId) {
-      studentData = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
-    } else {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "student_admissions",
-        [Query.equal("studentName", cert.studentName)]
-      );
-
-      if (!res.documents.length) {
-        alert("Student not found");
-        return;
-      }
-
-      studentData = res.documents[0];
-    }
-
-    // ✅ FETCH FRANCHISE
-    const franchiseRes = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved",
-      [Query.equal("email", studentData.franchiseEmail)]
-    );
-
-    if (franchiseRes.documents.length > 0) {
-      franchiseData = franchiseRes.documents[0];
-    }
-
-    // ===============================
-    // ✅ FIXED MARKS LOGIC (IMPORTANT)
-    // ===============================
-
-    let parsedMarks = [];
-
+  // ===============================
+  // ✅ MARKSHEET PRINT
+  // ===============================
+  const printMarksheet = async (cert) => {
     try {
 
-      // CASE 1: JSON string (multiple subjects)
-      if (typeof cert.marks === "string" && cert.marks.startsWith("[")) {
-        parsedMarks = JSON.parse(cert.marks);
+      let studentData = null;
+      let franchiseData = null;
+
+      // 🔹 FETCH STUDENT
+      if (cert.studentId) {
+        studentData = await databases.getDocument(
+          DATABASE_ID,
+          "student_admissions",
+          cert.studentId
+        );
+      } else {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "student_admissions",
+          [Query.equal("studentName", cert.studentName)]
+        );
+
+        if (!res.documents.length) {
+          alert("Student not found");
+          return;
+        }
+
+        studentData = res.documents[0];
       }
 
-      // CASE 2: single number ("70")
-      else if (!isNaN(cert.marks)) {
-        parsedMarks = [{
-          subject: cert.course || studentData.courseName || "Subject",
-          theory: Number(cert.marks),
-          practical: 0
-        }];
+      // 🔹 FETCH FRANCHISE
+      const franchiseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [Query.equal("email", studentData.franchiseEmail)]
+      );
+
+      if (franchiseRes.documents.length > 0) {
+        franchiseData = franchiseRes.documents[0];
       }
 
-      // CASE 3: already array
-      else if (Array.isArray(cert.marks)) {
-        parsedMarks = cert.marks;
+      // ===============================
+      // 🔥 SUBJECT LOGIC
+      // ===============================
+      let subjectList = [];
+
+      if (studentData.courseType === "single" || studentData.courseType === "beauty") {
+
+        subjectList = [
+          studentData.subjects
+            ?.split(",")
+            .map(s => s.trim())
+            .join(", ")
+        ];
+
+      } else {
+
+        subjectList = studentData.subjects
+          ?.split(",")
+          .map(s => s.trim()) || [];
+      }
+
+      // ===============================
+      // 🔥 MARKS PARSE
+      // ===============================
+      let parsedMarks = [];
+
+      try {
+
+        if (typeof cert.marks === "string" && cert.marks.startsWith("[")) {
+          parsedMarks = JSON.parse(cert.marks);
+        }
+
+        else if (!isNaN(cert.marks)) {
+          parsedMarks = [{
+            subject: subjectList[0] || "Subject",
+            theory: Number(cert.marks),
+            practical: 0
+          }];
+        }
+
+        else if (Array.isArray(cert.marks)) {
+          parsedMarks = cert.marks;
+        }
+
+      } catch (err) {
+        console.log("MARK PARSE ERROR:", err);
+      }
+
+      // ===============================
+      // 🔥 FORMAT MARKS
+      // ===============================
+      const formattedMarks = parsedMarks.map((m, index) => ({
+
+        subject: subjectList[index] || m.subject || `Subject ${index + 1}`,
+
+        objective: Number(m.theory || m.objective || 0),
+        practical: Number(m.practical || 0),
+
+        total:
+          Number(m.theory || m.objective || 0) +
+          Number(m.practical || 0)
+
+      }));
+
+      // ===============================
+      // 🔥 FINAL DATA
+      // ===============================
+      const data = {
+        studentName: studentData.studentName,
+        fatherName: studentData.fatherName,
+        surname: studentData.surname,
+        motherName: studentData.motherName,
+        course: studentData.courseName,
+        dob: studentData.dob,
+        instituteName: studentData.instituteName,
+        marksArray: formattedMarks,
+        grade: cert.grade || "",
+        marksheetNo: cert.$id || "",
+        franchiseSignature: franchiseData?.signature || ""
+      };
+
+      localStorage.setItem("marksheetStudent", JSON.stringify(data));
+
+      // 🔥 SWITCH PAGE
+      if (studentData.courseType === "beauty") {
+        window.open("/login/institute/certificate/beauty-marksheet", "_blank");
+      } else {
+        window.open("/login/institute/certificate/marksheet", "_blank");
       }
 
     } catch (err) {
-      console.log("MARK PARSE ERROR:", err);
+      console.error("MARKSHEET ERROR:", err);
+      alert("Failed to generate marksheet");
     }
+  };
 
-    // ✅ FORMAT MARKS
-    const formattedMarks = parsedMarks.map((m, index) => ({
+  // ===============================
+  // ✅ CERTIFICATE PRINT
+  // ===============================
+  const printCertificate = async (cert) => {
+    try {
 
-      subject: m.subject || `Subject ${index + 1}`,
+      let studentData = null;
+      let franchiseData = null;
 
-      objective: Number(m.theory || m.objective || 0),
-      practical: Number(m.practical || 0),
+      // 🔹 FETCH STUDENT
+      if (cert.studentId) {
+        studentData = await databases.getDocument(
+          DATABASE_ID,
+          "student_admissions",
+          cert.studentId
+        );
+      } else {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "student_admissions",
+          [Query.equal("studentName", cert.studentName)]
+        );
 
-      total:
-        Number(m.theory || m.objective || 0) +
-        Number(m.practical || 0)
+        if (!res.documents.length) {
+          alert("Student not found");
+          return;
+        }
 
-    }));
+        studentData = res.documents[0];
+      }
 
-    // ===============================
-    // ✅ FINAL DATA
-    // ===============================
+      // 🔹 FETCH FRANCHISE
+      const franchiseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [Query.equal("email", studentData.franchiseEmail)]
+      );
 
-    const data = {
-      studentName: studentData.studentName,
-      fatherName: studentData.fatherName,
-      surname: studentData.surname,
-      motherName: studentData.motherName,
+      if (franchiseRes.documents.length > 0) {
+        franchiseData = franchiseRes.documents[0];
+      }
 
-      course: studentData.courseName,
-      dob: studentData.dob,
+      // 🔥 FINAL DATA
+      const data = {
+        studentName: studentData.studentName || "",
+        marks: cert.marks,
+        grade: cert.grade,
+        course: studentData.courseName || "",
+        signatureId: studentData.signatureId || "",
+        franchiseSignature: franchiseData?.signature || "",
+        photoId: studentData.photoId || "",
+        instituteName: studentData.instituteName || "",
+        createdById: studentData.createdById || ""
+      };
 
-      instituteName: studentData.instituteName,
+      localStorage.setItem("certificateStudent", JSON.stringify(data));
 
-      marksArray: formattedMarks, // ✅ FIXED
+      // 🔥 SWITCH PAGE
+      if (studentData.courseType === "beauty") {
+        window.open("/login/institute/certificate/beauty-certificate", "_blank");
+      } else {
+        window.open("/login/institute/certificate/print", "_blank");
+      }
 
-      grade: cert.grade || "",
-      marksheetNo: cert.$id || "",
+    } catch (err) {
+      console.error("CERT ERROR:", err);
+      alert("Failed to open certificate");
+    }
+  };
 
-      // ✅ SIGNATURE
-      franchiseSignature: franchiseData?.signature || ""
-    };
-
-    console.log("FINAL MARKSHEET DATA:", data);
-
-    localStorage.setItem("marksheetStudent", JSON.stringify(data));
-
-    window.open("/login/institute/certificate/marksheet", "_blank");
-
-  } catch (err) {
-
-    console.error("MARKSHEET ERROR:", err);
-    alert("Failed to generate marksheet");
-
-  }
-};
+  // ===============================
+  // 🔹 LOAD DATA
+  // ===============================
   useEffect(() => {
-    if (!databases || !DATABASE_ID) return;
     loadCertificates();
   }, []);
 
   const loadCertificates = async () => {
     try {
-      if (!databases || !DATABASE_ID) return;
       const res = await databases.listDocuments(DATABASE_ID, CERT_COLLECTION);
       setCertificates(res.documents || []);
     } catch (err) {
-      console.log("Load certificates error:", err);
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
 
   const approveCertificate = async (id) => {
-    try {
-      await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
-        status: "approved",
-      });
-      alert("Certificate Approved");
-      loadCertificates();
-    } catch (err) {
-      console.log(err);
-    }
+    await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
+      status: "approved"
+    });
+    loadCertificates();
   };
 
   const rejectCertificate = async (id) => {
-    try {
-      await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
-        status: "rejected",
-      });
-      alert("Certificate Rejected");
-      loadCertificates();
-    } catch (err) {
-      console.log(err);
-    }
+    await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
+      status: "rejected"
+    });
+    loadCertificates();
   };
 
-const printCertificate = async (cert) => {
-
-  try {
-
-    let studentData = null;
-    let franchiseData = null;
-
-    // ✅ FETCH STUDENT
-    if (cert.studentId) {
-
-      studentData = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
-
-    } else {
-
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "student_admissions",
-        [Query.equal("studentName", cert.studentName)]
-      );
-
-      if (!res.documents.length) {
-        alert("Student not found");
-        return;
-      }
-
-      studentData = res.documents[0];
-    }
-
-    // ✅ FETCH FRANCHISE (IMPORTANT)
-    const franchiseRes = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved",
-      [Query.equal("email", studentData.franchiseEmail)]
-    );
-
-    if (franchiseRes.documents.length > 0) {
-      franchiseData = franchiseRes.documents[0];
-    }
-
-    // ✅ FINAL DATA
-    const data = {
-      studentName: studentData.studentName || "",
-      marks: cert.marks,
-      grade: cert.grade,
-      course: studentData.courseName || "",
-
-      // ✅ STUDENT SIGNATURE
-      signatureId: studentData.signatureId || "",
-
-      // ✅ FRANCHISE SIGNATURE (FULL URL)
-      franchiseSignature: franchiseData?.signature || "",
-
-      photoId: studentData.photoId || "",
-
-      instituteName: studentData.instituteName || "",
-      createdById: studentData.createdById || ""
-    };
-
-    console.log("FINAL CERT DATA:", data);
-
-    localStorage.setItem("certificateStudent", JSON.stringify(data));
-
-    window.open("/login/institute/certificate/print", "_blank");
-
-  } catch (err) {
-
-    console.error("CERT ERROR:", err);
-    alert("Failed to open certificate");
-
-  }
-};
   const getPhoto = (photoId) => {
-    if (!process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT) return null;
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
   };
 
-  if (loading || !DATABASE_ID) {
-    return <p className="p-10">Loading certificates...</p>;
-  }
+  if (loading) return <p className="p-10">Loading...</p>;
 
-  return (
-    <div className="p-10 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Certificate Approval Panel</h1>
-      <div className="bg-white shadow rounded">
-        <table className="w-full border">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="border p-2">#</th>
-              <th className="border p-2">Photo</th>
-              <th className="border p-2">Student</th>
-              <th className="border p-2">Course</th>
-              <th className="border p-2">Marks</th>
-              <th className="border p-2">Grade</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {certificates.map((c, index) => {
-              const photoUrl = getPhoto(c.photoId);
-              return (
-                <tr key={c.$id}>
-                  <td className="border p-2">{index + 1}</td>
-                  <td className="border p-2">
-                    {photoUrl && (
-                      <img
-                        src={photoUrl}
-                        className="w-12 h-12 rounded-full object-cover"
-                        alt="student"
-                      />
-                    )}
-                  </td>
-                  <td className="border p-2">{c.studentName}</td>
-                  <td className="border p-2">{c.course}</td>
-                  <td className="border p-2">{c.marks}</td>
-                  <td className="border p-2">{c.grade}</td>
-                  <td className="border p-2">
-                    {c.status === "pending" && (
-                      <span className="text-yellow-600 font-semibold">Pending</span>
-                    )}
-                    {c.status === "approved" && (
-                      <span className="text-green-600 font-semibold">Approved</span>
-                    )}
-                    {c.status === "rejected" && (
-                      <span className="text-red-600 font-semibold">Rejected</span>
-                    )}
-                  </td>
-                  <td className="border p-2 flex gap-2">
+ return (
+  <div className="p-10 bg-gray-100 min-h-screen">
+
+    <h1 className="text-3xl font-bold mb-8 text-gray-800">
+      Certificate Approval Panel
+    </h1>
+
+    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+
+      <table className="w-full border-collapse text-sm">
+
+        <thead className="bg-gray-200 text-gray-700">
+          <tr>
+            <th className="p-3 border">#</th>
+            <th className="p-3 border">Photo</th>
+            <th className="p-3 border">Student</th>
+            <th className="p-3 border">Course</th>
+            <th className="p-3 border">Marks</th>
+            <th className="p-3 border">Grade</th>
+            <th className="p-3 border">Status</th>
+            <th className="p-3 border">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {certificates.map((c, index) => {
+
+            const photoUrl = getPhoto(c.photoId);
+
+            return (
+              <tr
+                key={c.$id}
+                className="hover:bg-gray-50 transition duration-200"
+              >
+
+                <td className="p-3 border text-center">{index + 1}</td>
+
+                <td className="p-3 border text-center">
+                  <img
+                    src={photoUrl}
+                    className="w-12 h-12 rounded-full object-cover mx-auto"
+                  />
+                </td>
+
+                <td className="p-3 border font-medium">
+                  {c.studentName}
+                </td>
+
+                <td className="p-3 border">
+                  {c.course}
+                </td>
+
+                <td className="p-3 border text-center">
+                  {c.marks}
+                </td>
+
+                <td className="p-3 border text-center font-semibold">
+                  {c.grade}
+                </td>
+
+                <td className="p-3 border text-center">
+
+                  {c.status === "pending" && (
+                    <span className="text-yellow-600 font-semibold">
+                      Pending
+                    </span>
+                  )}
+
+                  {c.status === "approved" && (
+                    <span className="text-green-600 font-semibold">
+                      Approved
+                    </span>
+                  )}
+
+                  {c.status === "rejected" && (
+                    <span className="text-red-600 font-semibold">
+                      Rejected
+                    </span>
+                  )}
+
+                </td>
+
+                <td className="p-3 border">
+
+                  <div className="flex gap-2 justify-center flex-wrap">
+
                     {c.status === "pending" && (
                       <>
                         <button
                           onClick={() => approveCertificate(c.$id)}
-                          className="bg-green-600 text-white px-3 py-1 rounded"
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
                         >
                           Approve
                         </button>
+
                         <button
                           onClick={() => rejectCertificate(c.$id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded"
+                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
                         >
                           Reject
                         </button>
                       </>
                     )}
-                    {c.status === "approved" && (
-                      <div className="flex gap-2">
-  <button
-    onClick={() => printCertificate(c)}
-    className="bg-blue-600 text-white px-3 py-1 rounded"
-  >
-    View Certificate
-  </button>
 
-  <button
-    onClick={() => printMarksheet(c)}
-    className="bg-purple-600 text-white px-3 py-1 rounded"
-  >
-    View Marksheet
-  </button>
-</div>
+                    {c.status === "approved" && (
+                      <>
+                        <button
+                          onClick={() => printCertificate(c)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                        >
+                          Certificate
+                        </button>
+
+                        <button
+                          onClick={() => printMarksheet(c)}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs"
+                        >
+                          Marksheet
+                        </button>
+                      </>
                     )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+
+                  </div>
+
+                </td>
+
+              </tr>
+            );
+          })}
+
+        </tbody>
+
+      </table>
+
     </div>
-  );
+
+  </div>
+);
 }

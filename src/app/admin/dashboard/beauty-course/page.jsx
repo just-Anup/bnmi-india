@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { databases, ID } from '@/lib/appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = "typing_courses_master"
+const COLLECTION_ID = "beauty_courses_master"
 
 export default function BeautyCMS() {
 

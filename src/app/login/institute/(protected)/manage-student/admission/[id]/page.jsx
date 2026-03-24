@@ -89,8 +89,8 @@ const password = form.aadhar?.slice(-4) || "1234"
       queries = [Query.equal("franchiseEmail", user.email)];
     }
 
-    if (type === "typing") {
-      collection = "franchise_typing_courses";
+    if (type === "beauty") {
+      collection = "beauty_courses_single";
       queries = [Query.equal("franchiseEmail", user.email)];
     }
 
@@ -164,17 +164,22 @@ const handleFeesReceived = (value) => {
 
     let subjectsText = ""
 
-    if (form.courseType === "single") {
+ if (form.courseType === "single" || form.courseType === "beauty") {
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "course_subjects",
-        [Query.equal("courseId", courseId)]
-      )
+  const subjectCollection =
+    form.courseType === "beauty"
+      ? "beauty_courses_subjects"
+      : "course_subjects"
 
-      subjectsText = res.documents
-        .map(s => s.subjectName)
-        .join(", ")
+  const res = await databases.listDocuments( 
+    DATABASE_ID,
+    subjectCollection,
+    [Query.equal("courseId", courseId)]
+  )
+
+  subjectsText = res.documents
+    .map(s => s.subjectName)
+    .join(", ")
 
     } else {
       subjectsText = course.subjects || ""
@@ -202,6 +207,7 @@ const handleFeesReceived = (value) => {
 
     setForm({
       ...form,
+      
       courseName: course.courseName || course.courseCode,
       subjects: subjectsText,
       courseFees: course.courseFees || 0,
@@ -567,12 +573,12 @@ const handleSubmit = async (e) => {
         <button
           type="button"
           onClick={() => {
-            setForm({ ...form, courseType: "typing" });
-            loadCourses("typing");
+            setForm({ ...form, courseType: "beauty" });
+            loadCourses("beauty");
           }}
-          className={`px-4 py-2 rounded ${form.courseType === "typing" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+          className={`px-4 py-2 rounded ${form.courseType === "beauty" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
         >
-          Typing
+          Beauty
         </button>
 
       </div>

@@ -1,282 +1,319 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { databases, account } from '@/lib/appwrite'
+import { databases, ID, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
-import Link from 'next/link'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+const COURSE_COLLECTION = 'beauty_courses_single'
+const SUBJECT_COLLECTION = 'beauty_courses_subjects'
 
-export default function BeautyListPage() {
+export default function ListBeautyCourses() {
 
-const [courses, setCourses] = useState([])
-const [editCourse, setEditCourse] = useState(null)
+  const [courses, setCourses] = useState([])
+  const [editCourse, setEditCourse] = useState(null)
+  const [selectedCourse, setSelectedCourse] = useState(null)
 
-const [courseFees, setCourseFees] = useState('')
-const [minimumFees, setMinimumFees] = useState('')
+  const [courseFees, setCourseFees] = useState('')
+  const [minimumFees, setMinimumFees] = useState('')
+  const [subject, setSubject] = useState('')
 
-// ================= FETCH =================
-const fetchCourses = async () => {
+  const fetchCourses = async () => {
 
-try {
+    try {
 
-const user = await account.get()
+      const user = await account.get()
 
-const res = await databases.listDocuments(
-DATABASE_ID,
-"franchise_typing_courses",
-[
-Query.equal("franchiseEmail", user.email)
-]
-)
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COURSE_COLLECTION,
+        [
+          Query.equal("franchiseEmail", user.email)
+        ]
+      )
 
-// ✅ FILTER BAD DATA (fix crash)
-const cleanData = (res.documents || []).filter(
-(c) => c && c.$id
-)
+      setCourses(res.documents)
 
-setCourses(cleanData)
+    } catch (error) {
+      console.log("Fetch Error:", error)
+    }
 
-} catch (error) {
-console.log("Fetch Error:", error)
-setCourses([])
+  }
+
+  useEffect(() => {
+    fetchCourses()
+  }, [])
+
+  const deleteCourse = async (id) => {
+
+    if (!id) return
+
+    try {
+
+      await databases.deleteDocument(
+        DATABASE_ID,
+        COURSE_COLLECTION,
+        id
+      )
+
+      fetchCourses()
+
+    } catch (error) {
+      console.log("Delete Error:", error)
+    }
+
+  }
+
+  const openEdit = (course) => {
+
+    setEditCourse(course)
+    setCourseFees(course.courseFees)
+    setMinimumFees(course.minimumFees)
+
+  }
+
+  const updateFees = async () => {
+
+    if (!editCourse) return
+
+    try {
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        COURSE_COLLECTION,
+        editCourse.$id,
+        {
+          courseFees: Number(courseFees),
+          minimumFees: Number(minimumFees)
+        }
+      )
+
+      setEditCourse(null)
+      fetchCourses()
+
+    } catch (error) {
+      console.log("Update Error:", error)
+    }
+
+  }
+
+const saveSubject = async () => {
+
+  if (!selectedCourse) return
+
+  if (!subject.trim()) {
+    alert("Enter subject name")
+    return
+  }
+
+  try {
+
+    const user = await account.get()
+
+    const res = await databases.createDocument(
+      DATABASE_ID,
+      SUBJECT_COLLECTION,
+      ID.unique(),
+      {
+        courseId: String(selectedCourse.$id),
+        subjectName: String(subject),
+        franchiseEmail: user.email
+      }
+    )
+
+    console.log("Saved:", res)
+
+    alert("Subject Saved Successfully")
+
+    setSubject('')
+    setSelectedCourse(null)
+
+  } catch (error) {
+
+    console.error("Appwrite Error:", error)
+    alert(error.message)
+
+  }
+
 }
 
-}
+  return (
 
-useEffect(() => {
-fetchCourses()
-}, [])
+    <div className="p-10 bg-black min-h-screen text-white">
 
-// ================= DELETE =================
-const deleteCourse = async (id) => {
+      <div className="bg-[#121212] rounded-xl p-6 shadow-lg border border-gray-800">
 
-if (!id) return
+        <h2 className="text-xl font-bold mb-6">
+          Course List
+        </h2>
 
-try {
+        <table className="w-full border border-gray-800">
 
-await databases.deleteDocument(
-DATABASE_ID,
-"franchise_typing_courses",
-id
-)
+          <thead className="bg-orange-500 text-black">
 
-fetchCourses()
+            <tr>
+              <th className="border border-gray-800 p-2">Sr</th>
+              <th className="border border-gray-800 p-2">Course Name</th>
+              <th className="border border-gray-800 p-2">Exam Fees</th>
+              <th className="border border-gray-800 p-2">Course Fees</th>
+              <th className="border border-gray-800 p-2">Minimum Fees</th>
+              <th className="border border-gray-800 p-2">Duration</th>
+              <th className="border border-gray-800 p-2">Status</th>
+              <th className="border border-gray-800 p-2">Action</th>
+            </tr>
 
-} catch (error) {
-console.log("Delete Error:", error)
-}
+          </thead>
 
-}
+          <tbody>
 
-// ================= EDIT =================
-const openEdit = (course) => {
+            {courses.map((course, index) => (
 
-if (!course || !course.$id) return
+              <tr key={course.$id} className="hover:bg-[#1a1a1a]">
 
-setEditCourse(course)
-setCourseFees(course.courseFees || '')
-setMinimumFees(course.minimumFees || '')
+                <td className="border border-gray-800 p-2">{index + 1}</td>
 
-}
+                <td className="border border-gray-800 p-2">{course.courseName}</td>
 
-const updateFees = async () => {
+                <td className="border border-gray-800 p-2">{course.examFees}</td>
 
-if (!editCourse?.$id) return
+                <td className="border border-gray-800 p-2">{course.courseFees}</td>
 
-try {
+                <td className="border border-gray-800 p-2">{course.minimumFees}</td>
 
-await databases.updateDocument(
-DATABASE_ID,
-"franchise_typing_courses",
-editCourse.$id,
-{
-courseFees: Number(courseFees),
-minimumFees: Number(minimumFees)
-}
-)
+                <td className="border border-gray-800 p-2">{course.duration}</td>
 
-setEditCourse(null)
-fetchCourses()
+                <td className="border border-gray-800 p-2 text-green-400">{course.status}</td>
 
-} catch (error) {
-console.log("Update Error:", error)
-}
+                <td className="border border-gray-800 p-2 space-x-2">
 
-}
+                  <button
+                    onClick={() => openEdit(course)}
+                    className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
 
-// ================= UI =================
-return (
+                  <button
+                    onClick={() => setSelectedCourse(course)}
+                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
+                  >
+                    Add Subject
+                  </button>
 
-<div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-10">
+                  <button
+                    onClick={() => deleteCourse(course.$id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
 
-<div className="max-w-6xl mx-auto">
+                </td>
 
-{/* HEADER */}
-<div className="flex justify-between items-center mb-8">
+              </tr>
 
-<h1 className="text-3xl font-bold">
-📋 Beauty Course List
-</h1>
+            ))}
 
-</div>
+          </tbody>
 
-{/* TABLE */}
-<div className="bg-[#121212] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+        </table>
 
-<table className="w-full text-sm">
+      </div>
 
-<thead className="bg-orange-500 text-black">
-<tr>
-<th className="p-3">#</th>
-<th className="p-3">Course Name</th>
-<th className="p-3">Exam Fees</th>
-<th className="p-3">Course Fees</th>
-<th className="p-3">Minimum Fees</th>
-<th className="p-3">Duration</th>
-<th className="p-3">Status</th>
-<th className="p-3">Action</th>
-</tr>
-</thead>
 
-<tbody>
+      {editCourse && (
 
-{courses.length > 0 ? (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70">
 
-courses.map((course, index) => {
+          <div className="bg-[#121212] border border-gray-700 p-6 rounded w-[400px] text-white">
 
-if (!course || !course.$id) return null
+            <h3 className="text-lg font-bold mb-4">
+              Edit Course Fees
+            </h3>
 
-return (
+            <input
+              type="number"
+              value={courseFees}
+              onChange={(e) => setCourseFees(e.target.value)}
+              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
+              placeholder="Course Fee"
+            />
 
-<tr
-key={course.$id}
-className="border-t border-gray-800 hover:bg-[#1a1a1a] transition"
->
+            <input
+              type="number"
+              value={minimumFees}
+              onChange={(e) => setMinimumFees(e.target.value)}
+              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
+              placeholder="Minimum Fee"
+            />
 
-<td className="p-3">{index + 1}</td>
+            <div className="flex justify-end gap-2">
 
-<td className="p-3">{course.courseName || '-'}</td>
+              <button
+                onClick={() => setEditCourse(null)}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
 
-<td className="p-3 text-orange-400 font-semibold">
-₹{course.examFees || 0}
-</td>
+              <button
+                onClick={updateFees}
+                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
+              >
+                Save
+              </button>
 
-<td className="p-3">{course.courseFees || 0}</td>
+            </div>
 
-<td className="p-3">{course.minimumFees || 0}</td>
+          </div>
 
-<td className="p-3">{course.duration || '-'}</td>
+        </div>
 
-<td className="p-3 text-green-400">
-{course.status || 'Active'}
-</td>
+      )}
 
-<td className="p-3 space-x-2">
 
-{/* EDIT */}
-<button
-onClick={() => openEdit(course)}
-className="bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded text-black"
->
-Edit
-</button>
+      {selectedCourse && (
 
-{/* ADD SUBJECT */}
-<Link
-href={`/login/institute/add-course/beauty/subjects/${course.$id}`}
-className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded"
->
-Add Subject
-</Link>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70">
 
-{/* DELETE */}
-<button
-onClick={() => deleteCourse(course.$id)}
-className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
->
-Delete
-</button>
+          <div className="bg-[#121212] border border-gray-700 p-6 rounded w-[400px] text-white">
 
-</td>
+            <h3 className="text-lg font-bold mb-4">
+              Add Course Subject
+            </h3>
 
-</tr>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Subject Name"
+              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
+            />
 
-)
+            <div className="flex justify-end gap-2">
 
-})
+              <button
+                onClick={() => setSelectedCourse(null)}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
 
-) : (
+              <button
+                onClick={saveSubject}
+                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
+              >
+                Save
+              </button>
 
-<tr>
-<td colSpan="8" className="text-center p-6 text-gray-400">
-No Courses Found
-</td>
-</tr>
+            </div>
 
-)}
+          </div>
 
-</tbody>
+        </div>
 
-</table>
+      )}
 
-</div>
-
-</div>
-
-{/* ================= EDIT MODAL ================= */}
-{editCourse && editCourse.$id && (
-
-<div className="fixed inset-0 flex items-center justify-center bg-black/70">
-
-<div className="bg-[#121212] border border-gray-700 p-6 rounded-xl w-[400px] shadow-xl">
-
-<h3 className="text-lg font-bold mb-4">
-✏️ Edit Course Fees
-</h3>
-
-<input
-type="number"
-value={courseFees}
-onChange={(e)=>setCourseFees(e.target.value)}
-placeholder="Course Fee"
-className="border border-gray-700 bg-black p-3 w-full mb-4 rounded focus:ring-2 focus:ring-orange-500"
-/>
-
-<input
-type="number"
-value={minimumFees}
-onChange={(e)=>setMinimumFees(e.target.value)}
-placeholder="Minimum Fee"
-className="border border-gray-700 bg-black p-3 w-full mb-4 rounded focus:ring-2 focus:ring-orange-500"
-/>
-
-<div className="flex justify-end gap-2">
-
-<button
-onClick={()=>setEditCourse(null)}
-className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded"
->
-Close
-</button>
-
-<button
-onClick={updateFees}
-className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded text-black"
->
-Save
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-</div>
-
-)
+    </div>
+  )
 
 }
