@@ -262,6 +262,7 @@ const handleSubmit = async (e) => {
       return
     }
 
+
     // ✅ FILE UPLOAD
     let photoId = ""
     let signatureId = ""
@@ -321,6 +322,11 @@ const handleSubmit = async (e) => {
         wallet: newWallet.toFixed(2)
       }
     )
+
+    if (!form.dob) {
+  alert("Please select Date of Birth");
+  return;
+}
 
     // ✅ TRANSACTION
     await databases.createDocument(
@@ -690,17 +696,17 @@ const handleSubmit = async (e) => {
         <div>
 
           <label className="block mb-1 font-semibold">
-            Date Of Birth
-          </label>
+  Date Of Birth *
+</label>
 
-          <input
-            type="date"
-            name="dob"
-            value={form.dob}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
-
+<input
+  type="date"
+  name="dob"
+  value={form.dob}
+  onChange={handleChange}
+  className="border p-2 w-full"
+  required
+/>
         </div>
 
         <div><label className="block mb-1 font-semibold">

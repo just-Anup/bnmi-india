@@ -32,8 +32,8 @@ export default function addBeautycourse() {
   DATABASE_ID,
   MASTER_COLLECTION,
   [
-    Query.orderDesc('$createdAt'),
-    Query.limit(1000) // 🔥 increase limit
+    Query.orderDesc('courseCode'),
+    Query.limit(300) // 🔥 increase limit
   ]
 )
       setCourses(res.documents)

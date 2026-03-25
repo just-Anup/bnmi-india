@@ -135,28 +135,37 @@ export default function ResultPage() {
       const grade = calculateGrade();
 
       const resultDoc = await databases.createDocument(
-        DATABASE_ID,
-        RESULT_COLLECTION,
-        ID.unique(),
-        {
-          studentId: id,
-          studentName: student.studentName || "",
-          course: student.courseName || "",
-          photoId: student.photoId || "",
-          subjects: subjects.join(", "),
-          marks: JSON.stringify(marks),
-          totalMarks: Number(totalMarks),
-          percentage: Number(percentage),
-          grade,
+  DATABASE_ID,
+  RESULT_COLLECTION,
+  ID.unique(),
+  {
+    studentId: id,
+    studentName: student.studentName || "",
+    course: student.courseName || "",
+    photoId: student.photoId || "",
+    subjects: subjects.join(", "),
 
-          franchiseId: student.franchiseId || "",
-          instituteName: student.instituteName || "",
+    // ✅ FIXED HERE
+ marksArray: JSON.stringify(
+  marks.map((m) => ({
+    subject: m.subject,
+    objective: Number(m.theory || 0),
+    practical: Number(m.practical || 0),
+    total: Number(m.theory || 0) + Number(m.practical || 0)
+  }))
+),
 
-          createdById: user.$id,
-          createdAt: new Date().toISOString()
-        }
-      );
+    totalMarks: Number(totalMarks),
+    percentage: Number(percentage),
+    grade,
 
+    franchiseId: student.franchiseId || "",
+    instituteName: student.instituteName || "",
+
+    createdById: user.$id,
+    createdAt: new Date().toISOString()
+  }
+);
       // 🔥 SAVE SUBJECT MARKS (ONLY 1 FOR SINGLE/BEAUTY)
       for (const m of marks) {
         await databases.createDocument(

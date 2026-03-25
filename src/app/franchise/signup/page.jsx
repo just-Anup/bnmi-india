@@ -30,9 +30,10 @@ const statesAndCities = {
   "Gujarat": ["Ahmedabad", "Surat", "Vadodara"]
 }
 
-/* ---------------- ATC CODE GENERATOR ---------------- */
+/* ---------------- SAFE ATC GENERATOR ---------------- */
 
 const getStateCode = (state) => {
+  if (!state || typeof state !== "string") return "NA"
   return state.substring(0, 2).toUpperCase()
 }
 
@@ -71,23 +72,39 @@ export default function FranchiseSignup() {
   /* ---------------- STATE CHANGE ---------------- */
 
   const handleStateChange = (state) => {
-    setForm({ ...form, state, city: '' })
+    setForm((prev) => ({
+      ...prev,
+      state,
+      city: ''
+    }))
     setCities(statesAndCities[state] || [])
   }
 
   /* ---------------- SIGNUP ---------------- */
 
   const handleSignup = async (e) => {
-
     e.preventDefault()
+
+    console.log("FORM DATA:", form)
+
+    // ✅ Strong validation
+    if (!form.state) {
+      alert("Please select a state ❌")
+      return
+    }
+
+    if (!form.city) {
+      alert("Please select a city ❌")
+      return
+    }
+
     setLoading(true)
 
     try {
 
-      const atcCode = generateATCCode()
+      const atcCode = generateATCCode(form.state)
 
       /* Create Appwrite Auth User */
-
       await account.create(
         ID.unique(),
         form.email,
@@ -96,7 +113,6 @@ export default function FranchiseSignup() {
       )
 
       /* Save Franchise Request */
-
       await databases.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
@@ -104,8 +120,7 @@ export default function FranchiseSignup() {
         {
           ...form,
           franchiseEmail: form.email,
-          instituteName: form.instituteName,
-          atcCode: atcCode,
+          atcCode,
           wallet: "0.00",
           courierWallet: "0.00",
           status: "pending"
@@ -116,18 +131,14 @@ export default function FranchiseSignup() {
       router.push('/login')
 
     } catch (error) {
-
-      alert(error.message)
-      console.error(error)
-
+      console.error("ERROR:", error)
+      alert(error.message || "Something went wrong")
     }
 
     setLoading(false)
-
   }
 
   return (
-
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
       <form
@@ -136,157 +147,70 @@ export default function FranchiseSignup() {
       >
 
         <h2 className="text-2xl font-bold text-center">
-          Franchise Form
+          Franchise Formgfgsfdgsd
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
 
-          {/* Name */}
+          <input placeholder="Full Name" className="border p-3"
+            onChange={(e)=>setForm({...form,name:e.target.value})} required />
 
-          <div>
-            <label className="block font-medium mb-1">Full Name</label>
-            <input
-              type="text"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,name:e.target.value})}
-              required
-            />
-          </div>
+          <input placeholder="Institute Name" className="border p-3"
+            onChange={(e)=>setForm({...form,instituteName:e.target.value})} required />
 
-          {/* Institute */}
+          <input type="email" placeholder="Email" className="border p-3"
+            onChange={(e)=>setForm({...form,email:e.target.value})} required />
 
-          <div>
-            <label className="block font-medium mb-1">Institute Name</label>
-            <input
-              type="text"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,instituteName:e.target.value})}
-              required
-            />
-          </div>
+          <input type="password" placeholder="Password" className="border p-3"
+            onChange={(e)=>setForm({...form,password:e.target.value})} required />
 
-          {/* Email */}
+          <input placeholder="Mobile" className="border p-3"
+            onChange={(e)=>setForm({...form,mobile:e.target.value})} />
 
-          <div>
-            <label className="block font-medium mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,email:e.target.value})}
-              required
-            />
-          </div>
+          <select className="border p-3"
+            value={form.designation}
+            onChange={(e)=>setForm({...form,designation:e.target.value})}>
+            <option value="">Select Designation</option>
+            <option>Director</option>
+            <option>Employee</option>
+            <option>Partner</option>
+            <option>Proprietor</option>
+            <option>Trustee</option>
+            <option>Other</option>
+          </select>
 
-          {/* Password */}
+          <input type="date" className="border p-3"
+            onChange={(e)=>setForm({...form,dob:e.target.value})} />
 
-          <div>
-            <label className="block font-medium mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,password:e.target.value})}
-              required
-            />
-          </div>
+          <input placeholder="Address" className="border p-3 col-span-2"
+            onChange={(e)=>setForm({...form,address:e.target.value})} />
 
-          {/* Mobile */}
+          <input placeholder="Pincode" className="border p-3"
+            onChange={(e)=>setForm({...form,pincode:e.target.value})} />
 
-          <div>
-            <label className="block font-medium mb-1">Mobile Number</label>
-            <input
-              type="text"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,mobile:e.target.value})}
-            />
-          </div>
+          {/* ✅ STATE */}
+          <select
+            value={form.state}
+            className="border p-3"
+            onChange={(e)=>handleStateChange(e.target.value)}
+          >
+            <option value="">Select State</option>
+            {Object.keys(statesAndCities).map((state)=>(
+              <option key={state}>{state}</option>
+            ))}
+          </select>
 
-          {/* Designation */}
-
-          <div>
-            <label className="block font-medium mb-1">Designation</label>
-            <select
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,designation:e.target.value})}
-            >
-              <option value="">Select</option>
-              <option>Director</option>
-              <option>Employee</option>
-              <option>Partner</option>
-              <option>Proprietor</option>
-              <option>Trustee</option>
-              <option>Other</option>
-            </select>
-          </div>
-
-          {/* DOB */}
-
-          <div>
-            <label className="block font-medium mb-1">Date of Birth</label>
-            <input
-              type="date"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,dob:e.target.value})}
-            />
-          </div>
-
-          {/* Address */}
-
-          <div className="col-span-2">
-            <label className="block font-medium mb-1">Address</label>
-            <input
-              type="text"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,address:e.target.value})}
-            />
-          </div>
-
-          {/* Pincode */}
-
-          <div>
-            <label className="block font-medium mb-1">Pincode</label>
-            <input
-              type="text"
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,pincode:e.target.value})}
-            />
-          </div>
-
-          {/* State */}
-
-          <div>
-            <label className="block font-medium mb-1">State</label>
-            <select
-              className="w-full border p-3"
-              onChange={(e)=>handleStateChange(e.target.value)}
-            >
-              <option value="">Select State</option>
-
-              {Object.keys(statesAndCities).map((state)=>(
-                <option key={state}>{state}</option>
-              ))}
-
-            </select>
-          </div>
-
-          {/* City */}
-
-          <div>
-            <label className="block font-medium mb-1">City</label>
-
-            <select
-              className="w-full border p-3"
-              onChange={(e)=>setForm({...form,city:e.target.value})}
-            >
-
-              <option value="">Select City</option>
-
-              {cities.map((city)=>(
-                <option key={city}>{city}</option>
-              ))}
-
-            </select>
-
-          </div>
+          {/* ✅ CITY */}
+          <select
+            value={form.city}
+            className="border p-3"
+            onChange={(e)=>setForm({...form,city:e.target.value})}
+          >
+            <option value="">Select City</option>
+            {cities.map((city)=>(
+              <option key={city}>{city}</option>
+            ))}
+          </select>
 
         </div>
 
@@ -299,7 +223,6 @@ export default function FranchiseSignup() {
         </button>
 
       </form>
-
     </div>
   )
 }

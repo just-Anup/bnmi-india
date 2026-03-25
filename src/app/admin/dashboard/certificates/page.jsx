@@ -5,11 +5,20 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import QRCode from "qrcode";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const CERT_COLLECTION = "certificates";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
+
+// inside printCertificate
+
+const certId = `CERT-${Date.now()}`
+
+const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-certificate/${certId}`
+
+const qrCode = await QRCode.toDataURL(verifyUrl)
 export default function CertificateApprovalPage() {
 
   const [certificates, setCertificates] = useState([]);
@@ -18,211 +27,270 @@ export default function CertificateApprovalPage() {
   // ===============================
   // ✅ MARKSHEET PRINT
   // ===============================
-  const printMarksheet = async (cert) => {
-    try {
+const printMarksheet = async (cert) => {
+  try {
 
-      let studentData = null;
-      let franchiseData = null;
+    let studentData = null;
+    let franchiseData = null;
 
-      // 🔹 FETCH STUDENT
-      if (cert.studentId) {
-        studentData = await databases.getDocument(
-          DATABASE_ID,
-          "student_admissions",
-          cert.studentId
-        );
-      } else {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          "student_admissions",
-          [Query.equal("studentName", cert.studentName)]
-        );
-
-        if (!res.documents.length) {
-          alert("Student not found");
-          return;
-        }
-
-        studentData = res.documents[0];
-      }
-
-      // 🔹 FETCH FRANCHISE
-      const franchiseRes = await databases.listDocuments(
+    // 🔹 FETCH STUDENT
+    if (cert.studentId) {
+      studentData = await databases.getDocument(
         DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("email", studentData.franchiseEmail)]
+        "student_admissions",
+        cert.studentId
+      );
+    } else {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_admissions",
+        [Query.equal("studentName", cert.studentName)]
       );
 
-      if (franchiseRes.documents.length > 0) {
-        franchiseData = franchiseRes.documents[0];
+      if (!res.documents.length) {
+        alert("Student not found");
+        return;
       }
 
-      // ===============================
-      // 🔥 SUBJECT LOGIC
-      // ===============================
-      let subjectList = [];
+      studentData = res.documents[0];
+    }
 
-      if (studentData.courseType === "single" || studentData.courseType === "beauty") {
+    // 🔹 FETCH FRANCHISE
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
 
-        subjectList = [
-          studentData.subjects
-            ?.split(",")
-            .map(s => s.trim())
-            .join(", ")
-        ];
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
 
-      } else {
+    // ===============================
+    // 🔥 FETCH COURSE DURATION (FINAL FIX)
+    // ===============================
+    let courseDuration = "";
 
-        subjectList = studentData.subjects
-          ?.split(",")
-          .map(s => s.trim()) || [];
-      }
+    try {
 
-      // ===============================
-      // 🔥 MARKS PARSE
-      // ===============================
-      let parsedMarks = [];
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "beauty_courses_single",
+        [
+          Query.equal("courseName", studentData.courseName),
+          Query.equal("franchiseEmail", studentData.franchiseEmail)
+        ]
+      );
 
-      try {
-
-        if (typeof cert.marks === "string" && cert.marks.startsWith("[")) {
-          parsedMarks = JSON.parse(cert.marks);
-        }
-
-        else if (!isNaN(cert.marks)) {
-          parsedMarks = [{
-            subject: subjectList[0] || "Subject",
-            theory: Number(cert.marks),
-            practical: 0
-          }];
-        }
-
-        else if (Array.isArray(cert.marks)) {
-          parsedMarks = cert.marks;
-        }
-
-      } catch (err) {
-        console.log("MARK PARSE ERROR:", err);
-      }
-
-      // ===============================
-      // 🔥 FORMAT MARKS
-      // ===============================
-      const formattedMarks = parsedMarks.map((m, index) => ({
-
-        subject: subjectList[index] || m.subject || `Subject ${index + 1}`,
-
-        objective: Number(m.theory || m.objective || 0),
-        practical: Number(m.practical || 0),
-
-        total:
-          Number(m.theory || m.objective || 0) +
-          Number(m.practical || 0)
-
-      }));
-
-      // ===============================
-      // 🔥 FINAL DATA
-      // ===============================
-      const data = {
-        studentName: studentData.studentName,
-        fatherName: studentData.fatherName,
-        surname: studentData.surname,
-        motherName: studentData.motherName,
-        course: studentData.courseName,
-        dob: studentData.dob,
-        instituteName: studentData.instituteName,
-        marksArray: formattedMarks,
-        grade: cert.grade || "",
-        marksheetNo: cert.$id || "",
-        franchiseSignature: franchiseData?.signature || ""
-      };
-
-      localStorage.setItem("marksheetStudent", JSON.stringify(data));
-
-      // 🔥 SWITCH PAGE
-      if (studentData.courseType === "beauty") {
-        window.open("/login/institute/certificate/beauty-marksheet", "_blank");
-      } else {
-        window.open("/login/institute/certificate/marksheet", "_blank");
+      if (courseRes.documents.length > 0) {
+        courseDuration = courseRes.documents[0].duration || "";
       }
 
     } catch (err) {
-      console.error("MARKSHEET ERROR:", err);
-      alert("Failed to generate marksheet");
+      console.log("COURSE FETCH ERROR:", err);
     }
-  };
 
+    // ===============================
+    // 🔥 SUBJECT LOGIC
+    // ===============================
+    let subjectList = [];
+
+    if (
+      studentData.courseType === "single" ||
+      studentData.courseType === "beauty"
+    ) {
+      subjectList = [
+        studentData.subjects
+          ?.split(",")
+          .map((s) => s.trim())
+          .join(", "),
+      ];
+    } else {
+      subjectList =
+        studentData.subjects
+          ?.split(",")
+          .map((s) => s.trim()) || [];
+    }
+
+    // ===============================
+    // 🔥 MARKS PARSE (OLD SUPPORT)
+    // ===============================
+    let parsedMarks = [];
+
+    try {
+      if (typeof cert.marks === "string" && cert.marks.startsWith("[")) {
+        parsedMarks = JSON.parse(cert.marks);
+      } else if (!isNaN(cert.marks)) {
+        parsedMarks = [
+          {
+            subject: subjectList[0] || "Subject",
+            theory: Number(cert.marks),
+            practical: 0,
+          },
+        ];
+      } else if (Array.isArray(cert.marks)) {
+        parsedMarks = cert.marks;
+      }
+    } catch (err) {
+      console.log("MARK PARSE ERROR:", err);
+    }
+
+    // ===============================
+    // 🔥 FORMAT MARKS
+    // ===============================
+    const formattedMarks = parsedMarks.map((m, index) => ({
+      subject:
+        subjectList[index] ||
+        m.subject ||
+        `Subject ${index + 1}`,
+
+      objective: Number(m.theory || m.objective || 0),
+      practical: Number(m.practical || 0),
+
+      total:
+        Number(m.theory || m.objective || 0) +
+        Number(m.practical || 0),
+    }));
+
+    // ===============================
+    // 🔥 FINAL DATA (FIXED DOB + DURATION)
+    // ===============================
+    const data = {
+      studentName: studentData.studentName,
+      fatherName: studentData.fatherName,
+      surname: studentData.surname,
+      motherName: studentData.motherName,
+      course: studentData.courseName,
+
+      // ✅ DOB FIX
+      dob: studentData.dob
+  ? new Date(studentData.dob).toLocaleDateString("en-GB")
+  : "N/A",
+
+      // ✅ COURSE DURATION FIX
+      coursePeriod: courseDuration || "N/A",
+
+      instituteName: studentData.instituteName,
+      studentId: cert.studentId,
+
+      marksArray:
+        cert.marksArray && cert.marksArray.length > 0
+          ? cert.marksArray
+          : formattedMarks,
+
+      grade: cert.grade || "",
+      marksheetNo: cert.$id || "",
+      franchiseSignature: franchiseData?.signature || "",
+    };
+
+    // ✅ SAVE TO LOCAL STORAGE
+    localStorage.setItem(
+      "marksheetStudent",
+      JSON.stringify(data)
+    );
+
+    // 🔥 OPEN MARKSHEET
+    if (studentData.courseType === "beauty") {
+      window.open(
+        "/login/institute/certificate/beauty-marksheet",
+        "_blank"
+      );
+    } else {
+      window.open(
+        "/login/institute/certificate/marksheet",
+        "_blank"
+      );
+    }
+
+  } catch (err) {
+    console.error("MARKSHEET ERROR:", err);
+    alert("Failed to generate marksheet");
+  }
+};
   // ===============================
   // ✅ CERTIFICATE PRINT
   // ===============================
-  const printCertificate = async (cert) => {
-    try {
+const printCertificate = async (cert) => {
 
-      let studentData = null;
-      let franchiseData = null;
+  try {
 
-      // 🔹 FETCH STUDENT
-      if (cert.studentId) {
-        studentData = await databases.getDocument(
-          DATABASE_ID,
-          "student_admissions",
-          cert.studentId
-        );
-      } else {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          "student_admissions",
-          [Query.equal("studentName", cert.studentName)]
-        );
+    let studentData = null;
+    let franchiseData = null;
 
-        if (!res.documents.length) {
-          alert("Student not found");
-          return;
-        }
-
-        studentData = res.documents[0];
-      }
-
-      // 🔹 FETCH FRANCHISE
-      const franchiseRes = await databases.listDocuments(
+    // 🔹 FETCH STUDENT
+    if (cert.studentId) {
+      studentData = await databases.getDocument(
         DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("email", studentData.franchiseEmail)]
+        "student_admissions",
+        cert.studentId
+      );
+    } else {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_admissions",
+        [Query.equal("studentName", cert.studentName)]
       );
 
-      if (franchiseRes.documents.length > 0) {
-        franchiseData = franchiseRes.documents[0];
+      if (!res.documents.length) {
+        alert("Student not found");
+        return;
       }
 
-      // 🔥 FINAL DATA
-      const data = {
-        studentName: studentData.studentName || "",
-        marks: cert.marks,
-        grade: cert.grade,
-        course: studentData.courseName || "",
-        signatureId: studentData.signatureId || "",
-        franchiseSignature: franchiseData?.signature || "",
-        photoId: studentData.photoId || "",
-        instituteName: studentData.instituteName || "",
-        createdById: studentData.createdById || ""
-      };
-
-      localStorage.setItem("certificateStudent", JSON.stringify(data));
-
-      // 🔥 SWITCH PAGE
-      if (studentData.courseType === "beauty") {
-        window.open("/login/institute/certificate/beauty-certificate", "_blank");
-      } else {
-        window.open("/login/institute/certificate/print", "_blank");
-      }
-
-    } catch (err) {
-      console.error("CERT ERROR:", err);
-      alert("Failed to open certificate");
+      studentData = res.documents[0];
     }
-  };
 
+    // 🔹 FETCH FRANCHISE
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
+
+    // ✅ QR GENERATION
+    const certId = `CERT-${Date.now()}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/beauty-varification/${certId}`;
+    const qrCode = await QRCode.toDataURL(verifyUrl);
+
+    // 🔥 FINAL DATA
+    const data = {
+      studentName: studentData.studentName || "",
+      marks: cert.marks,
+      grade: cert.grade,
+      course: studentData.courseName || "",
+      duration: studentData.duration || "",
+      signatureId: studentData.signatureId || "",
+      franchiseSignature: franchiseData?.signature || "",
+      photoId: studentData.photoId || "",
+      instituteName: studentData.instituteName || "",
+      city: franchiseData?.city || "",
+      address: franchiseData?.address || "",
+      logo: franchiseData?.logo || "",
+     ownerName: franchiseData?.ownerName || franchiseData?.owner || franchiseData?.name || "",
+
+      // ✅ QR DATA
+      qrCode,
+      verifyUrl,
+      certificateId: certId
+    };
+
+    localStorage.setItem("certificateStudent", JSON.stringify(data));
+
+    // 🔄 OPEN PAGE
+    if (studentData.courseType === "beauty") {
+      window.open("/login/institute/certificate/beauty-certificate", "_blank");
+    } else {
+      window.open("/login/institute/certificate/print", "_blank");
+    }
+
+  } catch (err) {
+    console.error("CERT ERROR:", err);
+    alert("Failed to open certificate");
+  }
+};
   // ===============================
   // 🔹 LOAD DATA
   // ===============================

@@ -17,13 +17,14 @@ export default function AddCourseSingle() {
   const fetchCourses = async () => {
 
     try {
-
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        MASTER_COLLECTION,
-        [Query.orderDesc('$createdAt')]
-      )
-
+const res = await databases.listDocuments(
+  DATABASE_ID,
+  MASTER_COLLECTION,
+  [
+    Query.orderDesc('courseCode'),
+    Query.limit(500) // 🔥 increase limit
+  ]
+)
       setCourses(res.documents)
 
     } catch (error) {
