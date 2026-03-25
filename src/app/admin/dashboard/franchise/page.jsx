@@ -39,7 +39,7 @@ export default function Dashboard() {
   const [logoFile, setLogoFile] = useState(null)
   const [photoFile, setPhotoFile] = useState(null)
   const [signatureFile, setSignatureFile] = useState(null)
-
+const [customPlan, setCustomPlan] = useState("")
   /* ---------------- LOGIN CHECK ---------------- */
 
   useEffect(() => {
@@ -302,6 +302,10 @@ export default function Dashboard() {
         updatedData.logo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
       }
 
+      // ✅ HANDLE CUSTOM PLAN
+if (editData.plan === "CUSTOM") {
+  updatedData.plan = customPlan
+}
       // -------- OWNER PHOTO --------
       if (photoFile) {
         const res = await storage.createFile(
@@ -564,23 +568,42 @@ return (
                   className="w-full border p-3 rounded-lg"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium">Select Plan</label>
-                <select
-                  value={editData.plan || ""}
-                  onChange={(e) => setEditData({ ...editData, plan: e.target.value })}
-                  className="w-full border p-3 rounded-lg"
-                >
-                  <option value="">--Select Plan--</option>
 
-                  {Object.keys(institutePlans).map((plan, i) => (
-                    <option key={i} value={plan}>
-                      {plan} (₹{institutePlans[plan]})
-                    </option>
-                  ))}
 
-                </select>
-              </div>
+     <div>
+  <label className="text-sm font-medium">Select Plan</label>
+
+  <select
+    value={editData.plan || ""}
+    onChange={(e) => setEditData({ ...editData, plan: e.target.value })}
+    className="w-full border p-3 rounded-lg"
+  >
+    <option value="">--Select Plan--</option>
+
+    {Object.keys(institutePlans).map((plan, i) => (
+      <option key={i} value={plan}>
+        {plan} (₹{institutePlans[plan]})
+      </option>
+    ))}
+
+    {/* ✅ NEW OPTION */}
+    <option value="CUSTOM">Custom Plan</option>
+
+  </select>
+</div>
+{editData.plan === "CUSTOM" && (
+  <div className="mt-2">
+    <label className="text-sm font-medium">Enter Custom Plan</label>
+
+    <input
+      type="text"
+      placeholder="Enter custom plan name"
+      value={customPlan}
+      onChange={(e) => setCustomPlan(e.target.value)}
+      className="w-full border p-3 rounded-lg"
+    />
+  </div>
+)}
 
               <div>
                 <label className="text-sm font-medium">State</label>

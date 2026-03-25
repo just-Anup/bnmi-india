@@ -60,6 +60,13 @@ useEffect(() => {
       <aside className="w-64 bg-[#0f172a] text-white p-6 space-y-4">
 
         <h2 className="text-xl font-bold mb-6">Institute Portal</h2>
+        
+        <button
+          onClick={logout}
+          className="w-full bg-red-500 py-2 rounded mt-6 hover:bg-red-600"  
+        >
+          Logout
+        </button>
 
         <NavItem href="/login/institute/dashboard" label="Dashboard" />
         <NavItem href="/login/institute/add-course" label="Add New Course" />
@@ -98,12 +105,6 @@ useEffect(() => {
         <NavItem href="/login/institute/marketing" label="Marketing Material" />
         <NavItem href="/login/institute/recharge-request" label="Recharge Request" />
 
-        <button
-          onClick={logout}
-          className="w-full bg-red-500 py-2 rounded mt-6 hover:bg-red-600"  
-        >
-          Logout
-        </button>
 
       </aside>
 

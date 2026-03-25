@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { databases, ID, account } from '@/lib/appwrite'
+import { databases, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
@@ -17,7 +17,9 @@ export default function ListBeautyCourses() {
   const [courseFees, setCourseFees] = useState('')
   const [minimumFees, setMinimumFees] = useState('')
   const [subject, setSubject] = useState('')
+  const [search, setSearch] = useState('')
 
+  // ✅ FETCH COURSES
   const fetchCourses = async () => {
 
     try {
@@ -44,6 +46,7 @@ export default function ListBeautyCourses() {
     fetchCourses()
   }, [])
 
+  // ✅ DELETE
   const deleteCourse = async (id) => {
 
     if (!id) return
@@ -64,6 +67,7 @@ export default function ListBeautyCourses() {
 
   }
 
+  // ✅ EDIT OPEN
   const openEdit = (course) => {
 
     setEditCourse(course)
@@ -72,6 +76,7 @@ export default function ListBeautyCourses() {
 
   }
 
+  // ✅ UPDATE
   const updateFees = async () => {
 
     if (!editCourse) return
@@ -97,45 +102,44 @@ export default function ListBeautyCourses() {
 
   }
 
-const saveSubject = async () => {
+  // ✅ ADD SUBJECT
+  const saveSubject = async () => {
 
-  if (!selectedCourse) return
+    if (!selectedCourse) return
 
-  if (!subject.trim()) {
-    alert("Enter subject name")
-    return
+    if (!subject.trim()) {
+      alert("Enter subject name")
+      return
+    }
+
+    try {
+
+      const user = await account.get()
+
+      await databases.createDocument(
+        DATABASE_ID,
+        SUBJECT_COLLECTION,
+        'unique()',
+        {
+          courseId: String(selectedCourse.$id),
+          subjectName: String(subject),
+          franchiseEmail: user.email
+        }
+      )
+
+      alert("Subject Saved Successfully")
+
+      setSubject('')
+      setSelectedCourse(null)
+
+    } catch (error) {
+
+      console.error("Appwrite Error:", error)
+      alert(error.message)
+
+    }
+
   }
-
-  try {
-
-    const user = await account.get()
-
-    const res = await databases.createDocument(
-      DATABASE_ID,
-      SUBJECT_COLLECTION,
-      ID.unique(),
-      {
-        courseId: String(selectedCourse.$id),
-        subjectName: String(subject),
-        franchiseEmail: user.email
-      }
-    )
-
-    console.log("Saved:", res)
-
-    alert("Subject Saved Successfully")
-
-    setSubject('')
-    setSelectedCourse(null)
-
-  } catch (error) {
-
-    console.error("Appwrite Error:", error)
-    alert(error.message)
-
-  }
-
-}
 
   return (
 
@@ -146,6 +150,15 @@ const saveSubject = async () => {
         <h2 className="text-xl font-bold mb-6">
           Course List
         </h2>
+
+        {/* ✅ SEARCH BAR */}
+        <input
+          type="text"
+          placeholder="Search Course..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4 p-2 w-full bg-black border border-gray-700 rounded"
+        />
 
         <table className="w-full border border-gray-800">
 
@@ -166,52 +179,58 @@ const saveSubject = async () => {
 
           <tbody>
 
-            {courses.map((course, index) => (
+            {courses
+              .filter(course =>
+                course.courseName.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((course, index) => (
 
-              <tr key={course.$id} className="hover:bg-[#1a1a1a]">
+                <tr key={course.$id} className="hover:bg-[#1a1a1a]">
 
-                <td className="border border-gray-800 p-2">{index + 1}</td>
+                  <td className="border border-gray-800 p-2">{index + 1}</td>
 
-                <td className="border border-gray-800 p-2">{course.courseName}</td>
+                  <td className="border border-gray-800 p-2">{course.courseName}</td>
 
-                <td className="border border-gray-800 p-2">{course.examFees}</td>
+                  <td className="border border-gray-800 p-2">{course.examFees}</td>
 
-                <td className="border border-gray-800 p-2">{course.courseFees}</td>
+                  <td className="border border-gray-800 p-2">{course.courseFees}</td>
 
-                <td className="border border-gray-800 p-2">{course.minimumFees}</td>
+                  <td className="border border-gray-800 p-2">{course.minimumFees}</td>
 
-                <td className="border border-gray-800 p-2">{course.duration}</td>
+                  <td className="border border-gray-800 p-2">{course.duration}</td>
 
-                <td className="border border-gray-800 p-2 text-green-400">{course.status}</td>
+                  <td className="border border-gray-800 p-2 text-green-400">{course.status}</td>
 
-                <td className="border border-gray-800 p-2 space-x-2">
+               <td className="border border-gray-800 p-2">
+  <div className="flex flex-wrap gap-2">
 
-                  <button
-                    onClick={() => openEdit(course)}
-                    className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
+    <button
+      onClick={() => openEdit(course)}
+      className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-sm font-medium"
+    >
+      Edit
+    </button>
 
-                  <button
-                    onClick={() => setSelectedCourse(course)}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
-                  >
-                    Add Subject
-                  </button>
+    <button
+      onClick={() => setSelectedCourse(course)}
+      className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium"
+    >
+      Add Subject
+    </button>
 
-                  <button
-                    onClick={() => deleteCourse(course.$id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
+    <button
+      onClick={() => deleteCourse(course.$id)}
+      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium"
+    >
+      Delete
+    </button>
 
-                </td>
+  </div>
+</td>
 
-              </tr>
+                </tr>
 
-            ))}
+              ))}
 
           </tbody>
 
@@ -219,7 +238,7 @@ const saveSubject = async () => {
 
       </div>
 
-
+      {/* ✅ EDIT MODAL */}
       {editCourse && (
 
         <div className="fixed inset-0 flex items-center justify-center bg-black/70">
@@ -270,7 +289,7 @@ const saveSubject = async () => {
 
       )}
 
-
+      {/* ✅ SUBJECT MODAL */}
       {selectedCourse && (
 
         <div className="fixed inset-0 flex items-center justify-center bg-black/70">
@@ -314,6 +333,6 @@ const saveSubject = async () => {
       )}
 
     </div>
-  )
 
+  )
 }
