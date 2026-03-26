@@ -181,6 +181,8 @@ const printMarksheet = async (cert) => {
       grade: cert.grade || "",
       marksheetNo: cert.$id || "",
       franchiseSignature: franchiseData?.signature || "",
+
+        logo: franchiseData?.logo || ""
     };
 
     // ✅ SAVE TO LOCAL STORAGE
@@ -191,16 +193,18 @@ const printMarksheet = async (cert) => {
 
     // 🔥 OPEN MARKSHEET
     if (studentData.courseType === "beauty") {
-      window.open(
-        "/login/institute/certificate/beauty-marksheet",
-        "_blank"
-      );
-    } else {
-      window.open(
-        "/login/institute/certificate/marksheet",
-        "_blank"
-      );
-    }
+
+  window.open("/login/institute/certificate/beauty-marksheet", "_blank");
+
+} else if (studentData.courseType === "semester") {
+
+  window.open("/login/institute/certificate/semester-marksheet", "_blank");
+
+} else {
+
+  window.open("/login/institute/certificate/marksheet", "_blank");
+
+}
 
   } catch (err) {
     console.error("MARKSHEET ERROR:", err);
@@ -280,12 +284,19 @@ const printCertificate = async (cert) => {
     localStorage.setItem("certificateStudent", JSON.stringify(data));
 
     // 🔄 OPEN PAGE
-    if (studentData.courseType === "beauty") {
-      window.open("/login/institute/certificate/beauty-certificate", "_blank");
-    } else {
-      window.open("/login/institute/certificate/print", "_blank");
-    }
+  if (studentData.courseType === "beauty") {
 
+  window.open("/login/institute/certificate/beauty-certificate", "_blank");
+
+} else if (studentData.courseType === "semester") {
+
+  window.open("/login/institute/certificate/semester-certificate", "_blank");
+
+} else {
+
+  window.open("/login/institute/certificate/print", "_blank");
+
+}
   } catch (err) {
     console.error("CERT ERROR:", err);
     alert("Failed to open certificate");

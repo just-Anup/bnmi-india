@@ -23,7 +23,7 @@ export default function ResultPage() {
     if (id) loadStudent();
   }, [id]);
 
-  const loadStudent = async () => {
+const loadStudent = async () => {
   try {
 
     const res = await databases.getDocument(
@@ -34,11 +34,17 @@ export default function ResultPage() {
 
     setStudent(res);
 
+    // ✅ SEMESTER SUPPORT (NEW)
+    if (res.courseType === "semester") {
+      await loadSemesterSubjects(res.courseName, res.semesterNumber);
+      return; // stop old logic
+    }
+
+    // ✅ OLD LOGIC (UNCHANGED)
     let subjectList = [];
 
     if (res.subjects) {
 
-      // ✅ SINGLE + BEAUTY → ONE ROW (BUT SHOW ALL SUBJECT NAMES)
       if (res.courseType === "single" || res.courseType === "beauty") {
 
         subjectList = [
@@ -50,7 +56,6 @@ export default function ResultPage() {
 
       } else {
 
-        // ✅ MULTIPLE → MULTIPLE ROWS
         subjectList = res.subjects
           ?.split(",")
           .map(s => s.trim());
@@ -71,6 +76,37 @@ export default function ResultPage() {
 
   } catch (err) {
     console.log(err);
+  }
+};
+
+const loadSemesterSubjects = async (courseCode, semester) => {
+
+  try {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "semester_subjects",
+      [
+        Query.equal("courseCode", courseCode),
+        Query.equal("semesterNumber", Number(semester))
+      ]
+    );
+
+    const subjectList = res.documents.map(s => s.subjectName);
+
+    setSubjects(subjectList);
+
+    const initialMarks = subjectList.map(sub => ({
+      subject: sub,
+      theory: "",
+      practical: "",
+      total: 0
+    }));
+
+    setMarks(initialMarks);
+
+  } catch (err) {
+    console.log("SEM RESULT ERROR:", err);
   }
 };
   const updateMarks = (index, field, value) => {
@@ -144,6 +180,10 @@ export default function ResultPage() {
     course: student.courseName || "",
     photoId: student.photoId || "",
     subjects: subjects.join(", "),
+
+        semesterNumber: student.semesterNumber,
+    courseType: student.courseType,
+
 
     // ✅ FIXED HERE
  marksArray: JSON.stringify(

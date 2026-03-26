@@ -6,7 +6,6 @@ import { Query } from "appwrite";
 import Link from "next/link";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
-const COLLECTION = "semester_courses";
 
 export default function SemesterCourseList() {
 
@@ -17,12 +16,11 @@ export default function SemesterCourseList() {
   }, []);
 
   const loadCourses = async () => {
-
     const user = await account.get();
 
     const res = await databases.listDocuments(
       DATABASE_ID,
-      COLLECTION,
+      "semester_courses",
       [
         Query.equal("createdById", user.$id),
         Query.orderDesc("$createdAt")
@@ -33,60 +31,102 @@ export default function SemesterCourseList() {
   };
 
   return (
+    <div className="min-h-screen bg-[#0b0b0f] text-white p-10">
 
-    <div className="p-10 bg-black min-h-screen text-white">
+      <div className="max-w-7xl mx-auto">
 
-      <div className="flex justify-between mb-6">
+        <div className="flex justify-between mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 text-transparent bg-clip-text">
+            Semester Courses
+          </h1>
 
-        <h1 className="text-2xl font-bold">
-          SEMESTER COURSES
-        </h1>
+          <Link href="/login/institute/add-course/semester-course/add" className="btn-glow">
+            + Add Course
+          </Link>
+        </div>
 
-        <Link
-          href="/login/institute/add-course/semester-course/add"
-          className="bg-orange-500 hover:bg-orange-600 text-black px-6 py-2 rounded font-semibold"
-        >
-          Add Course
-        </Link>
+        <div className="cool-card">
+
+          <table className="w-full text-sm">
+<thead className="text-gray-400 border-b border-gray-700">
+  <tr>
+    <th className="p-4 text-left">#</th>
+    <th className="p-4 text-left">Code</th>
+    <th className="p-4 text-left">Name</th>
+    <th className="p-4 text-left">Duration</th>
+    <th className="p-4 text-left">Sem</th>
+        <th className="p-4 text-left">Exam Fees</th> 
+  </tr>
+</thead>
+
+<tbody>
+  {courses.map((c, i) => (
+    <tr key={c.$id} className="row">
+      <td className="p-4">{i + 1}</td>
+      <td className="p-4 text-orange-400 font-semibold">{c.courseCode}</td>
+      <td className="p-4">{c.courseName}</td>
+      <td className="p-4">{c.duration}</td>
+      <td className="p-4">{c.totalSemesters}</td>
+      <td className="p-4 text-green-400 font-semibold">
+  ₹{c.examFees}
+</td>
+    </tr>
+  ))}
+</tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
-      <table className="w-full border border-gray-800 bg-[#121212]">
+      <style jsx>{`
+        .cool-card {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 16px;
+          backdrop-filter: blur(10px);
+        }
+.row {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: 0.25s;
+}
 
-        <thead className="bg-orange-500 text-black">
+.row:hover {
+  background: rgba(255,255,255,0.05);
+}
 
-          <tr>
-            <th className="p-3 border border-gray-800">#</th>
-            <th className="p-3 border border-gray-800">Course Code</th>
-            <th className="p-3 border border-gray-800">Course Name</th>
-            <th className="p-3 border border-gray-800">Duration</th>
-            <th className="p-3 border border-gray-800">Semesters</th>
-          </tr>
+/* 🔥 Fix alignment */
+th, td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
 
-        </thead>
+/* Optional: better spacing for name column */
+td:nth-child(3) {
+  width: 40%;
+}
+        .hover-row {
+          transition: 0.3s;
+        }
 
-        <tbody>
+        .hover-row:hover {
+          background: rgba(255,255,255,0.08);
+          transform: scale(1.01);
+        }
 
-          {courses.map((c, i) => (
+        .btn-glow {
+          background: linear-gradient(135deg,#f97316,#fb923c);
+          padding: 10px 18px;
+          border-radius: 10px;
+          box-shadow: 0 0 15px rgba(249,115,22,0.6);
+        }
 
-            <tr key={c.$id} className="border-t border-gray-800 hover:bg-[#1a1a1a]">
-
-              <td className="p-3 border border-gray-800">{i + 1}</td>
-              <td className="p-3 border border-gray-800">{c.courseCode}</td>
-              <td className="p-3 border border-gray-800">{c.courseName}</td>
-              <td className="p-3 border border-gray-800">{c.duration}</td>
-              <td className="p-3 border border-gray-800">{c.totalSemesters}</td>
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
+        .btn-glow:hover {
+          box-shadow: 0 0 25px rgba(249,115,22,0.9);
+        }
+      `}</style>
 
     </div>
-
   );
-
 }

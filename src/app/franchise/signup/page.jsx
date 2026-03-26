@@ -147,7 +147,7 @@ export default function FranchiseSignup() {
       >
 
         <h2 className="text-2xl font-bold text-center">
-          Franchise Formgfgsfdgsd
+          Franchise Form
         </h2>
 
         <div className="grid grid-cols-2 gap-4">

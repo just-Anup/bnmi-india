@@ -22,7 +22,8 @@ export default function AddStudent() {
   const [photo, setPhoto] = useState(null);
   const [signature, setSignature] = useState(null);
   const [courses, setCourses] = useState([]);
-  
+  const [selectedSemester, setSelectedSemester] = useState("");
+const [semesterSubjects, setSemesterSubjects] = useState([]);
   
   const [form, setForm] = useState({
     
@@ -73,6 +74,18 @@ const password = form.aadhar?.slice(-4) || "1234"
     loadCourses("single");
   }, []);
 
+  useEffect(() => {
+  checkUser();
+}, []);
+
+const checkUser = async () => {
+  try {
+    const user = await account.get();
+    console.log("Logged in:", user);
+  } catch {
+    alert("Session expired, login again");
+  }
+};
   const loadCourses = async (type) => {
 
     const user = await account.get();
@@ -93,7 +106,17 @@ const password = form.aadhar?.slice(-4) || "1234"
       collection = "beauty_courses_single";
       queries = [Query.equal("franchiseEmail", user.email)];
     }
+    if (type === "semester") {
+  collection = "semester_courses";
+  queries = []; // 🔥 IMPORTANT (no filter for now)
+}
 
+try {
+  const user = await account.get();
+  console.log("USER OK:", user);
+} catch (err) {
+  console.log("NO SESSION:", err);
+}
     const res = await databases.listDocuments(
       DATABASE_ID,
       collection,
@@ -103,6 +126,39 @@ const password = form.aadhar?.slice(-4) || "1234"
     setCourses(res.documents);
 
   };
+
+  const loadSemesterSubjects = async (courseCode, semester) => {
+
+  try {
+
+    const user = await account.get();
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "semester_subjects",
+      [
+        Query.equal("courseCode", courseCode),
+        Query.equal("semesterNumber", Number(semester)),
+   
+      ]
+    );
+
+    setSemesterSubjects(res.documents);
+
+    const subjectNames = res.documents.map(s => s.subjectName).join(", ");
+
+    setForm(prev => ({
+      ...prev,
+      subjects: subjectNames
+    }));
+
+  } catch (err) {
+    console.log("SEM SUBJECT ERROR:", err);
+  }
+};
+
+
+
 
 const getFranchiseInfo = async () => {
 
@@ -163,6 +219,15 @@ const handleFeesReceived = (value) => {
     if (!course) return
 
     let subjectsText = ""
+    // ✅ FIRST HANDLE SEMESTER
+if (form.courseType === "semester") {
+  setForm({
+    ...form,
+    courseName: course.$id,
+    subjects: ""
+  });
+  return;
+}
 
  if (form.courseType === "single" || form.courseType === "beauty") {
 
@@ -176,6 +241,16 @@ const handleFeesReceived = (value) => {
     subjectCollection,
     [Query.equal("courseId", courseId)]
   )
+  // ✅ SEMESTER COURSE SUPPORT
+if (form.courseType === "semester") {
+
+  setForm({
+    ...form,
+    courseName: course.courseCode, // important
+    subjects: ""
+  });
+
+}
 
   subjectsText = res.documents
     .map(s => s.subjectName)
@@ -362,7 +437,7 @@ const handleSubmit = async (e) => {
         franchiseEmail: user.email,
         franchiseId: franchise.franchiseId,
         instituteName: franchise.instituteName,
-
+semesterNumber: selectedSemester ? Number(selectedSemester) : null,
         createdById: franchise.userId,
         createdByName: franchise.instituteName,
 
@@ -586,6 +661,54 @@ const handleSubmit = async (e) => {
         >
           Beauty
         </button>
+        <button
+  type="button"
+  onClick={() => {
+    setForm({ ...form, courseType: "semester" });
+    loadCourses("semester");
+  }}
+  className={`px-4 py-2 rounded ${form.courseType === "semester" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+>
+  Semester
+</button>
+
+        {form.courseType === "semester" && form.courseName && (
+
+  <div className="mb-4">
+
+    <label className="block mb-1 font-semibold">
+      Select Semester
+    </label>
+
+    <select
+      value={selectedSemester}
+      onChange={(e) => {
+        const sem = e.target.value;
+        setSelectedSemester(sem);
+
+        const selectedCourse = courses.find(c => c.$id === form.courseName);
+
+        if (selectedCourse) {
+          loadSemesterSubjects(selectedCourse.courseCode, sem);
+        }
+      }}
+      className="border p-2 w-full"
+    >
+      <option value="">Select Semester</option>
+
+      {courses.find(c => c.$id === form.courseName)?.totalSemesters &&
+        [...Array(courses.find(c => c.$id === form.courseName).totalSemesters)].map((_, i) => (
+          <option key={i + 1} value={i + 1}>
+            Semester {i + 1}
+          </option>
+        ))
+      }
+
+    </select>
+
+  </div>
+
+)}
 
       </div>
 

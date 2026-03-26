@@ -59,53 +59,58 @@ export default function CertificatePage() {
 
     const applyCertificate = async () => {
 
-        if (selected.length === 0) {
-            alert("Please select at least one student");
-            return;
+  try {
+
+    const uniqueStudents = {};
+
+    selected.forEach(id => {
+      const student = results.find(r => r.$id === id);
+      if (student) {
+        uniqueStudents[student.studentId] = student;
+      }
+    });
+
+    for (const key in uniqueStudents) {
+
+      const student = uniqueStudents[key];
+
+      const existing = await databases.listDocuments(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        [Query.equal("studentId", student.studentId)]
+      );
+
+      if (existing.documents.length > 0) continue;
+
+      await databases.createDocument(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        ID.unique(),
+        {
+          studentId: student.studentId,
+          studentName: student.studentName,
+          course: student.course,
+          photoId: student.photoId,
+          marks: student.totalMarks,
+          grade: student.grade,
+          certificateNo: "BNMI-" + Date.now(),
+          status: "pending",
+          createdAt: new Date().toISOString()
         }
+      );
+    }
 
-        try {
+    alert("Certificate request sent to admin");
+    setSelected([]);
 
-            for (const id of selected) {
+  } catch (err) {
 
-                const student = results.find(r => r.$id === id);
+    console.log("Certificate Error:", err);
+    alert(err.message);
 
-                if (!student) continue;
-
-                await databases.createDocument(
-                    DATABASE_ID,
-
-                    
-                    CERT_COLLECTION,
-                    ID.unique(),
-                    {
-                        studentId: student.studentId,
-                        studentName: student.studentName,
-                        course: student.course,
-                        photoId: student.photoId,
-                        marks: student.totalMarks,
-                        grade: student.grade,
-                        certificateNo: "BNMI-" + Date.now(),
-                        status: "pending",
-                        createdAt: new Date().toISOString()
-
-                    }
-                );
-
-            }
-
-            alert("Certificate request sent to admin");
-
-            setSelected([]);
-
-        } catch (err) {
-
-            console.log("Certificate Error:", err);
-            alert(err.message);
-
-        }
-
-    };
+  }
+};
+   
     const getPhoto = (photoId) => {
 
         if (!photoId) return null;

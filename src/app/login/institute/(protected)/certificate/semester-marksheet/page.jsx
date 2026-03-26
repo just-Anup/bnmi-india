@@ -115,12 +115,6 @@ export default function PrintMarksheet() {
 
         {/* TEMPLATE */}
         <img src="/beautymark.png" className="absolute w-full h-full" />
-        {student.logo && (
-  <img
-    src={student.logo}
-    className="absolute top-[10px] left-[370px] w-[160px] h-[160px] object-contain"
-  />
-)}
 
         {/* LEFT SIDE */}
         <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
@@ -143,7 +137,7 @@ export default function PrintMarksheet() {
 
           return (
             <div key={index}>
-<div style={{ top:570, left: 150, position: "absolute", width: 420 }}>
+<div style={{ top, left: 150, position: "absolute", width: 220 }}>
   {index === 0
     ? marksArray.map((s) => s.subject).join(", ")
     : ""}
