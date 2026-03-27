@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import { databases, ID, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
+import { useRouter } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const MASTER_COLLECTION = 'courses_master'
 const SINGLE_COLLECTION = 'courses_single'
 
 export default function AddCourseSingle() {
-  
+    const router = useRouter()
   const [examFee, setExamFee] = useState(0)
   const [courses, setCourses] = useState([])
   const [selectedCourses, setSelectedCourses] = useState({})
@@ -139,27 +140,57 @@ const examFee = planRes.documents[0]?.amount || 0;
           return
         }
 
-        await databases.createDocument(
-          DATABASE_ID,
-          SINGLE_COLLECTION,
-          ID.unique(),
-          {
-            courseId: course.$id,
-            courseCode: course.courseCode,
-            courseName: course.courseName,
-            duration: course.duration,
-            examFees: examFee,
-            courseFees: Number(course.courseFees),
-            minimumFees: Number(course.minimumFees),
-            status: "Active",
-            franchiseEmail: user.email
-          }
-        )
-      }
+        const existing = await databases.listDocuments(
+                 DATABASE_ID,
+                 SINGLE_COLLECTION,
+                 [
+                   Query.equal("courseId", course.$id),
+                   Query.equal("franchiseEmail", user.email)
+                 ]
+               )
+       
+               if (existing.documents.length > 0) {
+       
+                 // 🔁 UPDATE (overwrite)
+                 await databases.updateDocument(
+                   DATABASE_ID,
+                   SINGLE_COLLECTION,
+                   existing.documents[0].$id,
+                   {
+                     courseFees: Number(course.courseFees),
+                     minimumFees: Number(course.minimumFees),
+                     examFees: examFee,
+                     status: "Active"
+                   }
+                 )
+       
+               } else {
+       
+                 // ➕ CREATE
+                 await databases.createDocument(
+                   DATABASE_ID,
+                   SINGLE_COLLECTION,
+                   ID.unique(),
+                   {
+                     courseId: course.$id,
+                     courseCode: course.courseCode,
+                     courseName: course.courseName,
+                     duration: course.duration,
+                     examFees: examFee,
+                     courseFees: Number(course.courseFees),
+                     minimumFees: Number(course.minimumFees),
+                     status: "Active",
+                     franchiseEmail: user.email
+                   }
+                 )
+       
+               }
+       
+             }
 
       alert("Course Added Successfully")
       setSelectedCourses({})
-
+router.push('/login/institute/add-course/single/list') // change if your route is different
     } catch (error) {
 
       console.log("Add Course Error:", error)

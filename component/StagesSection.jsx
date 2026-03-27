@@ -99,7 +99,7 @@ export default function StagesSection() {
           
           </h2>
 
-          <p className="text-gray-600 mb-8 top-5">
+          <p className="text-gray-600 mb-8">
             {data.aboutDescription}
           </p>
 
