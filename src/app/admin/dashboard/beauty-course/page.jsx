@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { databases, ID } from '@/lib/appwrite'
-
+import { Query } from 'appwrite'
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION_ID = "beauty_courses_master"
 
@@ -42,7 +42,11 @@ const fetchCourses = async () => {
 try {
 const res = await databases.listDocuments(
 DATABASE_ID,
-COLLECTION_ID
+COLLECTION_ID,
+ [
+    Query.orderDesc('courseCode'),
+    Query.limit(300) // 🔥 increase limit
+  ]
 )
 
 // ✅ SAFE DATA

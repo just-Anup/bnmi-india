@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [logoFile, setLogoFile] = useState(null)
   const [photoFile, setPhotoFile] = useState(null)
   const [signatureFile, setSignatureFile] = useState(null)
+  const [plans, setPlans] = useState([]);
 
   /* ---------------- LOGIN CHECK ---------------- */
 
@@ -158,9 +159,23 @@ export default function Dashboard() {
     setStats(data)
   }
 
+  const fetchPlans = async () => {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_plans"
+      );
+
+      setPlans(res.documents);
+    } catch (err) {
+      console.error("Plan fetch error:", err);
+    }
+  };
+
   useEffect(() => {
     fetchAll()
     fetchStats()
+    fetchPlans();
   }, [])
 
   /* ---------------- APPROVE ---------------- */
@@ -324,6 +339,24 @@ export default function Dashboard() {
         updatedData.signature = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
       }
 
+      if (editData.newPlanName && editData.newPlanAmount) {
+
+  // ✅ Save new plan
+  await databases.createDocument(
+    DATABASE_ID,
+    "franchise_plans",
+    ID.unique(),
+    {
+      name: editData.newPlanName,
+      amount: Number(editData.newPlanAmount),
+    }
+  );
+
+  // ✅ Use it immediately
+  updatedData.plan = editData.newPlanName;
+}
+delete updatedData.newPlanName;
+delete updatedData.newPlanAmount;
       // ✅ VERY IMPORTANT → REMOVE FILE OBJECTS
       delete updatedData.logoFile
       delete updatedData.photoFile
@@ -396,119 +429,119 @@ export default function Dashboard() {
 
   if (loading) return <div className="p-10">Loading...</div>
 
-return (
-  <>
-    <div className="min-h-screen bg-gray-50 p-8">
+  return (
+    <>
+      <div className="min-h-screen bg-gray-50 p-8">
 
-      {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
-        Franchise Dashboard
-      </h1>
+        {/* Header */}
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+          Franchise Dashboard
+        </h1>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6">
-        <Tab label={`Pending (${pending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
-        <Tab label={`Approved (${approved.length})`} active={activeTab === 'approved'} onClick={() => setActiveTab('approved')} />
-        <Tab label={`Rejected (${rejected.length})`} active={activeTab === 'rejected'} onClick={() => setActiveTab('rejected')} />
-      </div>
+        {/* Tabs */}
+        <div className="flex gap-4 mb-6">
+          <Tab label={`Pending (${pending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
+          <Tab label={`Approved (${approved.length})`} active={activeTab === 'approved'} onClick={() => setActiveTab('approved')} />
+          <Tab label={`Rejected (${rejected.length})`} active={activeTab === 'rejected'} onClick={() => setActiveTab('rejected')} />
+        </div>
 
-      {/* Search */}
-      <div className="mb-8">
-        <input
-          type="text"
-          placeholder="Search by name, email, institute..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-white border border-gray-200 px-5 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      </div>
+        {/* Search */}
+        <div className="mb-8">
+          <input
+            type="text"
+            placeholder="Search by name, email, institute..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white border border-gray-200 px-5 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
 
-      {/* List */}
-      <div className="grid gap-6">
+        {/* List */}
+        <div className="grid gap-6">
 
-        {getCurrentData().length === 0 && (
-          <div className="text-center text-gray-500 py-10">
-            No records found
-          </div>
-        )}
+          {getCurrentData().length === 0 && (
+            <div className="text-center text-gray-500 py-10">
+              No records found
+            </div>
+          )}
 
-        {getCurrentData().map((req) => (
-          <div
-            key={req.$id}
-            className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-6 flex flex-col md:flex-row justify-between gap-6"
-          >
+          {getCurrentData().map((req) => (
+            <div
+              key={req.$id}
+              className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-6 flex flex-col md:flex-row justify-between gap-6"
+            >
 
-            {/* LEFT */}
-            <div className="space-y-1 text-sm text-gray-700">
+              {/* LEFT */}
+              <div className="space-y-1 text-sm text-gray-700">
 
-              <h3 className="text-lg font-semibold text-gray-900">
-                {req.name}
-              </h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {req.name}
+                </h3>
 
-              <p><b>Email:</b> {req.email}</p>
-              <p><b>Password:</b> {req.password}</p>
-              <p><b>Mobile:</b> {req.mobile}</p>
-              <p><b>State:</b> {req.state}</p>
-              <p><b>City:</b> {req.city}</p>
-              <p><b>Institute:</b> {req.instituteName}</p>
-              <p><b>ATC Code:</b> {req.atcCode}</p>
+                <p><b>Email:</b> {req.email}</p>
+                <p><b>Password:</b> {req.password}</p>
+                <p><b>Mobile:</b> {req.mobile}</p>
+                <p><b>State:</b> {req.state}</p>
+                <p><b>City:</b> {req.city}</p>
+                <p><b>Institute:</b> {req.instituteName}</p>
+                <p><b>ATC Code:</b> {req.atcCode}</p>
 
-              {/* Stats */}
-              <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                  Admissions: {stats[req.email]?.admissions || 0}
-                </span>
-                <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full">
-                  Enquiries: {stats[req.email]?.enquiries || 0}
-                </span>
-                <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                  Wallet: ₹{req.wallet || "0.00"}
-                </span>
-                <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full">
-                  Courier: ₹{req.courierWallet || "0.00"}
-                </span>
+                {/* Stats */}
+                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                  <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                    Admissions: {stats[req.email]?.admissions || 0}
+                  </span>
+                  <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full">
+                    Enquiries: {stats[req.email]?.enquiries || 0}
+                  </span>
+                  <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                    Wallet: ₹{req.wallet || "0.00"}
+                  </span>
+                  <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full">
+                    Courier: ₹{req.courierWallet || "0.00"}
+                  </span>
+                </div>
               </div>
+
+              {/* RIGHT */}
+              <div className="flex flex-col justify-center gap-3">
+
+                {/* Pending */}
+                {activeTab === 'pending' && (
+                  <div className="flex flex-wrap gap-3">
+                    <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
+                    <ActionBtn label="Approve" color="green" onClick={() => approveFranchise(req)} />
+                    <ActionBtn label="Reject" color="red" onClick={() => rejectFranchise(req)} />
+                  </div>
+                )}
+
+                {/* Approved */}
+                {activeTab === 'approved' && (
+                  <div className="flex flex-wrap gap-3 items-center">
+
+                    {req.logo && (
+                      <img
+                        src={req.logo}
+                        className="h-16 w-16 rounded-lg object-cover border"
+                      />
+                    )}
+
+                    <ActionBtn label="Fix QR" color="purple" onClick={() => fixQR(req)} />
+                    <ActionBtn label="Login" color="blue" onClick={() => loginAsFranchise(req)} />
+                    <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
+                    <ActionBtn label="ID Card" color="indigo" onClick={() => openIdCard(req)} />
+                    <ActionBtn label="Print" color="dark" onClick={() => openPrint(req)} />
+                    <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
+                  </div>
+                )}
+
+              </div>
+
             </div>
+          ))}
 
-            {/* RIGHT */}
-            <div className="flex flex-col justify-center gap-3">
-
-              {/* Pending */}
-              {activeTab === 'pending' && (
-                <div className="flex flex-wrap gap-3">
-                  <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
-                  <ActionBtn label="Approve" color="green" onClick={() => approveFranchise(req)} />
-                  <ActionBtn label="Reject" color="red" onClick={() => rejectFranchise(req)} />
-                </div>
-              )}
-
-              {/* Approved */}
-              {activeTab === 'approved' && (
-                <div className="flex flex-wrap gap-3 items-center">
-
-                  {req.logo && (
-                    <img
-                      src={req.logo}
-                      className="h-16 w-16 rounded-lg object-cover border"
-                    />
-                  )}
-
-                  <ActionBtn label="Fix QR" color="purple" onClick={() => fixQR(req)} />
-                  <ActionBtn label="Login" color="blue" onClick={() => loginAsFranchise(req)} />
-                  <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
-                  <ActionBtn label="ID Card" color="indigo" onClick={() => openIdCard(req)} />
-                  <ActionBtn label="Print" color="dark" onClick={() => openPrint(req)} />
-                  <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
-                </div>
-              )}
-
-            </div>
-
-          </div>
-        ))}
-
+        </div>
       </div>
-    </div>
 
       {/* ✅ EDIT MODAL */}
 
@@ -568,19 +601,39 @@ return (
                 <label className="text-sm font-medium">Select Plan</label>
                 <select
                   value={editData.plan || ""}
-                  onChange={(e) => setEditData({ ...editData, plan: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, plan: e.target.value })
+                  }
                   className="w-full border p-3 rounded-lg"
                 >
                   <option value="">--Select Plan--</option>
 
-                  {Object.keys(institutePlans).map((plan, i) => (
-                    <option key={i} value={plan}>
-                      {plan} (₹{institutePlans[plan]})
+                  {plans.map((plan) => (
+                    <option key={plan.$id} value={plan.name}>
+                      {plan.name} (₹{plan.amount})
                     </option>
                   ))}
-
                 </select>
               </div>
+              <input
+  type="text"
+  placeholder="Custom Plan Name"
+  value={editData.newPlanName || ""}
+  onChange={(e) =>
+    setEditData({ ...editData, newPlanName: e.target.value })
+  }
+  className="w-full border p-3 rounded-lg"
+/>
+
+<input
+  type="number"
+  placeholder="Custom Plan Amount"
+  value={editData.newPlanAmount || ""}
+  onChange={(e) =>
+    setEditData({ ...editData, newPlanAmount: e.target.value })
+  }
+  className="w-full border p-3 rounded-lg mt-2"
+/>
 
               <div>
                 <label className="text-sm font-medium">State</label>

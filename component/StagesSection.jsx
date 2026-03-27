@@ -73,39 +73,33 @@ export default function StagesSection() {
       title: data.visionTitle,
       content: data.visionContent,
     },
-    {
-      id: 3,
-      title: data.objectiveTitle,
-      content: data.objectiveContent,
-    },
+ 
   ]
 
   return (
-    <section className="relative py-24 bg-white overflow-hidden">
+    <section className="relative py-20 bg-white overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:18px_18px] opacity-40" />
 
       <div
         ref={sectionRef}
-        className="relative max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-8"
+        className="relative max-w-8xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-8"
       >
         {/* IMAGE */}
         <div>
           <img
             src={data.aboutImage}
-            className="w-full h-[520px] object-cover"
+            className="w-[800px] h-[700px]"
           />
         </div>
 
         {/* CONTENT */}
         <div>
-          <h2 className="text-4xl font-extrabold mb-4">
+          <h2 className="text-5xl font-extrabold mb-4">
             {data.aboutTitle}{' '}
-            <span className="text-[#19b9f1]">
-              {data.aboutSubtitleHighlight}
-            </span>
+          
           </h2>
 
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 mb-8 top-5">
             {data.aboutDescription}
           </p>
 

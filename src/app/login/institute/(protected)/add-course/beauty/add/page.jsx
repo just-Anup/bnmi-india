@@ -55,7 +55,13 @@ export default function addBeautycourse() {
       )
 
       const plan = res.documents[0]?.plan
-      const fee = institutePlans[plan] || 0
+  const planRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_plans",
+  [Query.equal("name", plan)]
+)
+
+const fee = planRes.documents[0]?.amount || 0
 
       setExamFee(fee)
     }
@@ -67,6 +73,7 @@ export default function addBeautycourse() {
     fetchCourses()
   }, [])
 
+  
   // ✅ Checkbox Select
   const handleCheck = (course) => {
 

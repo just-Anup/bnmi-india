@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { databases, ID } from '@/lib/appwrite'
+import { Query } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
@@ -43,7 +44,11 @@ export default function CMS() {
         try {
             const res = await databases.listDocuments(
                 DATABASE_ID,
-                "courses_master_multiple"
+                "courses_master_multiple",
+                 [
+                    Query.orderDesc('courseCode'),
+                    Query.limit(300) // 🔥 increase limit
+                  ]
             )
             setCourses(res.documents)
         } catch (err) {

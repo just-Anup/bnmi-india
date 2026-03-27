@@ -64,7 +64,7 @@ export default function Footer() {
       <div className="bg-[#19b9f1] py-12 px-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h3 className="text-3xl font-bold text-black">
-            Fabricate A Superior Site A LOT Faster WITH Moran
+           BHARAT NATIONAL MULTIMEDIA INSTITUTE
           </h3>
 
           <div className="relative">
@@ -81,9 +81,9 @@ export default function Footer() {
 
           <div className="footer-anim">
             <h2 className="text-3xl font-bold mb-6">
-              <span className="text-[#19b9f1]">M</span>oran
+              <span className="text-[#19b9f1]">B</span>NMI
               <span className="block text-sm text-[#19b9f1]">
-                IT Solution
+                Franchise Provider
               </span>
             </h2>
 
@@ -104,7 +104,6 @@ export default function Footer() {
             <ul className="space-y-3 text-gray-400 text-sm">
               <li>» About us</li>
               <li>» Meet Our Team</li>
-              <li>» Our Portfolio</li>
               <li>» Latest News</li>
               <li>» Contact Us</li>
               <li>» Our Service</li>

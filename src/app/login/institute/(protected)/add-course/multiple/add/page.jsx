@@ -7,12 +7,6 @@ import Link from "next/link";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
-const institutePlans = {
-  HOJAI: 400,
-  BIHAR: 499,
-  "ARUNACHAL PRADESH": 499,
-  BEAUTY: 500,
-};
 
 export default function AddMultipleCourse() {
 
@@ -55,18 +49,29 @@ export default function AddMultipleCourse() {
   };
 
   // ✅ FETCH USER PLAN
-  const fetchPlan = async () => {
-    const user = await account.get();
+const fetchPlan = async () => {
+  const user = await account.get();
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved",
-      [Query.equal("email", user.email)]
-    );
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [Query.equal("email", user.email)]
+  );
 
-    const plan = res.documents[0]?.plan;
-    setExamFee(institutePlans[plan] || 0);
-  };
+  const plan = res.documents[0]?.plan;
+
+  // ✅ GET PLAN AMOUNT FROM DB
+  const planRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_plans",
+    [Query.equal("name", plan)]
+  );
+
+  const fee = planRes.documents[0]?.amount || 0;
+
+  // ✅ SET EXAM FEE (THIS WAS MISSING)
+  setExamFee(fee);
+};
 
   // ✅ FETCH ALREADY ADDED COURSES
   const fetchAddedCourses = async () => {

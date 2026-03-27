@@ -32,25 +32,26 @@ const router = useRouter();
 const saveCourse = async () => {
   const user = await account.get();
 
-const res = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_approved",
-  [Query.equal("$id", user.$id)]
-);
-const franchise = res.documents[0];
+  // ✅ FIXED QUERY
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [Query.equal("email", user.email)]
+  );
 
-// ✅ GET FROM DB
-const institutePlans = {
-  HOJAI: 400,
-  BIHAR: 499,
-  "ARUNACHAL PRADESH": 499,
-  BEAUTY: 500
-};
+  const franchise = res.documents[0];
+  const plan = franchise?.plan;
 
-const plan = franchise?.plan;
-const examFee = institutePlans[plan] || 0;
+  // ✅ FETCH PLAN FROM DB
+  const planRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_plans",
+    [Query.equal("name", plan)]
+  );
 
+  const examFee = planRes.documents[0]?.amount || 0;
 
+  // ✅ SAVE COURSE
   await databases.createDocument(
     DATABASE_ID,
     "semester_courses",
@@ -60,12 +61,13 @@ const examFee = institutePlans[plan] || 0;
       courseName,
       duration,
       totalSemesters: semesters.length,
-       examFees: examFee, // ✅ ADD THIS
+      examFees: examFee,
       createdById: user.$id,
       createdAt: new Date().toISOString()
     }
   );
 
+  // ✅ SAVE SUBJECTS
   for (const sem of semesters) {
     for (const sub of sem.subjects) {
       await databases.createDocument(
@@ -86,7 +88,6 @@ const examFee = institutePlans[plan] || 0;
     }
   }
 
-  // 🔥 Redirect after save
   router.push("/login/institute/add-course/semester-course");
 };
   return (

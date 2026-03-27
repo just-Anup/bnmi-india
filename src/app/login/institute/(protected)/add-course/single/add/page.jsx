@@ -45,7 +45,15 @@ const res = await databases.listDocuments(
 
     const plan = res.documents[0]?.plan
 
-    const fee = institutePlans[plan] || 0
+const planRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_plans",
+  [Query.equal("name", plan)]
+);
+
+const fee = planRes.documents[0]?.amount || 0;
+
+setExamFee(fee);
 
     setExamFee(fee)
   }
@@ -116,7 +124,13 @@ const res = await databases.listDocuments(
 const franchise = res.documents[0]
 
 const userPlan = franchise?.plan
-const examFee = institutePlans[userPlan] || 0
+const planRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_plans",
+  [Query.equal("name", userPlan)]
+);
+
+const examFee = planRes.documents[0]?.amount || 0;
 
       for (const course of selected) {
 
@@ -156,12 +170,6 @@ const examFee = institutePlans[userPlan] || 0
   }
 
 
-  const institutePlans = {
-  "HOJAI": 400,
-  "BIHAR": 499,
-  "ARUNACHAL PRADESH": 499,
-  "BEAUTY": 500
-}
 
 
   return (
