@@ -119,16 +119,23 @@ export default function PrintMarksheet() {
   const handleDownload = async () => {
     try {
       const node = printRef.current;
+const rect = node.getBoundingClientRect();
 
       const dataUrl = await htmlToImage.toPng(node, {
   quality: 1,
   pixelRatio: 3,
   cacheBust: true,
-  width: node.scrollWidth,
-  height: node.scrollHeight,
+
+  // 🔥 THIS FIXES HALF IMAGE
+  width: rect.width,
+  height: rect.height,
+
   style: {
+    width: rect.width + "px",
+    height: rect.height + "px",
     transform: "scale(1)",
-    transformOrigin: "top left"
+    transformOrigin: "top left",
+    overflow: "visible"
   }
 });
 
@@ -173,9 +180,13 @@ export default function PrintMarksheet() {
 
   <div
   ref={printRef}
-  className="relative w-[900px] h-[1200px] mx-auto overflow-visible"
+  style={{
+    width: "900px",
+    height: "1200px",
+    position: "relative",
+    overflow: "visible"
+  }}
 >
-
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
