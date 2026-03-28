@@ -315,7 +315,7 @@ const printCertificate = async (cert) => {
     // ===============================
     const verifyId = cert.studentId;
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${verifyId}`;
+    const verifyUrl = `${window.location.origin}/beauty-verification/${verifyId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
     // ✅ GENERATE CERTIFICATE DATA
