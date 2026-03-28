@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import QRCode from "qrcode";
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -13,8 +15,10 @@ export default function PrintMarksheet() {
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
 
+  const printRef = useRef();
   // ✅ LOAD STUDENT
   useEffect(() => {
+    
     const data = localStorage.getItem("marksheetStudent");
 
     if (data) {
@@ -24,34 +28,57 @@ export default function PrintMarksheet() {
     }
   }, []);
 
-  // ✅ QR GENERATION
-// ✅ QR GENERATION (FIXED)
-useEffect(() => {
-  const generateQR = async () => {
+  useEffect(() => {
+  const loadImages = async () => {
+    if (!student) return;
+
     try {
+      if (student.logo) {
+        const logoBase64 = await toBase64(student.logo);
+        setStudent(prev => ({ ...prev, logo: logoBase64 }));
+      }
 
-      if (!student?.studentId) return;
-
-      // ✅ USE STUDENT ID (CORRECT)
-      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
-
-      console.log("MARKSHEET QR URL:", verifyUrl);
-
-      const qr = await QRCode.toDataURL(verifyUrl, {
-        width: 300,
-        margin: 1
-      });
-
-      setQrCode(qr);
+      if (student.franchiseSignature) {
+        const signBase64 = await toBase64(student.franchiseSignature);
+        setStudent(prev => ({ ...prev, franchiseSignature: signBase64 }));
+      }
 
     } catch (err) {
-      console.log("QR ERROR:", err);
+      console.log("IMAGE LOAD ERROR:", err);
     }
   };
 
-  if (student) generateQR();
+  loadImages();
+}, [student?.studentId]);
+  // ✅ QR GENERATION
+  // ✅ QR GENERATION (FIXED)
+  useEffect(() => {
 
-}, [student]);
+    const generateQR = async () => {
+      try {
+
+        if (!student?.studentId) return;
+
+        // ✅ USE STUDENT ID (CORRECT)
+        const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
+
+        console.log("MARKSHEET QR URL:", verifyUrl);
+
+        const qr = await QRCode.toDataURL(verifyUrl, {
+          width: 300,
+          margin: 1
+        });
+
+        setQrCode(qr);
+
+      } catch (err) {
+        console.log("QR ERROR:", err);
+      }
+    };
+
+    if (student) generateQR();
+
+  }, [student]);
   // ✅ AUTO PRINT
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -89,6 +116,31 @@ useEffect(() => {
     }
   };
 
+  const handleDownload = async () => {
+    try {
+      const node = printRef.current;
+
+      const dataUrl = await htmlToImage.toPng(node, {
+  quality: 1,
+  pixelRatio: 3,
+  cacheBust: true,
+  width: node.scrollWidth,
+  height: node.scrollHeight,
+  style: {
+    transform: "scale(1)",
+    transformOrigin: "top left"
+  }
+});
+
+      const link = document.createElement("a");
+      link.download = `${student.studentName}_marksheet.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.log("DOWNLOAD ERROR:", err);
+    }
+  };
   if (!student) return <div className="p-10">Loading...</div>;
 
   const total = marksArray.reduce(
@@ -96,19 +148,33 @@ useEffect(() => {
     0
   );
 
+  const toBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
+
   const franchiseSign = student.franchiseSignature || null;
 
   return (
     <div className="p-10 bg-white">
 
       <button
-        onClick={() => window.print()}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
+        onClick={handleDownload}
+        className="bg-green-600 text-white px-6 py-2 mb-6"
       >
-        Print / Download PDF
+        Download Image
       </button>
 
-      <div className="relative w-[900px] h-[1200px] mx-auto">
+  <div
+  ref={printRef}
+  className="relative w-[900px] h-[1200px] mx-auto overflow-visible"
+>
 
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
@@ -116,6 +182,7 @@ useEffect(() => {
         {student?.logo && (
           <img
             src={student.logo}
+            
             className="absolute top-[10px] left-[380px] w-[160px]"
           />
         )}
@@ -138,13 +205,13 @@ useEffect(() => {
         {marksArray.map((m, index) => (
           <div key={index}>
             <div style={{ top: 570 + index * 30, left: 150, position: "absolute" }}>
-             {m.subject
-  ?.split(/\d+\.\s/) // split by "1. 2. 3."
-  .filter(Boolean)
-  .map((sub, i) => (
-    <div key={i}>{i + 1}. {sub.trim()}</div>
-  ))
-}
+              {m.subject
+                ?.split(/\d+\.\s/) // split by "1. 2. 3."
+                .filter(Boolean)
+                .map((sub, i) => (
+                  <div key={i}>{i + 1}. {sub.trim()}</div>
+                ))
+              }
             </div>
             <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
               {m.objective}

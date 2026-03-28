@@ -5,7 +5,12 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
 import { databases, ID } from "@/lib/appwrite";
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
+
 const BUCKET_ID = "6986e8a4001925504f6b";
+
+
 
 export default function PrintCertificate() {
 
@@ -13,6 +18,7 @@ export default function PrintCertificate() {
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
 
+  const printRef = useRef();
   useEffect(() => {
 
     const data = localStorage.getItem("certificateStudent");
@@ -109,20 +115,88 @@ console.log("ID USED IN QR:", parsed.$id);
     return `${format(start)} To ${format(end)}`;
   };
 
+
+  const toBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
+
+ const handleDownload = async () => {
+  try {
+    const node = printRef.current;
+
+    
+    // ✅ convert images before capture
+    const images = node.querySelectorAll("img");
+
+    for (let img of images) {
+      const src = img.src;
+
+      if (!src.startsWith("data:")) {
+        try {
+          const base64 = await toBase64(src);
+          img.src = base64;
+        } catch (err) {
+          console.log("IMAGE CONVERT ERROR:", err);
+        }
+      }
+    }
+
+   const dataUrl = await htmlToImage.toPng(node, {
+  quality: 1,
+  pixelRatio: 3,
+  cacheBust: true,
+
+  // 🔥 FIX CUT ISSUE
+  width: node.scrollWidth,
+  height: node.scrollHeight,
+
+  style: {
+    transform: "scale(1)",
+    transformOrigin: "top left",
+    overflow: "visible"
+  }
+});
+    const link = document.createElement("a");
+    link.download = `${student.studentName}_certificate.png`;
+    link.href = dataUrl;
+    link.click();
+
+  } catch (err) {
+    console.log("DOWNLOAD ERROR:", err);
+  }
+};
+
+
   const printPage = () => window.print();
 
   return (
 
     <div className="p-10">
 
-      <button
-        onClick={printPage}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
-      >
-        Print Certificate
-      </button>
+  <button
+  onClick={handleDownload}
+  className="bg-green-600 text-white px-6 py-2 mb-6 ml-4"
+>
+  Download Certificate
+</button>
 
-      <div className="relative w-[900px] h-[1200px] mx-auto">
+
+  <div
+  ref={printRef}
+  style={{
+    width: "900px",
+    height: "1200px",
+    position: "relative",
+    overflow: "visible"
+  }}
+>
 
         {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
@@ -173,7 +247,6 @@ console.log("ID USED IN QR:", parsed.$id);
        {student.qrCode && (
   <img
     src={student.qrCode}
-    crossOrigin="anonymous"
     className="absolute top-[300px] right-[100px] w-[120px]"
   />
 )}
