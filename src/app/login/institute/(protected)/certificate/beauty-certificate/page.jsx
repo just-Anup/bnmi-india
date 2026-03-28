@@ -149,7 +149,7 @@ export default function PrintCertificate() {
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[680px] font-bold text-2xl">
-          {student.marks}
+          {student.marks}.00%
         </div>
 
         {/* QR */}

@@ -3,13 +3,10 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
-
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
 
@@ -32,56 +29,9 @@ export default function PrintMarksheet() {
     return () => clearTimeout(timer);
   }, []);
 
-
-  const fixColors = () => {
-  const all = document.querySelectorAll("*");
-
-  all.forEach((el) => {
-    const style = window.getComputedStyle(el);
-
-    if (
-      style.color.includes("lab") ||
-      style.backgroundColor.includes("lab")
-    ) {
-      el.style.color = "#000";
-      el.style.backgroundColor = "#fff";
-    }
-  });
-};
-
-const downloadPDF = async () => {
-  try {
-    const element = document.querySelector(".print-container");
-
-    fixColors(); // 🔥 fix color issue
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-
-    pdf.save(`${student.studentName}_marksheet.pdf`);
-
-  } catch (err) {
-    console.log("PDF ERROR:", err);
-    alert("Download failed");
-  }
-};
-  // ✅ FETCH MARKS
+  // ✅ FETCH MARKS (FIXED)
   const fetchMarks = async (studentId) => {
     try {
-
       const resultRes = await databases.listDocuments(
         DATABASE_ID,
         "exam_results",
@@ -91,9 +41,10 @@ const downloadPDF = async () => {
       let subjectList = [];
 
       if (resultRes.documents.length > 0) {
-        subjectList = resultRes.documents[0].subjects
-          ?.split(",")
-          .map((s) => s.trim()) || [];
+        subjectList =
+          resultRes.documents[0].subjects
+            ?.split(",")
+            .map((s) => s.trim()) || [];
       }
 
       const marksRes = await databases.listDocuments(
@@ -104,8 +55,11 @@ const downloadPDF = async () => {
 
       const marksDocs = marksRes.documents || [];
 
-      const finalMarks = subjectList.map((sub, index) => {
-        const mark = marksDocs[index];
+      // ✅ FIXED MAPPING (NO INDEX ISSUE)
+      const finalMarks = subjectList.map((sub) => {
+        const mark = marksDocs.find(
+          (m) => m.subject?.trim() === sub
+        );
 
         return {
           subject: sub,
@@ -118,7 +72,6 @@ const downloadPDF = async () => {
       });
 
       setMarksArray(finalMarks);
-
     } catch (err) {
       console.log("MARK FETCH ERROR:", err);
 
@@ -130,67 +83,58 @@ const downloadPDF = async () => {
 
   if (!student) return <div className="p-10">Loading...</div>;
 
-  const total = marksArray.reduce((sum, m) => sum + Number(m.total || 0), 0);
+  const total = marksArray.reduce(
+    (sum, m) => sum + Number(m.total || 0),
+    0
+  );
 
   const franchiseSign = student.franchiseSignature || null;
-<style>
-{`
-  @media print {
 
-    body {
-      margin: 0;
-      padding: 0;
-    }
-
-    button {
-      display: none !important;
-    }
-
-    .print-container {
-      position: relative !important;
-      width: 100% !important;
-      height: auto !important;
-      transform: scale(1);
-      transform-origin: top left;
-    }
-
-    img {
-      display: block !important;
-    }
-
-  }
-`}
-</style>
   return (
-
     <div className="p-10 bg-white">
-
-      {/* HIDE BUTTONS IN PDF */}
+      {/* PRINT STYLE */}
       <style>
         {`
           @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+
             button {
               display: none !important;
+            }
+
+            .print-container {
+              position: relative !important;
+              width: 100% !important;
+              height: auto !important;
+              transform: scale(1);
+              transform-origin: top left;
+            }
+
+            img {
+              display: block !important;
             }
           }
         `}
       </style>
 
-    <button
-  onClick={downloadPDF}
-  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
->
-  Download PDF
-</button>
+      {/* BUTTON */}
+      <button
+        onClick={() => window.print()}
+        className="bg-blue-600 text-white px-6 py-2 mb-6"
+      >
+        Print / Download PDF
+      </button>
 
-<div className="relative w-[900px] h-[1200px] mx-auto print-container">
-
+      {/* MARKSHEET */}
+      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
         {/* TEMPLATE */}
-     <img
-  src={student.logo + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute top-[10px] left-[380px] w-[160px] h-[160px]"
-/>
+        <img
+          src="/beautymark.png"
+          className="absolute w-full h-full"
+        />
 
         {/* LOGO */}
         {student?.logo && (
@@ -201,31 +145,70 @@ const downloadPDF = async () => {
         )}
 
         {/* LEFT SIDE */}
-        <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
-        <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
-        <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
-        <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
+        <div className="absolute top-[325px] left-[330px]">
+          {student.studentName}
+        </div>
+        <div className="absolute top-[346px] left-[330px]">
+          {student.fatherName}
+        </div>
+        <div className="absolute top-[367px] left-[330px]">
+          {student.surname}
+        </div>
+        <div className="absolute top-[388px] left-[330px]">
+          {student.motherName}
+        </div>
+        <div className="absolute top-[410px] left-[330px]">
+          {student.course}
+        </div>
+        <div className="absolute top-[450px] left-[330px]">
+          {student.instituteName}
+        </div>
 
         {/* RIGHT SIDE */}
-        <div className="absolute top-[325px] left-[680px]">1 Year</div>
-        <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
-        <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
-        <div className="absolute top-[390px] left-[680px]">{student.coursePeriod}</div>
+        <div className="absolute top-[325px] left-[680px]">
+          1 Year
+        </div>
+        <div className="absolute top-[348px] left-[680px]">
+          {student.marksheetNo}
+        </div>
+        <div className="absolute top-[369px] left-[680px]">
+          {student.dob}
+        </div>
+        <div className="absolute top-[390px] left-[680px]">
+          {student.coursePeriod}
+        </div>
 
-        {/* SUBJECT */}
-        {marksArray.slice(0, 1).map((m, index) => (
+        {/* SUBJECT + MARKS (FIXED) */}
+        {marksArray.map((m, index) => (
           <div key={index}>
-            <div style={{ top: 570, left: 150, position: "absolute", width: 420 }}>
-              {marksArray.map((s) => s.subject).join(", ")}
+            <div
+              style={{
+                top: 570 + index * 30,
+                left: 150,
+                position: "absolute",
+                width: 420,
+              }}
+            >
+              {m.subject}
             </div>
 
-            <div className="absolute top-[570px] left-[620px] font-bold">
+            <div
+              className="absolute font-bold"
+              style={{
+                top: 570 + index * 30,
+                left: 620,
+              }}
+            >
               {m.objective}
             </div>
 
-            <div className="absolute top-[570px] left-[690px] font-bold">
+            <div
+              className="absolute font-bold"
+              style={{
+                top: 570 + index * 30,
+                left: 690,
+              }}
+            >
               {m.practical}
             </div>
           </div>
@@ -243,11 +226,10 @@ const downloadPDF = async () => {
 
         {/* SIGNATURE */}
         {franchiseSign && (
-       <img
-  src={franchiseSign + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute bottom-[60px] left-[130px] w-[100px]"
-/>
+          <img
+            src={franchiseSign}
+            className="absolute bottom-[60px] left-[130px] w-[100px]"
+          />
         )}
 
         {/* OWNER */}
@@ -259,7 +241,6 @@ const downloadPDF = async () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
