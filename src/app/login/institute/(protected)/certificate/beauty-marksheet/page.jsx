@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import QRCode from "qrcode";
@@ -12,8 +11,6 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
 
-  const { id } = useParams();
-
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
@@ -21,26 +18,34 @@ export default function PrintMarksheet() {
 
   useEffect(() => {
 
-    if (!id) {
-      setError("❌ ID missing in URL");
-      return;
-    }
-
     const fetchData = async () => {
       try {
 
+        // ✅ GET STUDENT ID FROM LOCALSTORAGE (ONLY CHANGE)
+        const stored = localStorage.getItem("marksheetStudent");
+
+        if (!stored) {
+          setError("❌ No data found");
+          return;
+        }
+
+        const parsed = JSON.parse(stored);
+        const studentId = parsed.studentId;
+
+        // 🔹 FETCH STUDENT (UNCHANGED LOGIC)
         const studentData = await databases.getDocument(
           DATABASE_ID,
           "student_admissions",
-          id
+          studentId
         );
 
         setStudent(studentData);
 
+        // 🔹 FETCH MARKS (UNCHANGED LOGIC)
         const res = await databases.listDocuments(
           DATABASE_ID,
           "exam_results",
-          [Query.equal("studentId", id)]
+          [Query.equal("studentId", studentId)]
         );
 
         if (res.documents.length > 0) {
@@ -53,26 +58,26 @@ export default function PrintMarksheet() {
           if (doc.qrCode) {
             setQrCode(doc.qrCode);
           } else {
-            const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${studentData.$id}`;
+            const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${studentData.$id}`;
             const qr = await QRCode.toDataURL(verifyUrl);
             setQrCode(qr);
           }
 
         } else {
-          const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${studentData.$id}`;
+          const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${studentData.$id}`;
           const qr = await QRCode.toDataURL(verifyUrl);
           setQrCode(qr);
         }
 
       } catch (err) {
         console.log("DB ERROR:", err);
-        setError("❌ Invalid ID or data not found");
+        setError("❌ Invalid data");
       }
     };
 
     fetchData();
 
-  }, [id]);
+  }, []); // ✅ removed [id]
 
   useEffect(() => {
     const timer = setTimeout(() => window.print(), 500);
@@ -115,7 +120,6 @@ export default function PrintMarksheet() {
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[410px] left-[330px]">{student.course}</div>
 
-        {/* ✅ FIXED LINE */}
         <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
 
         {/* RIGHT */}
@@ -157,7 +161,6 @@ export default function PrintMarksheet() {
         {qrCode && (
           <img
             src={qrCode}
-            crossOrigin="anonymous"
             className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
           />
         )}
