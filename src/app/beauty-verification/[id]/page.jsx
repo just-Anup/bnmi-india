@@ -73,7 +73,22 @@ export default function VerifyCertificate() {
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  const logoUrl = franchise?.logo || null;
+  // ===============================
+  // ✅ ADDED: GET CERT DATA FROM LOCALSTORAGE
+  // ===============================
+  let localCert = null;
+
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("certificateStudent");
+    if (stored) {
+      localCert = JSON.parse(stored);
+    }
+  }
+
+  // ===============================
+  // ✅ UPDATED: LOGO WITH FALLBACK
+  // ===============================
+  const logoUrl = franchise?.logo || localCert?.logo || null;
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
@@ -109,15 +124,21 @@ export default function VerifyCertificate() {
               Certificate No : {certificate?.certificateNo || "N/A"}
             </p>
 
+            {/* ===============================
+               ✅ UPDATED: DURATION FIX
+            =============================== */}
             <p>
-              Duration : {certificate?.duration || student.duration || "N/A"}
+              Duration : {certificate?.duration || student.duration || localCert?.duration || "N/A"}
             </p>
 
+            {/* ===============================
+               ✅ UPDATED: ISSUE DATE FIX
+            =============================== */}
             <p>
               Issue Date :{" "}
               {certificate?.issueDate
                 ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-                : "N/A"}
+                : localCert?.issueDate || "N/A"}
             </p>
 
             <p>

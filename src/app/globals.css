@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+* {
+  color: #000 !important;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #000000; /* ✅ FORCE BLACK TEXT */
