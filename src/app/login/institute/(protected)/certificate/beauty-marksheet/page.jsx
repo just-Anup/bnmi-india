@@ -10,6 +10,7 @@ export default function PrintMarksheet() {
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
 
+  // ✅ LOAD STUDENT
   useEffect(() => {
     const data = localStorage.getItem("marksheetStudent");
 
@@ -29,49 +30,26 @@ export default function PrintMarksheet() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ✅ FETCH MARKS (FIXED)
+  // ✅ FETCH MARKS FROM exam_results
   const fetchMarks = async (studentId) => {
     try {
-      const resultRes = await databases.listDocuments(
+      const res = await databases.listDocuments(
         DATABASE_ID,
         "exam_results",
         [Query.equal("studentId", studentId)]
       );
 
-      let subjectList = [];
+      if (res.documents.length > 0) {
+        const resultDoc = res.documents[0];
 
-      if (resultRes.documents.length > 0) {
-        subjectList =
-          resultRes.documents[0].subjects
-            ?.split(",")
-            .map((s) => s.trim()) || [];
+        let parsedMarks = [];
+
+        if (resultDoc.marksArray) {
+          parsedMarks = JSON.parse(resultDoc.marksArray);
+        }
+
+        setMarksArray(parsedMarks);
       }
-
-      const marksRes = await databases.listDocuments(
-        DATABASE_ID,
-        "exam_subject_marks",
-        [Query.equal("studentId", studentId)]
-      );
-
-      const marksDocs = marksRes.documents || [];
-
-      // ✅ FIXED MAPPING (NO INDEX ISSUE)
-      const finalMarks = subjectList.map((sub) => {
-        const mark = marksDocs.find(
-          (m) => m.subject?.trim() === sub
-        );
-
-        return {
-          subject: sub,
-          objective: Number(mark?.theory || 0),
-          practical: Number(mark?.practical || 0),
-          total:
-            Number(mark?.theory || 0) +
-            Number(mark?.practical || 0),
-        };
-      });
-
-      setMarksArray(finalMarks);
     } catch (err) {
       console.log("MARK FETCH ERROR:", err);
 
@@ -92,7 +70,8 @@ export default function PrintMarksheet() {
 
   return (
     <div className="p-10 bg-white">
-      {/* PRINT STYLE */}
+
+      {/* PRINT CSS */}
       <style>
         {`
           @media print {
@@ -130,7 +109,8 @@ export default function PrintMarksheet() {
 
       {/* MARKSHEET */}
       <div className="relative w-[900px] h-[1200px] mx-auto print-container">
-        {/* TEMPLATE */}
+
+        {/* BACKGROUND */}
         <img
           src="/beautymark.png"
           className="absolute w-full h-full"
@@ -145,42 +125,24 @@ export default function PrintMarksheet() {
         )}
 
         {/* LEFT SIDE */}
-        <div className="absolute top-[325px] left-[330px]">
-          {student.studentName}
-        </div>
-        <div className="absolute top-[346px] left-[330px]">
-          {student.fatherName}
-        </div>
-        <div className="absolute top-[367px] left-[330px]">
-          {student.surname}
-        </div>
-        <div className="absolute top-[388px] left-[330px]">
-          {student.motherName}
-        </div>
-        <div className="absolute top-[410px] left-[330px]">
-          {student.course}
-        </div>
-        <div className="absolute top-[450px] left-[330px]">
-          {student.instituteName}
-        </div>
+        <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
+        <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
+        <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
+        <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
+        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
+        <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
 
         {/* RIGHT SIDE */}
-        <div className="absolute top-[325px] left-[680px]">
-          1 Year
-        </div>
-        <div className="absolute top-[348px] left-[680px]">
-          {student.marksheetNo}
-        </div>
-        <div className="absolute top-[369px] left-[680px]">
-          {student.dob}
-        </div>
-        <div className="absolute top-[390px] left-[680px]">
-          {student.coursePeriod}
-        </div>
+        <div className="absolute top-[325px] left-[680px]">1 Year</div>
+        <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
+        <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
+        <div className="absolute top-[390px] left-[680px]">{student.coursePeriod}</div>
 
-        {/* SUBJECT + MARKS (FIXED) */}
+        {/* SUBJECT + MARKS */}
         {marksArray.map((m, index) => (
           <div key={index}>
+
+            {/* SUBJECT */}
             <div
               style={{
                 top: 570 + index * 30,
@@ -192,31 +154,36 @@ export default function PrintMarksheet() {
               {m.subject}
             </div>
 
+            {/* OBJECTIVE */}
             <div
-              className="absolute font-bold"
               style={{
                 top: 570 + index * 30,
                 left: 620,
+                position: "absolute",
+                fontWeight: "bold",
               }}
             >
               {m.objective}
             </div>
 
+            {/* PRACTICAL */}
             <div
-              className="absolute font-bold"
               style={{
                 top: 570 + index * 30,
                 left: 690,
+                position: "absolute",
+                fontWeight: "bold",
               }}
             >
               {m.practical}
             </div>
+
           </div>
         ))}
 
         {/* TOTAL */}
-        <div className="absolute bottom-[290px] left-[775px] font-bold">
-          {total}
+        <div className="absolute bottom-[290px] left-[755px] font-bold">
+          {total}.00%
         </div>
 
         {/* GRADE */}
@@ -225,22 +192,23 @@ export default function PrintMarksheet() {
         </div>
 
         {/* SIGNATURE */}
-        {franchiseSign && (
+        {/* {franchiseSign && (
           <img
             src={franchiseSign}
             className="absolute bottom-[60px] left-[130px] w-[100px]"
           />
-        )}
+        )} */}
 
         {/* OWNER */}
-        {student.ownerName && (
+        {/* {student.ownerName && (
           <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
             <div className="font-semibold">{student.ownerName}</div>
             <div className="text-xs text-gray-600">
               Controller Of Examination
             </div>
           </div>
-        )}
+        )} */}
+
       </div>
     </div>
   );

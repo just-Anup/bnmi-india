@@ -143,12 +143,12 @@ export default function PrintCertificate() {
         </div>
 
         {/* GRADE */}
-        <div className="absolute top-[770px] left-[550px] font-bold text-2xl">
+        <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
           {student.grade}
         </div>
 
         {/* MARKS */}
-        <div className="absolute top-[770px] left-[680px] font-bold text-2xl">
+        <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
           {student.marks}.00%
         </div>
 
