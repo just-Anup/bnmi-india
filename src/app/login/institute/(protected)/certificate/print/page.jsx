@@ -5,6 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const BUCKET_ID = "6986e8a4001925504f6b";
@@ -49,6 +51,51 @@ export default function PrintCertificate() {
 
   }, []);
 
+  const fixColors = () => {
+  const all = document.querySelectorAll("*");
+
+  all.forEach((el) => {
+    const style = window.getComputedStyle(el);
+
+    if (
+      style.color.includes("lab") ||
+      style.backgroundColor.includes("lab")
+    ) {
+      el.style.color = "#000";
+      el.style.backgroundColor = "#fff";
+    }
+  });
+};
+
+const downloadPDF = async () => {
+  try {
+    const element = document.querySelector(".print-container");
+
+    fixColors();
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+    pdf.save(`${student?.studentName || "certificate"}.pdf`);
+
+  } catch (err) {
+    console.log("PDF ERROR:", err);
+    alert("Download failed");
+  }
+};
   const loadFranchise = async (userId) => {
     try {
       const res = await databases.listDocuments(
@@ -119,14 +166,20 @@ export default function PrintCertificate() {
   return (
     <div className="p-10">
 
-      <button
-        onClick={printPage}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
-      >
-        Print Certificate
-      </button>
+   <button
+  onClick={printPage}
+  className="bg-blue-600 text-white px-6 py-2 mb-6"
+>
+  Print
+</button>
 
-      <div className="relative w-[900px] h-[1200px] mx-auto">
+<button
+  onClick={downloadPDF}
+  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
+>
+  Download PDF
+</button>
+      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
 
         {/* TEMPLATE */}
         <img
@@ -135,21 +188,24 @@ export default function PrintCertificate() {
         />
 
         {/* LOGO */}
-        {student.logo && (
-          <img
-            src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[180px]"
-          />
-        )}
+        {/* {student.logo && (
+         <img
+  src={student.logo + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="absolute top-[40px] left-[370px] w-[180px]"
+/>
+        )} */}
 
         {/* PHOTO */}
+        <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
         {photoUrl && (
-          <img
-            src={photoUrl}
-            className="absolute top-[440px] left-[410px] w-[120px] h-[120px] object-cover"
-          />
+        <img
+  src={photoUrl + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="w-full h-full object-cover"
+/>
         )}
-
+</div>
         {/* NAME */}
         <div className="absolute top-[660px] left-[400px] text-3xl font-bold">
           {student.studentName}
@@ -187,9 +243,10 @@ export default function PrintCertificate() {
         {/* QR CODE */}
         {student.qrCode && (
           <img
-            src={student.qrCode}
-            className="absolute top-[300px] right-[100px] w-[120px]"
-          />
+  src={student.qrCode + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="absolute top-[300px] right-[100px] w-[120px]"
+/>
         )}
 
         {/* CERTIFICATE NO + DATE */}
@@ -199,19 +256,22 @@ export default function PrintCertificate() {
         </div>
 
         {/* STUDENT SIGNATURE */}
+        <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
         {signatureUrl && (
           <img
-            src={signatureUrl}
-            className="absolute top-[535px] left-[410px] w-[120px]"
+            src={signatureUrl + "&mode=admin"}
+            crossOrigin="anonymous"
+            className="max-w-full max-h-full object-contain"
           />
         )}
-
+</div>
         {/* FRANCHISE SIGNATURE */}
         {franchiseSign && (
-          <img
-            src={franchiseSign}
-            className="absolute bottom-[100px] left-[100px] w-[100px]"
-          />
+         <img
+  src={franchiseSign + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="absolute bottom-[100px] left-[100px] w-[100px]"
+/>
         )}
 
         {/* OWNER NAME */}

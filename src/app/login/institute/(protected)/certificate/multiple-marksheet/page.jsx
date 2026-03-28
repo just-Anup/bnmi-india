@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -25,6 +27,65 @@ export default function PrintMarksheetMultiple() {
     setTimeout(() => window.print(), 500);
   }, []);
 
+  const toBase64 = async (url) => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.log("IMAGE CONVERT ERROR:", err);
+    return null;
+  }
+};
+
+const fixColors = () => {
+  const all = document.querySelectorAll("*");
+
+  all.forEach((el) => {
+    const style = window.getComputedStyle(el);
+
+    if (style.color.includes("lab") || style.backgroundColor.includes("lab")) {
+      el.style.color = "#000";
+      el.style.backgroundColor = "#fff";
+    }
+  });
+};
+
+const downloadPDF = async () => {
+  try {
+    const element = document.querySelector(".print-container");
+
+    // 🔥 FIX COLOR ISSUE
+    fixColors();
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+pdf.save(`${student?.studentName || "marksheet"}.pdf`);
+
+  } catch (err) {
+    console.log("PDF ERROR:", err);
+    alert("Download failed");
+  }
+};
 
   // ===============================
   // ✅ FETCH MULTIPLE SUBJECT DATA
@@ -84,26 +145,30 @@ export default function PrintMarksheetMultiple() {
   return (
     <div className="p-10 bg-white">
 
-      {/* PRINT BUTTON */}
-      <button
-        onClick={() => window.print()}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
-      >
-        Print / Download PDF
-      </button>
+ {student && (
+  <button
+    onClick={downloadPDF}
+    className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
+  >
+    Download PDF
+  </button>
+)}
 
       <div className="relative w-[900px] h-[1200px] mx-auto print-container">
 
         {/* TEMPLATE */}
-        <img src="/beautymark.png" className="absolute w-full h-full" />
+        <img src="/marksheet.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
-        {student?.logo && (
+        {/* {student?.logo && (
           <img
-            src={student.logo}
-            className="absolute top-[10px] left-[380px] w-[160px] h-[160px] object-contain"
-          />
-        )}
+  id="logo-img"
+  src={student.logo + "&mode=admin"}  // 🔥 ADD THIS
+  crossOrigin="anonymous"
+  className="absolute top-[10px] left-[400px] w-[102px] h-[120px]"
+/>
+
+        )} */}
 
         {/* ===============================
             LEFT SIDE
@@ -209,17 +274,20 @@ export default function PrintMarksheetMultiple() {
             SIGNATURE
         =============================== */}
         {student?.franchiseSignature && (
-          <img
-            src={student.franchiseSignature}
-            className="absolute bottom-[60px] left-[130px] w-[100px]"
-          />
+
+<img
+  id="sign-img"
+  src={student.franchiseSignature + "&mode=admin"} // 🔥 ADD THIS
+  crossOrigin="anonymous"
+  className="absolute bottom-[90px] left-[130px] w-[100px]"
+/>
         )}
 
         {/* OWNER NAME */}
         {student?.ownerName && (
           <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
             <div className="font-semibold">{student.ownerName}</div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-gray-600 font font-bold">
               Controller Of Examination
             </div>
           </div>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -28,6 +30,54 @@ export default function PrintMarksheet() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const fixColors = () => {
+  const all = document.querySelectorAll("*");
+
+  all.forEach((el) => {
+    const style = window.getComputedStyle(el);
+
+    if (
+      style.color.includes("lab") ||
+      style.backgroundColor.includes("lab")
+    ) {
+      el.style.color = "#000";
+      el.style.backgroundColor = "#fff";
+    }
+  });
+};
+
+const downloadPDF = async () => {
+  try {
+    const element = document.querySelector(".print-container");
+
+    if (!element) return alert("Page not ready");
+
+    fixColors();
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+    pdf.save(`${student?.studentName || "marksheet"}.pdf`);
+
+  } catch (err) {
+    console.log("PDF ERROR:", err);
+    alert("Download failed");
+  }
+};
 
   const fetchMarks = async (studentId, studentData) => {
     try {
@@ -133,23 +183,24 @@ export default function PrintMarksheet() {
   return (
     <div className="p-10 bg-white">
 
-      <button
-        onClick={() => window.print()}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
-      >
-        Print / Download PDF
-      </button>
+  <button
+  onClick={downloadPDF}
+  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
+>
+  Download PDF
+</button>
 
       <div className="relative w-[900px] h-[1200px] mx-auto print-container">
 
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
         {student?.logo && (
-          <img
-            src={student.logo}
-            className="absolute top-[10px] left-[380px] w-[160px] h-[160px]"
-          />
-        )}
+  <img
+    src={student.logo + "&mode=admin"}
+    crossOrigin="anonymous"
+    className="absolute top-[10px] left-[380px] w-[130px] h-[130px]"
+  />
+)}
 
         {/* LEFT SIDE */}
         <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
@@ -228,12 +279,22 @@ export default function PrintMarksheet() {
 
         {/* SIGNATURE */}
         {franchiseSign && (
-          <img
-            src={franchiseSign}
-            className="absolute bottom-[60px] left-[130px] w-[100px]"
-          />
+       <img
+  src={franchiseSign + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="absolute bottom-[90px] left-[130px] w-[100px]"
+/>
         )}
 
+        {/* OWNER */}
+        {student.ownerName && (
+          <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
+            <div className="font-semibold">{student.ownerName}</div>
+            <div className="text-xs text-gray-600">
+              Controller Of Examination
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
