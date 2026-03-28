@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 
+import { account } from "@/lib/appwrite";
+
+const user = await account.get();
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 const RESULT_COLLECTION = "exam_results";
@@ -57,10 +60,8 @@ export default function CertificatePage() {
 
     };
 
-    const applyCertificate = async () => {
-
+  const applyCertificate = async () => {
   try {
-
     const uniqueStudents = {};
 
     selected.forEach(id => {
@@ -71,7 +72,6 @@ export default function CertificatePage() {
     });
 
     for (const key in uniqueStudents) {
-
       const student = uniqueStudents[key];
 
       const existing = await databases.listDocuments(
@@ -81,6 +81,8 @@ export default function CertificatePage() {
       );
 
       if (existing.documents.length > 0) continue;
+
+      console.log("Creating certificate for:", student.studentId);
 
       await databases.createDocument(
         DATABASE_ID,
@@ -95,8 +97,6 @@ export default function CertificatePage() {
           grade: student.grade,
           certificateNo: "BNMI-" + Date.now(),
           status: "pending",
-    createdById: user.$id,
-
           createdAt: new Date().toISOString()
         }
       );
@@ -106,10 +106,8 @@ export default function CertificatePage() {
     setSelected([]);
 
   } catch (err) {
-
     console.log("Certificate Error:", err);
     alert(err.message);
-
   }
 };
    

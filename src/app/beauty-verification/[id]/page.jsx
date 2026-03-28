@@ -22,12 +22,14 @@ export default function VerifyCertificate() {
     const fetchAll = async () => {
       try {
 
+        // ✅ STUDENT
         const student = await databases.getDocument(
           DATABASE_ID,
           "student_admissions",
           id
         );
 
+        // ✅ CERTIFICATE
         const certRes = await databases.listDocuments(
           DATABASE_ID,
           "certificates",
@@ -36,6 +38,7 @@ export default function VerifyCertificate() {
 
         const certificate = certRes.documents[0];
 
+        // ✅ FRANCHISE
         let franchise = null;
 
         if (student.franchiseEmail) {
@@ -48,7 +51,30 @@ export default function VerifyCertificate() {
           franchise = res.documents[0];
         }
 
-        setData({ student, certificate, franchise });
+        // ===============================
+        // ✅ FIXED: COURSE DURATION (CORRECT PLACE)
+        // ===============================
+        let courseDuration = "";
+
+        try {
+          const courseRes = await databases.listDocuments(
+            DATABASE_ID,
+            "beauty_courses_single",
+            [
+              Query.equal("courseName", student.courseName),
+              Query.equal("franchiseEmail", student.franchiseEmail)
+            ]
+          );
+
+          if (courseRes.documents.length > 0) {
+            courseDuration = courseRes.documents[0].duration || "";
+          }
+        } catch (err) {
+          console.log("Duration fetch error:", err);
+        }
+
+        // ✅ FINAL SET DATA
+        setData({ student, certificate, franchise, courseDuration });
 
       } catch (err) {
         console.error(err);
@@ -67,17 +93,14 @@ export default function VerifyCertificate() {
   if (data === false)
     return <p className="p-10 text-center text-red-600">Invalid Certificate</p>;
 
-  const { student, certificate, franchise } = data;
+  const { student, certificate, franchise, courseDuration } = data;
 
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  // ===============================
-  // ✅ ADDED: GET CERT DATA FROM LOCALSTORAGE
-  // ===============================
+  // ✅ LOCAL CERT (NO CHANGE)
   let localCert = null;
-
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("certificateStudent");
     if (stored) {
@@ -85,27 +108,23 @@ export default function VerifyCertificate() {
     }
   }
 
-  // ===============================
-  // ✅ UPDATED: LOGO WITH FALLBACK
-  // ===============================
+  // ✅ LOGO FIX
   const logoUrl = franchise?.logo || localCert?.logo || null;
 
-  // ✅ GET CERT META FROM CERTIFICATE PAGE
-let certMeta = null;
-
-if (typeof window !== "undefined") {
-  const storedMeta = localStorage.getItem("certificateMeta");
-  if (storedMeta) {
-    certMeta = JSON.parse(storedMeta);
+  // ✅ CERT META (NO CHANGE)
+  let certMeta = null;
+  if (typeof window !== "undefined") {
+    const storedMeta = localStorage.getItem("certificateMeta");
+    if (storedMeta) {
+      certMeta = JSON.parse(storedMeta);
+    }
   }
-}
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
       <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-5">
 
-        {/* 🔥 TEXT FIX WRAPPER */}
         <div style={{ color: "#000", opacity: 1, WebkitTextFillColor: "#000" }}>
 
           <h1 className="text-lg font-bold text-center mb-4">
@@ -129,25 +148,22 @@ if (typeof window !== "undefined") {
             <p>
               Course : {student.courseName || student.course || "N/A"}
             </p>
-<p>
-  Certificate No : {certificate?.certificateNo || certMeta?.certificateNo || "N/A"}
-</p>
 
-            {/* ===============================
-               ✅ UPDATED: DURATION FIX
-            =============================== */}
-           <p>
-  Duration : {certificate?.duration || student.duration || certMeta?.duration || "N/A"}
-</p>
-            {/* ===============================
-               ✅ UPDATED: ISSUE DATE FIX
-            =============================== */}
-        <p>
-  Issue Date :{" "}
-  {certificate?.issueDate
-    ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-    : certMeta?.issueDate || "N/A"}
-</p>
+            <p>
+              Certificate No : {certificate?.certificateNo || certMeta?.certificateNo || "N/A"}
+            </p>
+
+            {/* ✅ FINAL DURATION FIX */}
+            <p>
+              Duration : {courseDuration || certificate?.duration || student.duration || "N/A"}
+            </p>
+
+            <p>
+              Issue Date :{" "}
+              {certificate?.issueDate
+                ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
+                : certMeta?.issueDate || "N/A"}
+            </p>
 
             <p>
               Marks : {certificate?.marks ? `${certificate.marks}%` : "N/A"}
