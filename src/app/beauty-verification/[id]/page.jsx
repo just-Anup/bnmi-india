@@ -128,17 +128,17 @@ export default function VerifyCertificate() {
                ✅ UPDATED: DURATION FIX
             =============================== */}
             <p>
-              Duration : {certificate?.duration || student.duration || localCert?.duration || "N/A"}
+              Duration : {certificate?.duration || student.duration || "N/A"}
             </p>
 
             {/* ===============================
                ✅ UPDATED: ISSUE DATE FIX
             =============================== */}
             <p>
-              Issue Date :{" "}
-              {certificate?.issueDate
-                ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-                : localCert?.issueDate || "N/A"}
+          Issue Date :{" "}
+{certificate?.issueDate
+  ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
+  : "N/A"}
             </p>
 
             <p>
