@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
+import QRCode from "qrcode"; // ✅ ADDED
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
@@ -20,7 +21,7 @@ export default function PrintCertificate() {
     const parsed = JSON.parse(data);
 
     console.log("STUDENT DATA:", parsed);
-    console.log("DURATION VALUE:", parsed.duration); // 🔥 DEBUG
+    console.log("DURATION VALUE:", parsed.duration);
 
     setStudent(parsed);
 
@@ -40,6 +41,30 @@ export default function PrintCertificate() {
     const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
     setIssueDate(today);
 
+    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
+    const generateQR = async () => {
+      try {
+
+        const verifyId = parsed.$id || certNo;
+
+        // 👉 IMPORTANT: your real domain
+ const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${verifyId}`;
+
+        const qr = await QRCode.toDataURL(verifyUrl);
+
+        setStudent(prev => ({
+          ...prev,
+          qrCode: qr,
+          verifyUrl
+        }));
+
+      } catch (err) {
+        console.error("QR ERROR:", err);
+      }
+    };
+
+    generateQR();
+
   }, []);
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
@@ -56,7 +81,7 @@ export default function PrintCertificate() {
 
   const franchiseSign = student.franchiseSignature || null;
 
-  // ✅ COURSE DURATION FUNCTION (FIXED)
+  // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   const getCourseDuration = (durationText) => {
 
     if (!durationText) return "N/A";
@@ -125,9 +150,9 @@ export default function PrintCertificate() {
           )}
         </div>
 
-        {/* NAME */}s
+        {/* NAME */}
         <div className="absolute top-[660px] left-[320px] w-[400px] text-3xl font-bold">
-              {student.studentName}
+          {student.studentName}
         </div>
 
         {/* COURSE */}
@@ -135,8 +160,8 @@ export default function PrintCertificate() {
           Course Name: {student.course}
         </div>
 
-        {/* ✅ COURSE DURATION (FIXED) */}
-        <div className="absolute top-[857px] left-[300px]  font-semibold">
+        {/* COURSE DURATION */}
+        <div className="absolute top-[857px] left-[300px] font-semibold">
           Course Duration: {getCourseDuration(
             student.duration || student.courseDuration || "1 year"
           )}
@@ -152,11 +177,12 @@ export default function PrintCertificate() {
           {student.marks}.00%
         </div>
 
-        {/* QR */}
+        {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
         {student.qrCode && (
           <img
             src={student.qrCode}
-            className="absolute top-[320px] right-[90px] w-[120px]"
+            crossOrigin="anonymous"
+            className="absolute top-[300px] right-[100px] w-[120px]"
           />
         )}
 
@@ -171,10 +197,10 @@ export default function PrintCertificate() {
 
         </div>
 
-        {/* INSTITUTE + CITY */}
+        {/* INSTITUTE */}
         <div className="absolute bottom-[440px] left-[150px] text-3xl font-bold text-red-700">
 
-          ATC: {student.instituteName} | {[ student.city].filter(Boolean).join(", ")}
+          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
         </div>
 
         {/* SIGNATURE */}
@@ -194,21 +220,21 @@ export default function PrintCertificate() {
             className="absolute bottom-[100px] left-[100px] w-[100px]"
           />
         )}
-        {/* ✅ OWNER NAME */}
-{/* ✅ OWNER NAME */}
-{student.ownerName && (
-  <div className="absolute bottom-[60px] left-[80px] text-sm text-center">
 
-    <div className="font-semibold">
-      {student.ownerName}
-    </div>
+        {/* OWNER NAME */}
+        {student.ownerName && (
+          <div className="absolute bottom-[60px] left-[80px] text-sm text-center">
 
-    <div className="text-xs text-gray-600">
-    Controller Of Examination
-    </div>
+            <div className="font-semibold">
+              {student.ownerName}
+            </div>
 
-  </div>
-)}
+            <div className="text-xs text-gray-600">
+              Controller Of Examination
+            </div>
+
+          </div>
+        )}
 
       </div>
 

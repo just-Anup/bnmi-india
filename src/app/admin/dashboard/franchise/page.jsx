@@ -818,7 +818,7 @@ delete updatedData.newPlanAmount;
               />
               <img
                 src={selectedFranchise.qrCode}
-                className="absolute top-[530px] left-[130px] w-[100px]"
+                className="absolute top-[510px] left-[130px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
 

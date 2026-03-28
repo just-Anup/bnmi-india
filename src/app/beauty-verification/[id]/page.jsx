@@ -9,12 +9,17 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 export default function VerifyCertificate() {
 
   const { id } = useParams();
+
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
 
     const fetchData = async () => {
       try {
+
+        console.log("VERIFY ID:", id); // 🔥 DEBUG
 
         const res = await databases.getDocument(
           DATABASE_ID,
@@ -22,18 +27,47 @@ export default function VerifyCertificate() {
           id
         );
 
+        console.log("DATA FOUND:", res); // 🔥 DEBUG
+
         setData(res);
 
       } catch (err) {
-        console.log(err);
+
+        console.error("FETCH ERROR:", err);
+
+        setError("Invalid or Not Found");
+
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
+    if (id) fetchData();
 
   }, [id]);
 
-  if (!data) return <div className="p-10">Loading...</div>;
+  // ✅ LOADING
+  if (loading) {
+    return <div className="p-10">Loading...</div>;
+  }
+
+  // ❌ ERROR
+  if (error) {
+    return (
+      <div className="p-10 text-red-600 font-bold">
+        ❌ {error}
+      </div>
+    );
+  }
+
+  // ❌ SAFETY
+  if (!data) {
+    return (
+      <div className="p-10 text-red-600 font-bold">
+        ❌ No Data Found
+      </div>
+    );
+  }
 
   return (
 
