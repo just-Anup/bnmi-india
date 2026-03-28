@@ -95,7 +95,8 @@ export default function CertificatePage() {
           grade: student.grade,
           certificateNo: "BNMI-" + Date.now(),
           status: "pending",
-              franchiseEmail: (await account.get()).email, // 🔥 ADD THIS
+    createdById: user.$id,
+
           createdAt: new Date().toISOString()
         }
       );

@@ -206,30 +206,62 @@ const loadSemesterSubjects = async (courseCode, semester) => {
     createdAt: new Date().toISOString()
   }
 );
-      // 🔥 SAVE SUBJECT MARKS (ONLY 1 FOR SINGLE/BEAUTY)
-      for (const m of marks) {
-        await databases.createDocument(
-          DATABASE_ID,
-          "exam_subject_marks",
-          ID.unique(),
-          {
-            studentId: id,
-            resultId: resultDoc.$id,
-            subject:
-              student.courseType === "single" || student.courseType === "beauty"
-                ? "Course"
-                : m.subject,
 
-            theory: Number(m.theory || 0),
-            practical: Number(m.practical || 0),
-            total: Number(m.theory || 0) + Number(m.practical || 0),
+// ===============================
+// ✅ FINAL CORRECT SAVE LOGIC
+// ===============================
+if (student.courseType === "multiple") {
 
-            createdById: user.$id,
-            createdAt: new Date().toISOString()
-          }
-        );
+  for (const m of marks) {
+
+    await databases.createDocument(
+      DATABASE_ID,
+      "student_subject_results",
+      ID.unique(),
+      {
+        studentId: id,
+
+        // ✅ SUBJECT COMES DIRECTLY FROM UI
+        subject: m.subject,
+
+        // ✅ CORRECT VALUES
+        objective: Number(m.theory || 0),
+        practical: Number(m.practical || 0),
+        total:
+          Number(m.theory || 0) +
+          Number(m.practical || 0),
+
+        courseType: student.courseType,
+        createdAt: new Date().toISOString()
       }
+    );
+  }
 
+} else {
+
+  // ✅ KEEP SAME
+  for (const m of marks) {
+
+    await databases.createDocument(
+      DATABASE_ID,
+      "student_subject_results",
+      ID.unique(),
+      {
+        studentId: id,
+        subject: m.subject || "Course",
+        objective: Number(m.theory || 0),
+        practical: Number(m.practical || 0),
+        total:
+          Number(m.theory || 0) +
+          Number(m.practical || 0),
+
+        courseType: student.courseType,
+        createdAt: new Date().toISOString()
+      }
+    );
+  }
+
+}
       alert("Result Saved Successfully");
       router.push("/login/institute/student-exam/offline");
 

@@ -18,12 +18,6 @@ export default function addBeautycourse() {
   const [selectedCourses, setSelectedCourses] = useState({})
   const [search, setSearch] = useState('')
 
-  const institutePlans = {
-    "HOJAI": 400,
-    "BIHAR": 499,
-    "ARUNACHAL PRADESH": 499,
-    "BEAUTY": 500
-  }
 
   // ✅ Fetch Master Courses
   const fetchCourses = async () => {
@@ -55,6 +49,7 @@ export default function addBeautycourse() {
       )
 
       const plan = res.documents[0]?.plan
+      
   const planRes = await databases.listDocuments(
   DATABASE_ID,
   "franchise_plans",

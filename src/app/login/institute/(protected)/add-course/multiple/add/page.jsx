@@ -49,29 +49,29 @@ export default function AddMultipleCourse() {
   };
 
   // ✅ FETCH USER PLAN
-const fetchPlan = async () => {
-  const user = await account.get();
+  const fetchPlan = async () => {
+    const user = await account.get();
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    "franchise_approved",
-    [Query.equal("email", user.email)]
-  );
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", user.email)]
+    );
 
-  const plan = res.documents[0]?.plan;
+    const plan = res.documents[0]?.plan;
 
-  // ✅ GET PLAN AMOUNT FROM DB
-  const planRes = await databases.listDocuments(
-    DATABASE_ID,
-    "franchise_plans",
-    [Query.equal("name", plan)]
-  );
+    // ✅ GET PLAN AMOUNT FROM DB
+    const planRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_plans",
+      [Query.equal("name", plan)]
+    );
 
-  const fee = planRes.documents[0]?.amount || 0;
+    const fee = planRes.documents[0]?.amount || 0;
 
-  // ✅ SET EXAM FEE (THIS WAS MISSING)
-  setExamFee(fee);
-};
+    // ✅ SET EXAM FEE (THIS WAS MISSING)
+    setExamFee(fee);
+  };
 
   // ✅ FETCH ALREADY ADDED COURSES
   const fetchAddedCourses = async () => {
@@ -184,7 +184,8 @@ const fetchPlan = async () => {
                       </span>
                     ) : (
                       <Link
-                        href={`/login/institute/add-course/multiple/subjects/${course.$id}?name=${course.courseName}&code=${course.courseCode}`}
+
+                        href={`/login/institute/add-course/multiple/subjects/${course.$id}?name=${course.courseName}&code=${course.courseCode}&duration=${course.duration}`}
                         className="bg-orange-500 hover:bg-orange-600 transition px-4 py-2 rounded-lg text-black font-semibold shadow"
                       >
                         Add Subjects

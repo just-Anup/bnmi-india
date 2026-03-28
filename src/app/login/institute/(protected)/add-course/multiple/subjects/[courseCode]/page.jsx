@@ -16,6 +16,7 @@ export default function SubjectPage() {
   const courseId = params.courseId;
   const courseName = searchParams.get("name");
   const courseCode = searchParams.get("code");
+  const courseDuration = searchParams.get("duration");
 
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
@@ -62,6 +63,7 @@ export default function SubjectPage() {
         courseName,
         courseCode,
         subjects: selectedSubjects.join(", "),
+        duration: courseDuration || "",
         courseFees: Number(courseFees),
         minimumFees: Number(minimumFees),
         franchiseEmail: user.email,

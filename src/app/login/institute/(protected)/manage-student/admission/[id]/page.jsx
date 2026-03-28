@@ -260,6 +260,7 @@ if (form.courseType === "semester") {
       subjectsText = course.subjects || ""
     }
 
+    
     // 🔥 FETCH PLAN
     const user = await account.get()
 
@@ -271,14 +272,18 @@ if (form.courseType === "semester") {
 
     const plan = resPlan.documents[0]?.plan
 
-    const institutePlans = {
-      "HOJAI": 400,
-      "BIHAR": 499,
-      "ARUNACHAL PRADESH": 499,
-      "BEAUTY": 500
-    }
+  // ✅ FETCH FROM DB
 
-    const dynamicFee = institutePlans[plan] || 0
+
+// ✅ REPLACE HERE
+const planRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_plans",
+  [Query.equal("name", plan)]
+);
+
+const dynamicFee = planRes.documents[0]?.amount || 0;
+  
 
     setForm({
       ...form,
