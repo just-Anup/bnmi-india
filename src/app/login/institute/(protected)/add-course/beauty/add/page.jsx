@@ -127,8 +127,9 @@ const fee = planRes.documents[0]?.amount || 0
       )
 
       const franchise = res.documents[0]
-      const userPlan = franchise?.plan
-      const examFee = institutePlans[userPlan] || 0
+const userPlan = franchise?.plan
+// use already fetched state
+const finalExamFee = examFee
 
       for (const course of selected) {
 
@@ -157,7 +158,7 @@ const fee = planRes.documents[0]?.amount || 0
             {
               courseFees: Number(course.courseFees),
               minimumFees: Number(course.minimumFees),
-              examFees: examFee,
+              examFees: finalExamFee,
               status: "Active"
             }
           )
@@ -174,7 +175,7 @@ const fee = planRes.documents[0]?.amount || 0
               courseCode: course.courseCode,
               courseName: course.courseName,
               duration: course.duration,
-              examFees: examFee,
+              examFees: finalExamFee,
               courseFees: Number(course.courseFees),
               minimumFees: Number(course.minimumFees),
               status: "Active",

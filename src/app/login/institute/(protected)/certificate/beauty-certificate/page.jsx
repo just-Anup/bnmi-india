@@ -126,8 +126,8 @@ export default function PrintCertificate() {
         </div>
 
         {/* NAME */}s
-        <div className="absolute top-[660px] left-[370px] w-[400px] text-3xl font-bold">
-              MADHURAJ
+        <div className="absolute top-[660px] left-[320px] w-[400px] text-3xl font-bold">
+              {student.studentName}
         </div>
 
         {/* COURSE */}
@@ -172,7 +172,7 @@ export default function PrintCertificate() {
         </div>
 
         {/* INSTITUTE + CITY */}
-        <div className="absolute bottom-[440px] left-[150px] text-4xl font-bold text-red-700">
+        <div className="absolute bottom-[440px] left-[150px] text-3xl font-bold text-red-700">
 
           ATC: {student.instituteName} | {[ student.city].filter(Boolean).join(", ")}
         </div>
@@ -197,7 +197,7 @@ export default function PrintCertificate() {
         {/* ✅ OWNER NAME */}
 {/* ✅ OWNER NAME */}
 {student.ownerName && (
-  <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
+  <div className="absolute bottom-[60px] left-[80px] text-sm text-center">
 
     <div className="font-semibold">
       {student.ownerName}
