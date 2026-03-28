@@ -42,7 +42,15 @@ export default function PrintCertificate() {
     setIssueDate(today);
 
     // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
-
+// ✅ SAVE FINAL CERT DATA FOR VERIFICATION
+localStorage.setItem(
+  "certificateMeta",
+  JSON.stringify({
+    certificateNo: certNo,
+    issueDate: today,
+    duration: parsed.duration || parsed.courseDuration || ""
+  })
+);
 
     console.log("FULL STUDENT DATA:", parsed);
 console.log("ID USED IN QR:", parsed.$id);

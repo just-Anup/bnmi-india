@@ -318,6 +318,21 @@ const printCertificate = async (cert) => {
     const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${verifyId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
+    // ✅ GENERATE CERTIFICATE DATA
+const certificateNo = `CERT-${Date.now()}`;
+const issueDate = new Date().toISOString();
+
+// ✅ SAVE IN DATABASE
+await databases.updateDocument(
+  DATABASE_ID,
+  "certificates",
+  cert.$id,
+  {
+    certificateNo: certificateNo,
+    issueDate: issueDate,
+    duration: studentData.duration || ""
+  }
+);
 
     // ===============================
     // 🔥 FINAL DATA (UNCHANGED)
@@ -334,6 +349,8 @@ const printCertificate = async (cert) => {
       instituteName: studentData.instituteName || "",
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
+       certificateNo: `CERT-${Date.now()}`, // ✅ NEW
+  issueDate: new Date().toISOString(), // ✅ NEW
       logo: franchiseData?.logo || "",
       ownerName:
         franchiseData?.ownerName ||
