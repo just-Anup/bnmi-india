@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function VerifyCertificate() {
 
@@ -12,123 +14,113 @@ export default function VerifyCertificate() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
 
-    const fetchData = async () => {
+    if (!id) return;
+
+    const fetchAll = async () => {
       try {
 
-        console.log("VERIFY ID:", id); // 🔥 DEBUG
-
-        const res = await databases.getDocument(
+        const student = await databases.getDocument(
           DATABASE_ID,
-          "certificates",
+          "student_admissions",
           id
         );
 
-        console.log("DATA FOUND:", res); // 🔥 DEBUG
+        const certRes = await databases.listDocuments(
+          DATABASE_ID,
+          "certificates",
+          [Query.equal("studentId", id)]
+        );
 
-        setData(res);
+        const certificate = certRes.documents[0];
+
+        let franchise = null;
+
+        if (student.franchiseEmail) {
+          const res = await databases.listDocuments(
+            DATABASE_ID,
+            "franchise_approved",
+            [Query.equal("email", student.franchiseEmail)]
+          );
+
+          franchise = res.documents[0];
+        }
+
+        setData({ student, certificate, franchise });
 
       } catch (err) {
-
-        console.error("FETCH ERROR:", err);
-
-        setError("Invalid or Not Found");
-
+        console.error(err);
+        setData(false);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchData();
+    fetchAll();
 
   }, [id]);
 
-  // ✅ LOADING
-  if (loading) {
-    return <div className="p-10">Loading...</div>;
-  }
+  if (loading) return <p className="p-10 text-center">Loading...</p>;
 
-  // ❌ ERROR
-  if (error) {
-    return (
-      <div className="p-10 text-red-600 font-bold">
-        ❌ {error}
-      </div>
-    );
-  }
+  if (data === false)
+    return <p className="p-10 text-center text-red-600">Invalid Certificate</p>;
 
-  // ❌ SAFETY
-  if (!data) {
-    return (
-      <div className="p-10 text-red-600 font-bold">
-        ❌ No Data Found
-      </div>
-    );
-  }
+  const { student, certificate, franchise } = data;
+
+  const photoUrl = student.photoId
+    ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+    : null;
 
   return (
+    <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
-    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-5">
 
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow p-5">
+        <h1 className="text-green-600 text-lg font-bold text-center mb-4">
+          ✅ Certificate Verified
+        </h1>
 
-        {/* PHOTO */}
-        <img
-          src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/6986e8a4001925504f6b/files/${data.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
-          className="w-40 h-40 mx-auto rounded-lg object-cover"
-        />
+        {photoUrl && (
+          <img src={photoUrl} className="w-28 h-28 mx-auto rounded-lg" />
+        )}
 
-        {/* NAME */}
-        <h2 className="text-red-600 text-lg font-bold mt-4 text-center">
-          Name Of Student :
+        <h2 className="text-center font-bold mt-2">
+          {student.studentName}
         </h2>
 
-        <p className="text-center font-semibold">
-          {data.studentName}
-        </p>
+        <div className="mt-4">
 
-        {/* COURSE */}
-        <div className="mt-5">
-          <h3 className="bg-black text-white px-4 py-2 rounded-full inline-block">
-            Course Name
-          </h3>
+          <p>Course : {student.course}</p>
 
-          <p className="mt-2">
-            • {data.course}
+          <p>Certificate No : {certificate?.certificateNo}</p>
+
+          <p>Duration : {certificate?.duration}</p>
+
+          <p>
+            Issue Date :{" "}
+            {certificate?.issueDate
+              ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
+              : "N/A"}
           </p>
+
+          <p>Marks : {certificate?.marks}%</p>
+
+          <p>Grade : {certificate?.grade}</p>
+
         </div>
 
-        {/* DETAILS */}
-        <div className="mt-5">
-          <h3 className="bg-black text-white px-4 py-2 rounded-full inline-block">
-            Course Details
-          </h3>
+        <div className="mt-4 border-t pt-3">
 
-          <ul className="mt-2 space-y-2 text-sm">
+          <p>Institute : {student.instituteName}</p>
 
-            <li>• Certificate Number : {data.certificateId}</li>
-            <li>• Course Duration : {data.duration}</li>
-            <li>• Certificate Issue : {new Date(data.issueDate).toLocaleDateString()}</li>
+          <p>Email : {franchise?.email}</p>
 
-            <li>• Marks Obtained : {data.marks}</li>
-            <li>• Grade Secured : {data.grade}</li>
+          <p>Contact : {franchise?.mobile}</p>
 
-          </ul>
-        </div>
+          <p>Address : {franchise?.address}</p>
 
-        {/* INSTITUTE */}
-        <div className="mt-5">
-          <h3 className="bg-red-600 text-white px-4 py-2 rounded-full inline-block">
-            Authorized Center Details
-          </h3>
-
-          <ul className="mt-2 text-sm space-y-2">
-            <li>• Name Of Institute : {data.instituteName}</li>
-            <li>• Address : {data.address}, {data.city}</li>
-          </ul>
         </div>
 
       </div>

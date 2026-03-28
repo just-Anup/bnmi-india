@@ -259,7 +259,7 @@ const data = {
 
 if (studentData.courseType === "beauty") {
 
-  window.open("/login/institute/certificate/beauty-marksheet", "_blank");
+window.open(`/login/institute/certificate/beauty-marksheet?id=${cert.studentId}`, "_blank");
 
 } else if (studentData.courseType === "semester") {
 
@@ -328,7 +328,7 @@ const printCertificate = async (cert) => {
     // ✅ QR GENERATION
 const certId = cert.$id;
 
-const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/beaty-certificate/${certId}`;
+const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${certId}`;
 
 const qrCode = await QRCode.toDataURL(verifyUrl);
 
@@ -347,13 +347,12 @@ const qrCode = await QRCode.toDataURL(verifyUrl);
       address: franchiseData?.address || "",
       logo: franchiseData?.logo || "",
      ownerName: franchiseData?.ownerName || franchiseData?.owner || franchiseData?.name || "",
-
+$id: cert.$id,   // 🔥 ADD THIS LINE
       // ✅ QR DATA
       qrCode,
       verifyUrl,
       certificateId: certId
     };
-
     localStorage.setItem("certificateStudent", JSON.stringify(data));
 
     // 🔄 OPEN PAGE
