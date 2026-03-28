@@ -90,6 +90,16 @@ export default function VerifyCertificate() {
   // ===============================
   const logoUrl = franchise?.logo || localCert?.logo || null;
 
+  // ✅ GET CERT META FROM CERTIFICATE PAGE
+let certMeta = null;
+
+if (typeof window !== "undefined") {
+  const storedMeta = localStorage.getItem("certificateMeta");
+  if (storedMeta) {
+    certMeta = JSON.parse(storedMeta);
+  }
+}
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
@@ -119,27 +129,25 @@ export default function VerifyCertificate() {
             <p>
               Course : {student.courseName || student.course || "N/A"}
             </p>
-
-            <p>
-              Certificate No : {certificate?.certificateNo || "N/A"}
-            </p>
+<p>
+  Certificate No : {certificate?.certificateNo || certMeta?.certificateNo || "N/A"}
+</p>
 
             {/* ===============================
                ✅ UPDATED: DURATION FIX
             =============================== */}
-            <p>
-              Duration : {certificate?.duration || student.duration || "N/A"}
-            </p>
-
+           <p>
+  Duration : {certificate?.duration || student.duration || certMeta?.duration || "N/A"}
+</p>
             {/* ===============================
                ✅ UPDATED: ISSUE DATE FIX
             =============================== */}
-            <p>
-          Issue Date :{" "}
-{certificate?.issueDate
-  ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-  : "N/A"}
-            </p>
+        <p>
+  Issue Date :{" "}
+  {certificate?.issueDate
+    ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
+    : certMeta?.issueDate || "N/A"}
+</p>
 
             <p>
               Marks : {certificate?.marks ? `${certificate.marks}%` : "N/A"}
