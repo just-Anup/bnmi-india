@@ -315,7 +315,7 @@ const printCertificate = async (cert) => {
     // ===============================
     const verifyId = cert.studentId;
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${verifyId}`;
+      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
     // ✅ GENERATE CERTIFICATE DATA
