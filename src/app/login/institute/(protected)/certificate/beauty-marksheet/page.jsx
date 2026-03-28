@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
@@ -14,83 +12,91 @@ export default function PrintMarksheet() {
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
-  const [error, setError] = useState("");
 
+  // ✅ LOAD STUDENT
   useEffect(() => {
+    const data = localStorage.getItem("marksheetStudent");
 
-    const fetchData = async () => {
-      try {
+    if (data) {
+      const parsed = JSON.parse(data);
+      setStudent(parsed);
+      fetchMarks(parsed.studentId);
+    }
+  }, []);
 
-        // ✅ GET STUDENT ID FROM LOCALSTORAGE (ONLY CHANGE)
-        const stored = localStorage.getItem("marksheetStudent");
+  // ✅ QR GENERATION
+// ✅ QR GENERATION (FIXED)
+useEffect(() => {
+  const generateQR = async () => {
+    try {
 
-        if (!stored) {
-          setError("❌ No data found");
-          return;
-        }
+      if (!student?.studentId) return;
 
-        const parsed = JSON.parse(stored);
-        const studentId = parsed.studentId;
+      // ✅ USE STUDENT ID (CORRECT)
+      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
 
-        // 🔹 FETCH STUDENT (UNCHANGED LOGIC)
-        const studentData = await databases.getDocument(
-          DATABASE_ID,
-          "student_admissions",
-          studentId
-        );
+      console.log("MARKSHEET QR URL:", verifyUrl);
 
-        setStudent(studentData);
+      const qr = await QRCode.toDataURL(verifyUrl, {
+        width: 300,
+        margin: 1
+      });
 
-        // 🔹 FETCH MARKS (UNCHANGED LOGIC)
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          "exam_results",
-          [Query.equal("studentId", studentId)]
-        );
+      setQrCode(qr);
 
-        if (res.documents.length > 0) {
-          const doc = res.documents[0];
+    } catch (err) {
+      console.log("QR ERROR:", err);
+    }
+  };
 
-          if (doc.marksArray) {
-            setMarksArray(JSON.parse(doc.marksArray));
-          }
+  if (student) generateQR();
 
-          if (doc.qrCode) {
-            setQrCode(doc.qrCode);
-          } else {
-            const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${studentData.$id}`;
-            const qr = await QRCode.toDataURL(verifyUrl);
-            setQrCode(qr);
-          }
-
-        } else {
-          const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${studentData.$id}`;
-          const qr = await QRCode.toDataURL(verifyUrl);
-          setQrCode(qr);
-        }
-
-      } catch (err) {
-        console.log("DB ERROR:", err);
-        setError("❌ Invalid data");
-      }
-    };
-
-    fetchData();
-
-  }, []); // ✅ removed [id]
-
+}, [student]);
+  // ✅ AUTO PRINT
   useEffect(() => {
-    const timer = setTimeout(() => window.print(), 500);
+    const timer = setTimeout(() => {
+      window.print();
+    }, 500);
     return () => clearTimeout(timer);
   }, []);
 
-  if (error) return <div className="p-10 text-red-600">{error}</div>;
+  // ✅ FETCH MARKS
+  const fetchMarks = async (studentId) => {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "exam_results",
+        [Query.equal("studentId", studentId)]
+      );
+
+      if (res.documents.length > 0) {
+        const resultDoc = res.documents[0];
+
+        let parsedMarks = [];
+
+        if (resultDoc.marksArray) {
+          parsedMarks = JSON.parse(resultDoc.marksArray);
+        }
+
+        setMarksArray(parsedMarks);
+      }
+    } catch (err) {
+      console.log("MARK FETCH ERROR:", err);
+
+      if (student?.marksArray) {
+        setMarksArray(student.marksArray);
+      }
+    }
+  };
+
   if (!student) return <div className="p-10">Loading...</div>;
 
   const total = marksArray.reduce(
     (sum, m) => sum + Number(m.total || 0),
     0
   );
+
+  const franchiseSign = student.franchiseSignature || null;
 
   return (
     <div className="p-10 bg-white">
@@ -106,6 +112,7 @@ export default function PrintMarksheet() {
 
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
+        {/* LOGO */}
         {student?.logo && (
           <img
             src={student.logo}
@@ -119,24 +126,25 @@ export default function PrintMarksheet() {
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[410px] left-[330px]">{student.course}</div>
-
         <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
 
         {/* RIGHT */}
         <div className="absolute top-[325px] left-[680px]">1 Year</div>
-        <div className="absolute top-[348px] left-[680px]">{student.$id}</div>
-        <div className="absolute top-[369px] left-[680px]">
-          {student.dob
-            ? new Date(student.dob).toLocaleDateString("en-GB")
-            : ""}
-        </div>
+        <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
+        <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
         <div className="absolute top-[390px] left-[680px]">{student.coursePeriod}</div>
 
         {/* SUBJECTS */}
         {marksArray.map((m, index) => (
           <div key={index}>
             <div style={{ top: 570 + index * 30, left: 150, position: "absolute" }}>
-              {m.subject}
+             {m.subject
+  ?.split(/\d+\.\s/) // split by "1. 2. 3."
+  .filter(Boolean)
+  .map((sub, i) => (
+    <div key={i}>{i + 1}. {sub.trim()}</div>
+  ))
+}
             </div>
             <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
               {m.objective}
@@ -157,7 +165,7 @@ export default function PrintMarksheet() {
           {student.grade}
         </div>
 
-        {/* QR */}
+        {/* ✅ QR */}
         {qrCode && (
           <img
             src={qrCode}
