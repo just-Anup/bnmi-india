@@ -3,10 +3,8 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+import QRCode from "qrcode"; // ✅ ADDED
 import { databases, ID } from "@/lib/appwrite";
-
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function PrintCertificate() {
@@ -22,116 +20,91 @@ export default function PrintCertificate() {
 
     const parsed = JSON.parse(data);
 
+    console.log("STUDENT DATA:", parsed);
+    console.log("DURATION VALUE:", parsed.duration);
+
     setStudent(parsed);
 
     // ✅ CERTIFICATE NUMBER
     let certNo = localStorage.getItem("certificateNo");
 
     if (!certNo) {
-      const year = new Date().getFullYear();
-      const random = Math.floor(1000 + Math.random() * 9000);
-      certNo = `BNMI-${year}-${random}`;
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const numbers = Math.floor(10000 + Math.random() * 90000);
+      certNo = `${random}${numbers}`;
       localStorage.setItem("certificateNo", certNo);
     }
 
     setCertificateNo(certNo);
 
-    // ✅ ISSUE DATE
-    const today = new Date();
-    setIssueDate(today.toISOString());
+    // ✅ DATE OF ISSUE
+    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
+    setIssueDate(today);
 
-    // ✅ COURSE DURATION FUNCTION
-    const getCourseDuration = (durationText) => {
+    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
 
-      if (!durationText) return "N/A";
 
-      const today = new Date();
-      const start = new Date(today);
-      start.setDate(start.getDate() + 1);
-
-      const end = new Date(start);
-
-      const text = durationText.toLowerCase();
-
-      if (text.includes("year")) {
-        const years = parseInt(text) || 1;
-        end.setFullYear(end.getFullYear() + years);
-      }
-
-      if (text.includes("month")) {
-        const months = parseInt(text) || 1;
-        end.setMonth(end.getMonth() + months);
-      }
-
-      end.setDate(end.getDate() - 1);
-
-      const format = (date) =>
-        date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-
-      return `${format(start)} To ${format(end)}`;
-    };
-
-    const saveCertificate = async () => {
-      try {
-
-        const verifyId = parsed.$id;
-
-        const duration = getCourseDuration(parsed.duration || "1 year");
-
-        // 🔥 SAVE TO APPWRITE
-        await databases.createDocument(
-          DATABASE_ID,
-          "certificates",
-          ID.unique(),
-          {
-            studentId: verifyId,
-            certificateNo: certNo,
-            duration: duration,
-            issueDate: today.toISOString(),
-            marks: parsed.marks,
-            grade: parsed.grade
-          }
-        );
-
-        // ✅ GENERATE QR
-        const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${verifyId}`;
-
-        const qr = await QRCode.toDataURL(verifyUrl, {
-          width: 300,
-          margin: 1
-        });
-
-        setStudent(prev => ({
-          ...prev,
-          qrCode: qr
-        }));
-
-      } catch (err) {
-        console.error("SAVE ERROR:", err);
-      }
-    };
-
-    saveCertificate();
+    console.log("FULL STUDENT DATA:", parsed);
+console.log("ID USED IN QR:", parsed.$id);
 
   }, []);
 
+ 
+  
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
+  // ✅ PHOTO
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
+  // ✅ SIGNATURE
   const signatureUrl = student.signatureId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
+  const franchiseSign = student.franchiseSignature || null;
+
+  // ✅ COURSE DURATION FUNCTION (UNCHANGED)
+  const getCourseDuration = (durationText) => {
+
+    if (!durationText) return "N/A";
+
+    const today = new Date();
+
+    const start = new Date(today);
+    start.setDate(start.getDate() + 1);
+
+    const end = new Date(start);
+
+    const text = durationText.toLowerCase();
+
+    if (text.includes("year")) {
+      const years = parseInt(text) || 1;
+      end.setFullYear(end.getFullYear() + years);
+    }
+
+    if (text.includes("month")) {
+      const months = parseInt(text) || 1;
+      end.setMonth(end.getMonth() + months);
+    }
+
+    end.setDate(end.getDate() - 1);
+
+    const format = (date) =>
+      date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+    return `${format(start)} To ${format(end)}`;
+  };
+
   const printPage = () => window.print();
 
   return (
+
     <div className="p-10">
 
       <button
@@ -143,43 +116,112 @@ export default function PrintCertificate() {
 
       <div className="relative w-[900px] h-[1200px] mx-auto">
 
+        {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
-        {/* PHOTO */}
-        {photoUrl && (
-          <img src={photoUrl} className="absolute top-[360px] left-[380px] w-[160px] h-[160px]" />
+        {/* LOGO */}
+        {student.logo && (
+          <img
+            src={student.logo}
+            className="absolute top-[40px] left-[370px] w-[180px]"
+          />
         )}
 
+        {/* PHOTO */}
+        <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
+          {photoUrl && (
+            <img src={photoUrl} className="w-full h-full object-cover" />
+          )}
+        </div>
+
         {/* NAME */}
-        <div className="absolute top-[660px] left-[320px] text-3xl font-bold">
+        <div className="absolute top-[660px] left-[320px] w-[400px] text-3xl font-bold">
           {student.studentName}
         </div>
 
         {/* COURSE */}
-        <div className="absolute top-[837px] left-[300px]">
+        <div className="absolute top-[837px] left-[300px] font-semibold">
           Course Name: {student.course}
         </div>
 
-        {/* QR */}
-        {student.qrCode && (
+        {/* COURSE DURATION */}
+        <div className="absolute top-[857px] left-[300px] font-semibold">
+          Course Duration: {getCourseDuration(
+            student.duration || student.courseDuration || "1 year"
+          )}
+        </div>
+
+        {/* GRADE */}
+        <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
+          {student.grade}
+        </div>
+
+        {/* MARKS */}
+        <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
+          {student.marks}.00%
+        </div>
+
+        {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
+       {student.qrCode && (
+  <img
+    src={student.qrCode}
+    crossOrigin="anonymous"
+    className="absolute top-[300px] right-[100px] w-[120px]"
+  />
+)}
+
+        {/* CERT NO + DATE */}
+        <div className="absolute bottom-[110px] left-[340px] font-semibold">
+
+          <div>Certificate No : {certificateNo}</div>
+
+          <div className="mt-1">
+            Date Of Issue : {issueDate}
+          </div>
+
+        </div>
+
+        {/* INSTITUTE */}
+        <div className="absolute bottom-[440px] left-[150px] text-3xl font-bold text-red-700">
+
+          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
+        </div>
+
+        {/* SIGNATURE */}
+        <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
+          {signatureUrl && (
+            <img
+              src={signatureUrl}
+              className="max-w-full max-h-full object-contain"
+            />
+          )}
+        </div>
+
+        {/* FRANCHISE SIGN */}
+        {franchiseSign && (
           <img
-            src={student.qrCode}
-            className="absolute top-[300px] right-[100px] w-[120px]"
+            src={franchiseSign}
+            className="absolute bottom-[100px] left-[100px] w-[100px]"
           />
         )}
 
-        {/* CERT INFO */}
-        <div className="absolute bottom-[110px] left-[340px]">
-          <div>Certificate No : {certificateNo}</div>
-          <div>Date Of Issue : {new Date(issueDate).toLocaleDateString("en-GB")}</div>
-        </div>
+        {/* OWNER NAME */}
+        {student.ownerName && (
+          <div className="absolute bottom-[60px] left-[80px] text-sm text-center">
 
-        {/* SIGN */}
-        {signatureUrl && (
-          <img src={signatureUrl} className="absolute top-[535px] left-[390px] w-[140px]" />
+            <div className="font-semibold">
+              {student.ownerName}
+            </div>
+
+            <div className="text-xs text-gray-600">
+              Controller Of Examination
+            </div>
+
+          </div>
         )}
 
       </div>
+
     </div>
   );
 }

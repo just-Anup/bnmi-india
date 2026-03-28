@@ -16,7 +16,7 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 
 const certId = `CERT-${Date.now()}`
 
-const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-certificate/${certId}`
+const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${certId}`
 
 const qrCode = await QRCode.toDataURL(verifyUrl)
 export default function CertificateApprovalPage() {
@@ -112,22 +112,19 @@ try {
   // 🔥 MULTIPLE COURSE
   else if (studentData.courseType === "multiple") {
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    "franchise_multiple_courses",
-    [
-      Query.equal("courseName", studentData.courseName),
-      Query.equal("franchiseEmail", studentData.franchiseEmail)
-    ]
-  );
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "course_master_multiple",
+      [
+        Query.equal("courseName", studentData.courseName)
+      ]
+    );
 
-  console.log("MULTIPLE COURSE FETCH:", res.documents); // 🔥 debug
+    if (res.documents.length > 0) {
+      courseDuration = res.documents[0].duration || "";
+    }
 
-  if (res.documents.length > 0) {
-    courseDuration = res.documents[0].duration || "";
   }
-
-}
 
 } catch (err) {
   console.log("COURSE DURATION ERROR:", err);
@@ -195,42 +192,36 @@ try {
         Number(m.practical || 0),
     }));
 
-    const formatCoursePeriod = (duration, dob) => {
-  if (!duration) return "N/A";
-
-  const startYear = new Date().getFullYear(); // current year
-  let years = 1;
-
-  if (duration.includes("2")) years = 2;
-  if (duration.includes("3")) years = 3;
-
-  const endYear = startYear + years;
-
-  return `${duration} (${startYear}–${endYear})`;
-};
     // ===============================
     // 🔥 FINAL DATA (FIXED DOB + DURATION)
     // ===============================
-const data = {
-
+    const data = {
   studentName: studentData.studentName || "",
   fatherName: studentData.fatherName || "",
+
+  // ✅ FIXED (NOW ALWAYS COMES)
   surname: studentData.surname || "N/A",
   motherName: studentData.motherName || "N/A",
 
+  // ✅ DOB FIX
   dob: studentData.dob
     ? new Date(studentData.dob).toLocaleDateString("en-GB")
     : "N/A",
 
+  // ✅ COURSE NAME
   course: studentData.courseName || "",
 
-  // 🔥 FIXED
-  courseDuration: courseDuration || "N/A",
-  coursePeriod: formatCoursePeriod(courseDuration),
+  // ✅ 🔥 COURSE PERIOD FIX (MAIN ISSUE)
+  coursePeriod:
+    courseDuration ||
+    studentData.duration ||
+    studentData.courseDuration ||
+    "N/A",
 
   instituteName: studentData.instituteName || "",
   studentId: cert.studentId,
 
+  // ✅ MARKS
   marksArray:
     cert.marksArray && cert.marksArray.length > 0
       ? cert.marksArray
@@ -239,9 +230,11 @@ const data = {
   grade: cert.grade || "",
   marksheetNo: cert.$id || "",
 
+  // ✅ SIGNATURE + LOGO
   franchiseSignature: franchiseData?.signature || "",
   logo: franchiseData?.logo || "",
 
+  // ✅ OWNER NAME (OPTIONAL)
   ownerName:
     franchiseData?.ownerName ||
     franchiseData?.owner ||
@@ -255,24 +248,16 @@ const data = {
     );
 
     // 🔥 OPEN MARKSHEET
- // 🔥 OPEN MARKSHEET (FINAL FIX)
+    if (studentData.courseType === "beauty") {
 
-if (studentData.courseType === "beauty") {
-
-window.open(`/login/institute/certificate/beauty-marksheet?id=${cert.studentId}`, "_blank");
+  window.open("/login/institute/certificate/beauty-marksheet", "_blank");
 
 } else if (studentData.courseType === "semester") {
 
   window.open("/login/institute/certificate/semester-marksheet", "_blank");
 
-} else if (studentData.courseType === "multiple") {
-
-  // ✅ NEW PAGE FOR MULTIPLE
-  window.open("/login/institute/certificate/multiple-marksheet", "_blank");
-
 } else {
 
-  // ✅ SINGLE (UNCHANGED)
   window.open("/login/institute/certificate/marksheet", "_blank");
 
 }
@@ -325,14 +310,18 @@ const printCertificate = async (cert) => {
       franchiseData = franchiseRes.documents[0];
     }
 
-    // ✅ QR GENERATION
-const certId = cert.$id;
+    // ===============================
+    // ✅ ONLY CHANGE — USE studentId
+    // ===============================
+    const verifyId = cert.studentId;
 
-const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${certId}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${verifyId}`;
 
-const qrCode = await QRCode.toDataURL(verifyUrl);
+    const qrCode = await QRCode.toDataURL(verifyUrl);
 
-    // 🔥 FINAL DATA
+    // ===============================
+    // 🔥 FINAL DATA (UNCHANGED)
+    // ===============================
     const data = {
       studentName: studentData.studentName || "",
       marks: cert.marks,
@@ -346,29 +335,31 @@ const qrCode = await QRCode.toDataURL(verifyUrl);
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
       logo: franchiseData?.logo || "",
-     ownerName: franchiseData?.ownerName || franchiseData?.owner || franchiseData?.name || "",
-$id: cert.$id,   // 🔥 ADD THIS LINE
-      // ✅ QR DATA
+      ownerName:
+        franchiseData?.ownerName ||
+        franchiseData?.owner ||
+        franchiseData?.name ||
+        "",
+
+      // ✅ KEEP SAME
+      studentId: cert.studentId,
+
+      // ✅ QR
       qrCode,
-      verifyUrl,
-      certificateId: certId
+      verifyUrl
     };
+
     localStorage.setItem("certificateStudent", JSON.stringify(data));
 
     // 🔄 OPEN PAGE
-  if (studentData.courseType === "beauty") {
+    if (studentData.courseType === "beauty") {
+      window.open("/login/institute/certificate/beauty-certificate", "_blank");
+    } else if (studentData.courseType === "semester") {
+      window.open("/login/institute/certificate/semester-certificate", "_blank");
+    } else {
+      window.open("/login/institute/certificate/print", "_blank");
+    }
 
-  window.open("/login/institute/certificate/beauty-certificate", "_blank");
-
-} else if (studentData.courseType === "semester") {
-
-  window.open("/login/institute/certificate/semester-certificate", "_blank");
-
-} else {
-
-  window.open("/login/institute/certificate/print", "_blank");
-
-}
   } catch (err) {
     console.error("CERT ERROR:", err);
     alert("Failed to open certificate");

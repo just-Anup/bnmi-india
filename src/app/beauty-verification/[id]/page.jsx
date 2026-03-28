@@ -73,53 +73,74 @@ export default function VerifyCertificate() {
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
+  const logoUrl = franchise?.logo || null;
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
       <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-5">
 
-        <h1 className="text-green-600 text-lg font-bold text-center mb-4">
-          ✅ Certificate Verified
-        </h1>
+        {/* 🔥 TEXT FIX WRAPPER */}
+        <div style={{ color: "#000", opacity: 1, WebkitTextFillColor: "#000" }}>
 
-        {photoUrl && (
-          <img src={photoUrl} className="w-28 h-28 mx-auto rounded-lg" />
-        )}
+          <h1 className="text-lg font-bold text-center mb-4">
+            ✅ Certificate Verified
+          </h1>
 
-        <h2 className="text-center font-bold mt-2">
-          {student.studentName}
-        </h2>
+          {logoUrl && (
+            <img src={logoUrl} className="w-24 mx-auto mb-3" />
+          )}
 
-        <div className="mt-4">
+          {photoUrl && (
+            <img src={photoUrl} className="w-28 h-28 mx-auto rounded-lg" />
+          )}
 
-          <p>Course : {student.course}</p>
+          <h2 className="text-center font-bold mt-2">
+            {student.studentName}
+          </h2>
 
-          <p>Certificate No : {certificate?.certificateNo}</p>
+          <div className="mt-4">
 
-          <p>Duration : {certificate?.duration}</p>
+            <p>
+              Course : {student.courseName || student.course || "N/A"}
+            </p>
 
-          <p>
-            Issue Date :{" "}
-            {certificate?.issueDate
-              ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-              : "N/A"}
-          </p>
+            <p>
+              Certificate No : {certificate?.certificateNo || "N/A"}
+            </p>
 
-          <p>Marks : {certificate?.marks}%</p>
+            <p>
+              Duration : {certificate?.duration || student.duration || "N/A"}
+            </p>
 
-          <p>Grade : {certificate?.grade}</p>
+            <p>
+              Issue Date :{" "}
+              {certificate?.issueDate
+                ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
+                : "N/A"}
+            </p>
 
-        </div>
+            <p>
+              Marks : {certificate?.marks ? `${certificate.marks}%` : "N/A"}
+            </p>
 
-        <div className="mt-4 border-t pt-3">
+            <p>
+              Grade : {certificate?.grade || "N/A"}
+            </p>
 
-          <p>Institute : {student.instituteName}</p>
+          </div>
 
-          <p>Email : {franchise?.email}</p>
+          <div className="mt-4 border-t pt-3">
 
-          <p>Contact : {franchise?.mobile}</p>
+            <p>Institute : {student.instituteName || "N/A"}</p>
 
-          <p>Address : {franchise?.address}</p>
+            <p>Email : {franchise?.email || "N/A"}</p>
+
+            <p>Contact : {franchise?.mobile || "N/A"}</p>
+
+            <p>Address : {franchise?.address || "N/A"}</p>
+
+          </div>
 
         </div>
 
