@@ -256,11 +256,16 @@ try {
 
   window.open("/login/institute/certificate/semester-marksheet", "_blank");
 
-} else {
+} else if (studentData.courseType === "multiple") {
+
+  window.open("/login/institute/certificate/multiple-marksheet", "_blank");
+}else {
 
   window.open("/login/institute/certificate/marksheet", "_blank");
 
 }
+
+ 
 
   } catch (err) {
     console.error("MARKSHEET ERROR:", err);

@@ -48,23 +48,23 @@ export default function PrintCertificate() {
     setIssueDate(today);
 
     // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
-// ✅ SAVE FINAL CERT DATA FOR VERIFICATION
-localStorage.setItem(
-  "certificateMeta",
-  JSON.stringify({
-    certificateNo: certNo,
-    issueDate: today,
-    duration: parsed.duration || parsed.courseDuration || ""
-  })
-);
+    // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
+    localStorage.setItem(
+      "certificateMeta",
+      JSON.stringify({
+        certificateNo: certNo,
+        issueDate: today,
+        duration: parsed.duration || parsed.courseDuration || ""
+      })
+    );
 
     console.log("FULL STUDENT DATA:", parsed);
-console.log("ID USED IN QR:", parsed.$id);
+    console.log("ID USED IN QR:", parsed.$id);
 
   }, []);
 
- 
-  
+
+
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
   // ✅ PHOTO
@@ -117,61 +117,75 @@ console.log("ID USED IN QR:", parsed.$id);
 
 
   const toBase64 = async (url) => {
-  const res = await fetch(url);
-  const blob = await res.blob();
+    const res = await fetch(url);
+    const blob = await res.blob();
 
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
 
- const handleDownload = async () => {
-  try {
-    const node = printRef.current;
+  const handleDownload = async () => {
+    try {
+      const node = printRef.current;
 
-    
-    // ✅ convert images before capture
-    const images = node.querySelectorAll("img");
 
-    for (let img of images) {
-      const src = img.src;
+      // ✅ convert images before capture
+      const images = node.querySelectorAll("img");
 
-      if (!src.startsWith("data:")) {
-        try {
-          const base64 = await toBase64(src);
-          img.src = base64;
-        } catch (err) {
-          console.log("IMAGE CONVERT ERROR:", err);
+      for (let img of images) {
+        const src = img.src;
+
+        if (!src.startsWith("data:")) {
+          try {
+            const base64 = await toBase64(src);
+            img.src = base64;
+          } catch (err) {
+            console.log("IMAGE CONVERT ERROR:", err);
+          }
         }
       }
+
+      const dataUrl = await htmlToImage.toPng(node, {
+        quality: 1,
+        pixelRatio: 3,
+        cacheBust: true,
+
+        // 🔥 FIX CUT ISSUE
+        width: node.scrollWidth,
+        height: node.scrollHeight,
+
+        style: {
+          transform: "scale(1)",
+          transformOrigin: "top left",
+          overflow: "visible"
+        }
+      });
+      const link = document.createElement("a");
+      link.download = `${student.studentName}_certificate.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.log("DOWNLOAD ERROR:", err);
+    }
+  };
+
+   const formatCourseName = (text) => {
+    if (!text) return "";
+
+    const words = text.split(" ");
+    const lines = [];
+
+    for (let i = 0; i < words.length; i += 7) {
+      lines.push(words.slice(i, i + 7).join(" "));
     }
 
-   const dataUrl = await htmlToImage.toPng(node, {
-  quality: 1,
-  pixelRatio: 3,
-  cacheBust: true,
-
-  // 🔥 FIX CUT ISSUE
-  width: node.scrollWidth,
-  height: node.scrollHeight,
-
-  style: {
-    transform: "scale(1)",
-    transformOrigin: "top left",
-    overflow: "visible"
-  }
-});
-    const link = document.createElement("a");
-    link.download = `${student.studentName}_certificate.png`;
-    link.href = dataUrl;
-    link.click();
-
-  } catch (err) {
-    console.log("DOWNLOAD ERROR:", err);
-  }
-};
+    return lines;
+  };
+  const courseLines = formatCourseName(student.course);
 
 
   const printPage = () => window.print();
@@ -180,23 +194,23 @@ console.log("ID USED IN QR:", parsed.$id);
 
     <div className="p-10">
 
-  <button
-  onClick={handleDownload}
-  className="bg-green-600 text-white px-6 py-2 mb-6 ml-4"
->
-  Download Certificate
-</button>
+      <button
+        onClick={handleDownload}
+        className="bg-green-600 text-white px-6 py-2 mb-6 ml-4"
+      >
+        Download Certificate
+      </button>
 
 
-  <div
-  ref={printRef}
-  style={{
-    width: "900px",
-    height: "1200px",
-    position: "relative",
-    overflow: "visible"
-  }}
->
+      <div
+        ref={printRef}
+        style={{
+          width: "900px",
+          height: "1200px",
+          position: "relative",
+          overflow: "visible"
+        }}
+      >
 
         {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
@@ -205,7 +219,7 @@ console.log("ID USED IN QR:", parsed.$id);
         {student.logo && (
           <img
             src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[180px]"
+            className="absolute top-[40px] left-[370px] w-[140px]"
           />
         )}
 
@@ -221,13 +235,30 @@ console.log("ID USED IN QR:", parsed.$id);
           {student.studentName}
         </div>
 
+        
         {/* COURSE */}
-        <div className="absolute top-[837px] left-[300px] font-semibold">
-          Course Name: {student.course}
+        <div
+          className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
+        >
+          <div className="flex gap-2">
+            <span>Course Name:</span>
+            <span>{courseLines[0]}</span>
+          </div>
+
+          {courseLines.slice(1).map((line, index) => (
+            <div key={index} className="ml-[120px]">
+              {line}
+            </div>
+          ))}
         </div>
 
         {/* COURSE DURATION */}
-        <div className="absolute top-[857px] left-[300px] font-semibold">
+        <div
+          className="absolute left-[270px] font-semibold"
+          style={{
+            top: 807 + (courseLines.length * 20) + 20
+          }}
+        >
           Course Duration: {getCourseDuration(
             student.duration || student.courseDuration || "1 year"
           )}
@@ -244,12 +275,12 @@ console.log("ID USED IN QR:", parsed.$id);
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
-       {student.qrCode && (
-  <img
-    src={student.qrCode}
-    className="absolute top-[300px] right-[100px] w-[120px]"
-  />
-)}
+        {student.qrCode && (
+          <img
+            src={student.qrCode}
+            className="absolute top-[300px] right-[100px] w-[120px]"
+          />
+        )}
 
         {/* CERT NO + DATE */}
         <div className="absolute bottom-[110px] left-[340px] font-semibold">
@@ -263,7 +294,7 @@ console.log("ID USED IN QR:", parsed.$id);
         </div>
 
         {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[150px] text-3xl font-bold text-red-700">
+        <div className="absolute bottom-[440px] left-[150px] w-full text-center text-3xl font-bold text-red-700">
 
           ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
         </div>

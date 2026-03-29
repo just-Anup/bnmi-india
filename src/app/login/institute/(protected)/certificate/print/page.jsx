@@ -3,27 +3,32 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { databases } from "@/lib/appwrite";
-import { Query } from "appwrite";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import QRCode from "qrcode"; // ✅ ADDED
+import { databases, ID } from "@/lib/appwrite";
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const BUCKET_ID = "6986e8a4001925504f6b";
+
+
 
 export default function PrintCertificate() {
 
   const [student, setStudent] = useState(null);
-  const [franchiseName, setFranchiseName] = useState("");
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
 
+  const printRef = useRef();
   useEffect(() => {
 
     const data = localStorage.getItem("certificateStudent");
     if (!data) return;
 
     const parsed = JSON.parse(data);
+
+    console.log("STUDENT DATA:", parsed);
+    console.log("DURATION VALUE:", parsed.duration);
+
     setStudent(parsed);
 
     // ✅ CERTIFICATE NUMBER
@@ -38,249 +43,291 @@ export default function PrintCertificate() {
 
     setCertificateNo(certNo);
 
-    // ✅ ISSUE DATE
+    // ✅ DATE OF ISSUE
     const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
     setIssueDate(today);
 
-    // ✅ LOAD FRANCHISE NAME
-    if (parsed.createdById) {
-      loadFranchise(parsed.createdById);
-    } else if (parsed.instituteName) {
-      setFranchiseName(parsed.instituteName);
-    }
+    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
+    // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
+    localStorage.setItem(
+      "certificateMeta",
+      JSON.stringify({
+        certificateNo: certNo,
+        issueDate: today,
+        duration: parsed.duration || parsed.courseDuration || ""
+      })
+    );
+
+    console.log("FULL STUDENT DATA:", parsed);
+    console.log("ID USED IN QR:", parsed.$id);
 
   }, []);
 
-  const fixColors = () => {
-  const all = document.querySelectorAll("*");
 
-  all.forEach((el) => {
-    const style = window.getComputedStyle(el);
-
-    if (
-      style.color.includes("lab") ||
-      style.backgroundColor.includes("lab")
-    ) {
-      el.style.color = "#000";
-      el.style.backgroundColor = "#fff";
-    }
-  });
-};
-
-const downloadPDF = async () => {
-  try {
-    const element = document.querySelector(".print-container");
-
-    fixColors();
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-
-    pdf.save(`${student?.studentName || "certificate"}.pdf`);
-
-  } catch (err) {
-    console.log("PDF ERROR:", err);
-    alert("Download failed");
-  }
-};
-  const loadFranchise = async (userId) => {
-    try {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("userId", userId)]
-      );
-
-      if (res.documents.length > 0) {
-        setFranchiseName(res.documents[0].instituteName);
-      }
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const getCourseDuration = (durationText) => {
-
-  if (!durationText) return "N/A";
-
-  const today = new Date();
-
-  const start = new Date(today);
-  start.setDate(start.getDate() + 1);
-
-  const end = new Date(start);
-
-  const text = durationText.toLowerCase();
-
-  if (text.includes("year")) {
-    const years = parseInt(text) || 1;
-    end.setFullYear(end.getFullYear() + years);
-  }
-
-  if (text.includes("month")) {
-    const months = parseInt(text) || 1;
-    end.setMonth(end.getMonth() + months);
-  }
-
-  end.setDate(end.getDate() - 1);
-
-  const format = (date) =>
-    date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-  return `${format(start)} To ${format(end)}`;
-};
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-  // ✅ IMAGE URLS
+  // ✅ PHOTO
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
+  // ✅ SIGNATURE
   const signatureUrl = student.signatureId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
   const franchiseSign = student.franchiseSignature || null;
 
+  // ✅ COURSE DURATION FUNCTION (UNCHANGED)
+  const getCourseDuration = (durationText) => {
+
+    if (!durationText) return "N/A";
+
+    const today = new Date();
+
+    const start = new Date(today);
+    start.setDate(start.getDate() + 1);
+
+    const end = new Date(start);
+
+    const text = durationText.toLowerCase();
+
+    if (text.includes("year")) {
+      const years = parseInt(text) || 1;
+      end.setFullYear(end.getFullYear() + years);
+    }
+
+    if (text.includes("month")) {
+      const months = parseInt(text) || 1;
+      end.setMonth(end.getMonth() + months);
+    }
+
+    end.setDate(end.getDate() - 1);
+
+    const format = (date) =>
+      date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+    return `${format(start)} To ${format(end)}`;
+  };
+
+
+  const toBase64 = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleDownload = async () => {
+    try {
+      const node = printRef.current;
+
+
+      // ✅ convert images before capture
+      const images = node.querySelectorAll("img");
+
+      for (let img of images) {
+        const src = img.src;
+
+        if (!src.startsWith("data:")) {
+          try {
+            const base64 = await toBase64(src);
+            img.src = base64;
+          } catch (err) {
+            console.log("IMAGE CONVERT ERROR:", err);
+          }
+        }
+      }
+
+      const dataUrl = await htmlToImage.toPng(node, {
+        quality: 1,
+        pixelRatio: 3,
+        cacheBust: true,
+
+        // 🔥 FIX CUT ISSUE
+        width: node.scrollWidth,
+        height: node.scrollHeight,
+
+        style: {
+          transform: "scale(1)",
+          transformOrigin: "top left",
+          overflow: "visible"
+        }
+      });
+      const link = document.createElement("a");
+      link.download = `${student.studentName}_certificate.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.log("DOWNLOAD ERROR:", err);
+    }
+  };
+
+
   const printPage = () => window.print();
 
+  const formatCourseName = (text) => {
+    if (!text) return "";
+
+    const words = text.split(" ");
+    const lines = [];
+
+    for (let i = 0; i < words.length; i += 7) {
+      lines.push(words.slice(i, i + 7).join(" "));
+    }
+
+    return lines;
+  };
+  const courseLines = formatCourseName(student.course);
+
   return (
+
     <div className="p-10">
 
-   <button
-  onClick={printPage}
-  className="bg-blue-600 text-white px-6 py-2 mb-6"
->
-  Print
-</button>
+      <button
+        onClick={handleDownload}
+        className="bg-green-600 text-white px-6 py-2 mb-6 ml-4"
+      >
+        Download Certificate
+      </button>
 
-<button
-  onClick={downloadPDF}
-  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
->
-  Download PDF
-</button>
-      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
+
+      <div
+        ref={printRef}
+        style={{
+          width: "900px",
+          height: "1200px",
+          position: "relative",
+          overflow: "visible"
+        }}
+      >
 
         {/* TEMPLATE */}
-        <img
-          src="/certi.png"
-          className="absolute w-full h-full"
-        />
+        <img src="/beautycerti.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
-        {/* {student.logo && (
-         <img
-  src={student.logo + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute top-[40px] left-[370px] w-[180px]"
-/>
-        )} */}
+        {student.logo && (
+          <img
+            src={student.logo}
+            className="absolute top-[40px] left-[370px] w-[140px]"
+          />
+        )}
 
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
-        {photoUrl && (
-        <img
-  src={photoUrl + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="w-full h-full object-cover"
-/>
-        )}
-</div>
+          {photoUrl && (
+            <img src={photoUrl} className="w-full h-full object-cover" />
+          )}
+        </div>
+
         {/* NAME */}
-        <div className="absolute top-[660px] left-[20px]  w-full text-center text-3xl font-bold">
+        <div className="absolute top-[660px] left-[320px] w-[400px] text-3xl font-bold">
           {student.studentName}
         </div>
 
+        {/* COURSE */}
+        <div
+          className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
+        >
+          <div className="flex gap-2">
+            <span>Course Name:</span>
+            <span>{courseLines[0]}</span>
+          </div>
+
+          {courseLines.slice(1).map((line, index) => (
+            <div key={index} className="ml-[120px]">
+              {line}
+            </div>
+          ))}
+        </div>
+
+        {/* COURSE DURATION */}
+        <div
+          className="absolute left-[270px] font-semibold"
+          style={{
+            top: 807 + (courseLines.length * 20) + 20
+          }}
+        >
+          Course Duration: {getCourseDuration(
+            student.duration || student.courseDuration || "1 year"
+          )}
+        </div>
+
         {/* GRADE */}
-        <div className="absolute top-[770px] left-[550px] text-xl font-bold">
+        <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
           {student.grade}
         </div>
 
         {/* MARKS */}
-        <div className="absolute top-[770px] left-[680px] text-xl font-bold">
-          {student.marks}
+        <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
+          {student.marks}.00%
+        </div>
+
+        {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
+        {student.qrCode && (
+          <img
+            src={student.qrCode}
+            className="absolute top-[300px] right-[100px] w-[120px]"
+          />
+        )}
+
+        {/* CERT NO + DATE */}
+        <div className="absolute bottom-[110px] left-[340px] font-semibold">
+
+          <div>Certificate No : {certificateNo}</div>
+
+          <div className="mt-1">
+            Date Of Issue : {issueDate}
+          </div>
+
         </div>
 
         {/* INSTITUTE */}
-        <div className="absolute bottom-[455px] left-0 w-full text-center text-red-700">
-          <span className="text-3xl font-bold px-4">
-         ATC: {franchiseName} | {[ student.city].filter(Boolean).join(", ")}
-           </span>
-        </div>
-       
-  
-  
+        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-3xl font-bold text-red-700">
 
-<div className="absolute top-[837px] left-[300px] font-semibold">
-  Course: {student.course}
-</div>
-
-<div className="absolute top-[857px] left-[300px]  font-semibold">
-  Duration: {getCourseDuration(
-    student.duration || student.courseDuration || "1 year"
-  )}
-</div>
-        {/* QR CODE */}
-        {student.qrCode && (
-          <img
-  src={student.qrCode + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute top-[300px] right-[100px] w-[120px]"
-/>
-        )}
-
-        {/* CERTIFICATE NO + DATE */}
-        <div className="absolute bottom-[110px] left-[300px] font-semibold">
-          <div>Certificate No : {certificateNo}</div>
-          <div>Date Of Issue : {issueDate}</div>
+          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
         </div>
 
-        {/* STUDENT SIGNATURE */}
+        {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
-        {signatureUrl && (
-          <img
-            src={signatureUrl + "&mode=admin"}
-            crossOrigin="anonymous"
-            className="max-w-full max-h-full object-contain"
-          />
-        )}
-</div>
-        {/* FRANCHISE SIGNATURE */}
+          {signatureUrl && (
+            <img
+              src={signatureUrl}
+              className="max-w-full max-h-full object-contain"
+            />
+          )}
+        </div>
+
+        {/* FRANCHISE SIGN */}
         {franchiseSign && (
-         <img
-  src={franchiseSign + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute bottom-[100px] left-[100px] w-[100px]"
-/>
+          <img
+            src={franchiseSign}
+            className="absolute bottom-[100px] left-[100px] w-[100px]"
+          />
         )}
 
         {/* OWNER NAME */}
         {student.ownerName && (
-          <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
-            <div className="font-semibold">{student.ownerName}</div>
+          <div className="absolute bottom-[60px] left-[80px] text-sm text-center">
+
+            <div className="font-semibold">
+              {student.ownerName}
+            </div>
+
             <div className="text-xs text-gray-600">
               Controller Of Examination
             </div>
+
           </div>
         )}
 

@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import QRCode from "qrcode";
-import * as htmlToImage from "html-to-image";
-import { useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -13,244 +12,289 @@ export default function PrintMarksheet() {
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
-  const [qrCode, setQrCode] = useState("");
 
-  const printRef = useRef();
-  // ✅ LOAD STUDENT
   useEffect(() => {
-    
     const data = localStorage.getItem("marksheetStudent");
 
     if (data) {
       const parsed = JSON.parse(data);
       setStudent(parsed);
-      fetchMarks(parsed.studentId);
+      fetchMarks(parsed.studentId, parsed);
     }
   }, []);
 
-  useEffect(() => {
-  const loadImages = async () => {
-    if (!student) return;
-
-    try {
-      if (student.logo) {
-        const logoBase64 = await toBase64(student.logo);
-        setStudent(prev => ({ ...prev, logo: logoBase64 }));
-      }
-
-      if (student.franchiseSignature) {
-        const signBase64 = await toBase64(student.franchiseSignature);
-        setStudent(prev => ({ ...prev, franchiseSignature: signBase64 }));
-      }
-
-    } catch (err) {
-      console.log("IMAGE LOAD ERROR:", err);
-    }
-  };
-
-  loadImages();
-}, [student?.studentId]);
-  // ✅ QR GENERATION
-  // ✅ QR GENERATION (FIXED)
-  useEffect(() => {
-
-    const generateQR = async () => {
-      try {
-
-        if (!student?.studentId) return;
-
-        // ✅ USE STUDENT ID (CORRECT)
-        const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
-
-        console.log("MARKSHEET QR URL:", verifyUrl);
-
-        const qr = await QRCode.toDataURL(verifyUrl, {
-          width: 300,
-          margin: 1
-        });
-
-        setQrCode(qr);
-
-      } catch (err) {
-        console.log("QR ERROR:", err);
-      }
-    };
-
-    if (student) generateQR();
-
-  }, [student]);
-  // ✅ AUTO PRINT
   useEffect(() => {
     const timer = setTimeout(() => {
       window.print();
     }, 500);
+
     return () => clearTimeout(timer);
   }, []);
 
-  // ✅ FETCH MARKS
-  const fetchMarks = async (studentId) => {
+  const fixColors = () => {
+  const all = document.querySelectorAll("*");
+
+  all.forEach((el) => {
+    const style = window.getComputedStyle(el);
+
+    if (
+      style.color.includes("lab") ||
+      style.backgroundColor.includes("lab")
+    ) {
+      el.style.color = "#000";
+      el.style.backgroundColor = "#fff";
+    }
+  });
+};
+
+const downloadPDF = async () => {
+  try {
+    const element = document.querySelector(".print-container");
+
+    if (!element) return alert("Page not ready");
+
+    fixColors();
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+    pdf.save(`${student?.studentName || "marksheet"}.pdf`);
+
+  } catch (err) {
+    console.log("PDF ERROR:", err);
+    alert("Download failed");
+  }
+};
+
+  const fetchMarks = async (studentId, studentData) => {
     try {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "exam_results",
-        [Query.equal("studentId", studentId)]
-      );
 
-      if (res.documents.length > 0) {
-        const resultDoc = res.documents[0];
+      if (studentData?.courseType === "multiple") {
 
-        let parsedMarks = [];
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "student_subject_results",
+          [Query.equal("studentId", studentId)]
+        );
 
-        if (resultDoc.marksArray) {
-          parsedMarks = JSON.parse(resultDoc.marksArray);
+        const docs = res.documents || [];
+
+        // ✅ FIXED (safe sort)
+        const sorted = [...docs].sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+
+        const finalMarks = sorted.map((m) => ({
+          subject: m.subject,
+          objective: Number(m.objective || 0),
+          practical: Number(m.practical || 0),
+          total: Number(m.total || 0),
+        }));
+
+        setMarksArray(finalMarks);
+
+      } else {
+
+        // ✅ SINGLE + BEAUTY (UNCHANGED)
+        const resultRes = await databases.listDocuments(
+          DATABASE_ID,
+          "exam_results",
+          [Query.equal("studentId", studentId)]
+        );
+
+        let subjectList = [];
+
+        if (resultRes.documents.length > 0) {
+          subjectList = resultRes.documents[0].subjects
+            ?.split(",")
+            .map((s) => s.trim()) || [];
         }
 
-        setMarksArray(parsedMarks);
+        const marksRes = await databases.listDocuments(
+          DATABASE_ID,
+          "exam_subject_marks",
+          [Query.equal("studentId", studentId)]
+        );
+
+        const marksDocs = marksRes.documents || [];
+
+        const finalMarks = subjectList.map((sub, index) => {
+          const mark = marksDocs[index];
+
+          return {
+            subject: sub,
+            objective: Number(mark?.theory || 0),
+            practical: Number(mark?.practical || 0),
+            total:
+              Number(mark?.theory || 0) +
+              Number(mark?.practical || 0),
+          };
+        });
+
+        setMarksArray(finalMarks);
       }
+
     } catch (err) {
       console.log("MARK FETCH ERROR:", err);
 
-      if (student?.marksArray) {
-        setMarksArray(student.marksArray);
+      if (studentData?.marksArray) {
+        setMarksArray(studentData.marksArray);
       }
     }
   };
 
-  const handleDownload = async () => {
-    try {
-      const node = printRef.current;
-const rect = node.getBoundingClientRect();
-
-      const dataUrl = await htmlToImage.toPng(node, {
-  quality: 1,
-  pixelRatio: 3,
-  cacheBust: true,
-
-  // 🔥 THIS FIXES HALF IMAGE
-  width: rect.width,
-  height: rect.height,
-
-  style: {
-    width: rect.width + "px",
-    height: rect.height + "px",
-    transform: "scale(1)",
-    transformOrigin: "top left",
-    overflow: "visible"
-  }
-});
-
-      const link = document.createElement("a");
-      link.download = `${student.studentName}_marksheet.png`;
-      link.href = dataUrl;
-      link.click();
-
-    } catch (err) {
-      console.log("DOWNLOAD ERROR:", err);
-    }
-  };
   if (!student) return <div className="p-10">Loading...</div>;
 
-  const total = marksArray.reduce(
-    (sum, m) => sum + Number(m.total || 0),
-    0
-  );
+  const total = marksArray.reduce((sum, m) => sum + Number(m.total || 0), 0);
 
-  const toBase64 = async (url) => {
-  const res = await fetch(url);
-  const blob = await res.blob();
+  const getGrade = () => {
+    if (!marksArray.length) return "";
 
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
+    const maxMarks =
+      student?.courseType === "single" || student?.courseType === "beauty"
+        ? 100
+        : marksArray.length * 100;
+
+    const percentage = (total / maxMarks) * 100;
+
+    if (percentage >= 80) return "A+";
+    if (percentage >= 70) return "A";
+    if (percentage >= 55) return "B";
+    if (percentage >= 40) return "C";
+
+    return "F";
+  };
 
   const franchiseSign = student.franchiseSignature || null;
 
   return (
     <div className="p-10 bg-white">
 
-      <button
-        onClick={handleDownload}
-        className="bg-green-600 text-white px-6 py-2 mb-6"
-      >
-        Download Image
-      </button>
-
-  <div
-  ref={printRef}
-  style={{
-    width: "900px",
-    height: "1200px",
-    position: "relative",
-    overflow: "visible"
-  }}
+  <button
+  onClick={downloadPDF}
+  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
 >
+  Download PDF
+</button>
+
+      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
+
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
-        {/* LOGO */}
         {student?.logo && (
-          <img
-            src={student.logo}
-            
-            className="absolute top-[30px] left-[380px] w-[120px]"
-          />
-        )}
+  <img
+    src={student.logo + "&mode=admin"}
+    crossOrigin="anonymous"
+    className="absolute top-[10px] left-[380px] w-[130px] h-[130px]"
+  />
+)}
 
-        {/* LEFT */}
+        {/* LEFT SIDE */}
         <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
         <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[410px] left-[330px]">{student.course}</div>
+
+        {/* ✅ FIXED HERE */}
         <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE */}
         <div className="absolute top-[325px] left-[680px]">1 Year</div>
         <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
         <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
         <div className="absolute top-[390px] left-[680px]">{student.coursePeriod}</div>
 
-        {/* SUBJECTS */}
-        {marksArray.map((m, index) => (
-          <div key={index}>
-            <div style={{ top: 570 + index * 30, left: 150, position: "absolute" }}>
-              {m.subject
-                ?.split(/\d+\.\s/) // split by "1. 2. 3."
-                .filter(Boolean)
-                .map((sub, i) => (
-                  <div key={i}>{i + 1}. {sub.trim()}</div>
-                ))
-              }
-            </div>
-            <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
-              {m.objective}
-            </div>
-            <div style={{ top: 570 + index * 30, left: 690, position: "absolute" }}>
-              {m.practical}
-            </div>
-          </div>
-        ))}
+        {/* MULTIPLE */}
+        {student?.courseType?.toLowerCase() === "multiple" ? (
+
+  // ✅ MULTIPLE
+  marksArray.map((m, index) => {
+    const topPosition = 570 + index * 30;
+
+    return (
+      <div key={index}>
+        <div style={{ position: "absolute", top: topPosition, left: 150 }}>
+          {index + 1}) {m.subject}
+        </div>
+
+        <div style={{ position: "absolute", top: topPosition, left: 620 }}>
+          {m.objective}
+        </div>
+
+        <div style={{ position: "absolute", top: topPosition, left: 690 }}>
+          {m.practical}
+        </div>
+
+        <div style={{ position: "absolute", top: topPosition, left: 760 }}>
+          {m.total}
+        </div>
+      </div>
+    );
+  })
+
+) : (
+
+  // ✅ SINGLE + BEAUTY (UNCHANGED)
+  marksArray.slice(0, 1).map((m, index) => (
+    <div key={index}>
+      <div style={{ top: 570, left: 150, position: "absolute", width: 420 }}>
+        {marksArray.map((s) => s.subject).join(", ")}
+      </div>
+
+      <div className="absolute top-[570px] left-[620px] font-bold">
+        {m.objective}
+      </div>
+
+      <div className="absolute top-[570px] left-[690px] font-bold">
+        {m.practical}
+      </div>
+    </div>
+  ))
+
+)}
 
         {/* TOTAL */}
-        <div className="absolute bottom-[290px] left-[755px] font-bold">
-          {total}.00%
+        <div className="absolute bottom-[290px] left-[775px] font-bold">
+          {total}
         </div>
 
         {/* GRADE */}
         <div className="absolute top-[572px] left-[780px] font-bold">
-          {student.grade}
+          {getGrade()}
         </div>
 
-        {/* ✅ QR */}
-        {qrCode && (
-          <img
-            src={qrCode}
-            className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
-          />
+        {/* SIGNATURE */}
+        {franchiseSign && (
+       <img
+  src={franchiseSign + "&mode=admin"}
+  crossOrigin="anonymous"
+  className="absolute bottom-[90px] left-[130px] w-[100px]"
+/>
         )}
 
+        {/* OWNER */}
+        {student.ownerName && (
+          <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
+            <div className="font-semibold">{student.ownerName}</div>
+            <div className="text-xs text-gray-600">
+              Controller Of Examination
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

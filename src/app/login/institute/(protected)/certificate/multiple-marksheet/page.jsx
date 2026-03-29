@@ -3,90 +3,22 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import html2canvas from "html2canvas";
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
 import jsPDF from "jspdf";
 
+import QRCode from "qrcode";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheetMultiple() {
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
+  const [qrCode, setQrCode] = useState("");
+  const [courseData, setCourseData] = useState(null);
+const printRef = useRef();
 
-  useEffect(() => {
-    const data = localStorage.getItem("marksheetStudent");
-
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStudent(parsed);
-      fetchMarks(parsed.studentId);
-    }
-  }, []);
-
-  useEffect(() => {
-    setTimeout(() => window.print(), 500);
-  }, []);
-
-  const toBase64 = async (url) => {
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    const blob = await res.blob();
-
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.log("IMAGE CONVERT ERROR:", err);
-    return null;
-  }
-};
-
-const fixColors = () => {
-  const all = document.querySelectorAll("*");
-
-  all.forEach((el) => {
-    const style = window.getComputedStyle(el);
-
-    if (style.color.includes("lab") || style.backgroundColor.includes("lab")) {
-      el.style.color = "#000";
-      el.style.backgroundColor = "#fff";
-    }
-  });
-};
-
-const downloadPDF = async () => {
-  try {
-    const element = document.querySelector(".print-container");
-
-    // 🔥 FIX COLOR ISSUE
-    fixColors();
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-
-pdf.save(`${student?.studentName || "marksheet"}.pdf`);
-
-  } catch (err) {
-    console.log("PDF ERROR:", err);
-    alert("Download failed");
-  }
-};
-
+  
   // ===============================
   // ✅ FETCH MULTIPLE SUBJECT DATA
   // ===============================
@@ -117,12 +49,121 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
     }
   };
 
+
+  useEffect(() => {
+    const data = localStorage.getItem("marksheetStudent");
+
+    if (data) {
+      const parsed = JSON.parse(data);
+      setStudent(parsed);
+      fetchMarks(parsed.studentId);
+    }
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => window.print(), 500);
+  }, []);
+
+
+useEffect(() => {
+  const fetchCourse = async () => {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_multiple_courses",
+        [Query.equal("courseName", student?.course)]
+      );
+
+      if (res.documents.length > 0) {
+        setCourseData(res.documents[0]);
+      }
+
+    } catch (err) {
+      console.log("COURSE FETCH ERROR:", err);
+    }
+  };
+
+  if (student?.course) fetchCourse();
+}, [student]);
+useEffect(() => {
+  const generateQR = async () => {
+    try {
+      if (!student?.studentId) return;
+
+      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
+
+      const qr = await QRCode.toDataURL(verifyUrl, {
+        width: 300,
+        margin: 1,
+      });
+
+      setQrCode(qr);
+
+    } catch (err) {
+      console.log("QR ERROR:", err);
+    }
+  };
+
+  if (student) generateQR();
+}, [student]);
+
+ const handleDownload = async () => {
+    try {
+      const node = printRef.current;
+const rect = node.getBoundingClientRect();
+
+      const dataUrl = await htmlToImage.toPng(node, {
+  quality: 1,
+  pixelRatio: 3,
+  cacheBust: true,
+
+  // 🔥 THIS FIXES HALF IMAGE
+  width: rect.width,
+  height: rect.height,
+
+  style: {
+    width: rect.width + "px",
+    height: rect.height + "px",
+    transform: "scale(1)",
+    transformOrigin: "top left",
+    overflow: "visible"
+  }
+});
+
+      const link = document.createElement("a");
+      link.download = `${student.studentName}_marksheet.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.log("DOWNLOAD ERROR:", err);
+    }
+  };
+  if (!student) return <div className="p-10">Loading...</div>;
+
+  const total = marksArray.reduce(
+    (sum, m) => sum + Number(m.total || 0),
+    0
+  );
+
+  const toBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
+
+
   if (!student) return <div className="p-10">Loading...</div>;
 
   // ===============================
   // ✅ TOTAL + GRADE
   // ===============================
-  const total = marksArray.reduce((sum, m) => sum + m.total, 0);
+ 
   const percentage = marksArray.length
   ? ((total / (marksArray.length * 100)) * 100).toFixed(2)
   : 0;
@@ -142,22 +183,56 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
   return "F";
 };
 
+const getCoursePeriod = (durationText) => {
+  if (!durationText) return "N/A";
+
+  const today = new Date();
+
+  const start = new Date(today);
+  const end = new Date(today);
+
+  const text = durationText.toLowerCase();
+
+  if (text.includes("month")) {
+    const months = parseInt(text) || 1;
+    end.setMonth(end.getMonth() + months);
+  }
+
+  if (text.includes("year")) {
+    const years = parseInt(text) || 1;
+    end.setFullYear(end.getFullYear() + years);
+  }
+
+  const format = (d) =>
+    d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  return `${format(start)} To ${format(end)}`;
+};
+
   return (
     <div className="p-10 bg-white">
 
- {student && (
-  <button
-    onClick={downloadPDF}
-    className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
-  >
-    Download PDF
-  </button>
-)}
+ <button
+        onClick={handleDownload}
+        className="bg-green-600 text-white px-6 py-2 mb-6"
+      >
+        Download Image
+      </button>
 
-      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
+    <div ref={printRef}  style={{
+    width: "900px",
+    height: "1200px",
+    position: "relative",
+    overflow: "visible"
+  }}
+>
 
         {/* TEMPLATE */}
-        <img src="/marksheet.jpeg" className="absolute w-full h-full" />
+        <img src="/marksheet.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {/* {student?.logo && (
@@ -185,9 +260,8 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
         =============================== */}
     
 <div className="absolute top-[390px] left-[680px]">
-  {student.coursePeriod || "N/A"}
+  {getCoursePeriod(courseData?.duration)}
 </div>
-
         <div className="absolute top-[348px] left-[680px]">
           {student.marksheetNo || ""}
         </div>
@@ -196,11 +270,16 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
           {student.dob || "N/A"}
         </div>
 
-           <div className="absolute top-[325px] left-[680px]">
-  {student.courseDuration || "N/A"}
+  <div className="absolute top-[325px] left-[680px]">
+  {courseData?.duration || "N/A"}
 </div>
 
-
+{qrCode && (
+  <img
+    src={qrCode}
+    className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
+  />
+)}
         {/* ===============================
             SUBJECT TABLE (NO OVERFLOW FIXED)
         =============================== */}
@@ -234,19 +313,23 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
               >
                 {index + 1}) {m.subject}
               </div>
+              {/* MAX MARKS */}
+<div style={{ position: "absolute", top: topPosition, left: 525, textAlign: "center" }}>
+  100
+</div>
 
               {/* OBJECTIVE */}
-              <div style={{ position: "absolute", top: topPosition, left: 620 }}>
+              <div style={{ position: "absolute", top: topPosition, left: 590, textAlign: "center" }}>
                 {m.objective}
               </div>
 
               {/* PRACTICAL */}
-              <div style={{ position: "absolute", top: topPosition, left: 690 }}>
+              <div style={{ position: "absolute", top: topPosition, left: 660, textAlign: "center" }}>
                 {m.practical}
               </div>
 
               {/* TOTAL */}
-              <div style={{ position: "absolute", top: topPosition, left: 760 }}>
+              <div style={{ position: "absolute", top: topPosition, left: 720, textAlign: "center" }}>
                 {m.total}
               </div>
 
@@ -261,13 +344,15 @@ pdf.save(`${student?.studentName || "marksheet"}.pdf`);
           {total}
         </div>
 
+
+
         {/* PERCENTAGE */}
-<div className="absolute bottom-[260px] left-[750px] font-bold">
-  {percentage}%
+<div className="absolute bottom-[289px] left-[350px] font-bold">
+  Percentage: {percentage}%
 </div>
 
 {/* GRADE */}
-<div className="absolute top-[572px] left-[780px] font-bold">
+<div className="absolute top-[560px] left-[780px] font-bold">
   {getGrade()}
 </div>
         {/* ===============================
