@@ -378,6 +378,9 @@ await databases.updateDocument(
       window.open("/login/institute/certificate/beauty-certificate", "_blank");
     } else if (studentData.courseType === "semester") {
       window.open("/login/institute/certificate/semester-certificate", "_blank");
+    } else if (studentData.courseType === "multiple") {
+      window.open("/login/institute/certificate/multiple-certificate", "_blank"); 
+    
     } else {
       window.open("/login/institute/certificate/print", "_blank");
     }

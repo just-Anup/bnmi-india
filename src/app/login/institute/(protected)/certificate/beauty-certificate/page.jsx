@@ -231,7 +231,7 @@ export default function PrintCertificate() {
         </div>
 
         {/* NAME */}
-        <div className="absolute top-[660px] left-[320px] w-[400px] text-3xl font-bold">
+        <div className="absolute top-[660px] left-[10px] w-full text-center text-3xl font-bold">
           {student.studentName}
         </div>
 

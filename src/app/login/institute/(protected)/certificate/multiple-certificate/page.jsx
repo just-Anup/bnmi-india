@@ -17,6 +17,7 @@ export default function PrintCertificate() {
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
+const [percentage, setPercentage] = useState(0);
 
   const printRef = useRef();
   useEffect(() => {
@@ -62,6 +63,36 @@ export default function PrintCertificate() {
     console.log("ID USED IN QR:", parsed.$id);
 
   }, []);
+
+  useEffect(() => {
+  const fetchMarks = async () => {
+    try {
+      const res = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "student_subject_results",
+        [Query.equal("studentId", student?.studentId)]
+      );
+
+      if (res.documents.length > 0) {
+        const total = res.documents.reduce(
+          (sum, m) => sum + Number(m.total || 0),
+          0
+        );
+
+        const percent = (
+          total / (res.documents.length * 100)
+        ).toFixed(2);
+
+        setPercentage(percent);
+      }
+
+    } catch (err) {
+      console.log("PERCENT ERROR:", err);
+    }
+  };
+
+  if (student?.studentId) fetchMarks();
+}, [student]);
 
 
 
@@ -235,12 +266,12 @@ export default function PrintCertificate() {
           {student.studentName}
         </div>
 
-        {/* COURSE */}
+       {/* COURSE */}
         <div
           className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
         >
           <div className="flex gap-2">
-            <span>Course Name:</span>
+            <span className="whitespace-nowrap">Course Name:</span>
             <span>{courseLines[0]}</span>
           </div>
 
@@ -255,7 +286,7 @@ export default function PrintCertificate() {
         <div
           className="absolute left-[270px] font-semibold"
           style={{
-            top: 807 + (courseLines.length * 20) + 20
+            top: 827 + (courseLines.length * 20) + 20
           }}
         >
           Course Duration: {getCourseDuration(
@@ -270,7 +301,7 @@ export default function PrintCertificate() {
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {student.marks}.00%
+          {percentage}%
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}

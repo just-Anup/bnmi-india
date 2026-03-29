@@ -139,7 +139,7 @@ const rect = node.getBoundingClientRect();
       console.log("DOWNLOAD ERROR:", err);
     }
   };
-  if (!student) return <div className="p-10">Loading...</div>;
+  
 
   const total = marksArray.reduce(
     (sum, m) => sum + Number(m.total || 0),
@@ -158,7 +158,6 @@ const rect = node.getBoundingClientRect();
 };
 
 
-  if (!student) return <div className="p-10">Loading...</div>;
 
   // ===============================
   // ✅ TOTAL + GRADE
@@ -168,6 +167,43 @@ const rect = node.getBoundingClientRect();
   ? ((total / (marksArray.length * 100)) * 100).toFixed(2)
   : 0;
 
+
+  useEffect(() => {
+  const savePercentage = async () => {
+    try {
+      if (!student?.studentId || marksArray.length === 0) return;
+
+      // 🔥 get all subject docs
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [Query.equal("studentId", student.studentId)]
+      );
+
+      if (res.documents.length === 0) return;
+
+      const percent = (
+        marksArray.reduce((sum, m) => sum + m.total, 0) /
+        (marksArray.length * 100)
+      ).toFixed(2);
+
+      // ✅ UPDATE ONLY FIRST DOCUMENT (IMPORTANT)
+      await databases.updateDocument(
+        DATABASE_ID,
+        "student_subject_results",
+        res.documents[0].$id,
+        {
+          percentage: percent
+        }
+      );
+
+    } catch (err) {
+      console.log("SAVE PERCENT ERROR:", err);
+    }
+  };
+
+  savePercentage();
+}, [marksArray]);
   
 
  const getGrade = () => {
@@ -212,6 +248,8 @@ const getCoursePeriod = (durationText) => {
 
   return `${format(start)} To ${format(end)}`;
 };
+
+if (!student) return <div className="p-10">Loading...</div>;
 
   return (
     <div className="p-10 bg-white">
