@@ -72,6 +72,25 @@ export default function VerifyCertificate() {
         } catch (err) {
           console.log("Duration fetch error:", err);
         }
+        // ✅ IF NOT BEAUTY → FETCH FROM courses_single
+if (!courseDuration) {
+  try {
+    const singleCourseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_single",
+      [
+        Query.equal("courseId", student.courseId),
+        Query.equal("franchiseEmail", student.franchiseEmail)
+      ]
+    );
+
+    if (singleCourseRes.documents.length > 0) {
+      courseDuration = singleCourseRes.documents[0].duration || "";
+    }
+  } catch (err) {
+    console.log("Single course duration error:", err);
+  }
+}
 
         // ✅ FINAL SET DATA
         setData({ student, certificate, franchise, courseDuration });

@@ -207,7 +207,7 @@ const downloadPDF = async () => {
         )}
 </div>
         {/* NAME */}
-        <div className="absolute top-[660px] left-[400px] text-3xl font-bold">
+        <div className="absolute top-[660px] left-[20px]  w-full text-center text-3xl font-bold">
           {student.studentName}
         </div>
 

@@ -194,7 +194,7 @@ const rect = node.getBoundingClientRect();
           <img
             src={student.logo}
             
-            className="absolute top-[50px] left-[380px] w-[160px]"
+            className="absolute top-[50px] left-[380px] w-[150px]"
           />
         )}
 

@@ -10,6 +10,10 @@ import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { storage } from '@/lib/appwrite'
 import { ID } from 'appwrite'
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
+
+
 const BUCKET_ID = "6986e8a4001925504f6b"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
@@ -41,6 +45,7 @@ export default function Dashboard() {
   const [signatureFile, setSignatureFile] = useState(null)
   const [plans, setPlans] = useState([]);
 
+  const printRef = useRef();
   /* ---------------- LOGIN CHECK ---------------- */
 
   useEffect(() => {
@@ -407,25 +412,73 @@ delete updatedData.newPlanAmount;
     "BEAUTY": 500
   }
 
-  const downloadCertificate = async () => {
+  const toBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
 
-    const element = document.getElementById("print-area");
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
 
-    const canvas = await html2canvas(element, {
-      scale: 2, // better quality
+  const handleDownload = async () => {
+  try {
+    const node = document.getElementById("print-area");
+
+    if (!node) {
+      alert("ID Card not found");
+      return;
+    }
+
+    const rect = node.getBoundingClientRect();
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // ✅ FIX IMAGE ISSUE
+    const images = node.querySelectorAll("img");
+    for (let img of images) {
+      if (!img.src.startsWith("data:")) {
+        try {
+          const res = await fetch(img.src);
+          const blob = await res.blob();
+
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+
+          img.src = base64;
+        } catch (e) {
+          console.log("IMG ERROR:", e);
+        }
+      }
+    }
+
+    const dataUrl = await htmlToImage.toPng(node, {
+      quality: 1,
+      pixelRatio: 3,
+      cacheBust: true,
+      width: rect.width,
+      height: rect.height,
+      style: {
+        width: rect.width + "px",
+        height: rect.height + "px"
+      }
     });
 
-    const imgData = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = `${selectedFranchise?.name || "id-card"}.png`;
+    link.href = dataUrl;
+    link.click();
 
-    const pdf = new jsPDF("landscape", "mm", "a4");
+  } catch (err) {
+    console.log("DOWNLOAD ERROR:", err);
+  }
+};
 
-    const imgWidth = 297; // A4 landscape width
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-    pdf.save("BNMI_Certificate.pdf");
-  };
 
   if (loading) return <div className="p-10">Loading...</div>
 
@@ -808,7 +861,7 @@ delete updatedData.newPlanAmount;
             </button>
 
             {/* PRINT AREA */}
-            <div id="print-area" className="relative w-[800px]">
+            <div id="print-area" style={{ width: "800px", position: "relative" }}>
 
               {/* Background Image */}
               <img
@@ -818,7 +871,7 @@ delete updatedData.newPlanAmount;
               />
               <img
                 src={selectedFranchise.qrCode}
-                className="absolute top-[510px] left-[130px] w-[100px]"
+                className="absolute top-[550px] left-[130px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
 
@@ -847,19 +900,12 @@ delete updatedData.newPlanAmount;
             </div>
 
             {/* PRINT BUTTON */}
-            <button
-              onClick={() => window.print()}
-              className="mt-4 bg-black text-white px-4 py-2 w-full"
-            >
-              Print Certificate
-            </button>
-
-            <button
-              onClick={downloadCertificate}
-              className="mt-2 bg-green-600 text-white px-4 py-2 w-full"
-            >
-              Download PDF
-            </button>
+           <button
+  onClick={handleDownload}
+  className="bg-green-600 text-white px-6 py-2 mb-6 ml-4"
+>
+  Download Certificate
+</button>
 
           </div>
 
