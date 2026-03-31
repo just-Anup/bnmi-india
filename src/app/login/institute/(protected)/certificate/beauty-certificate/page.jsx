@@ -9,6 +9,7 @@ import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 
 
@@ -42,6 +43,25 @@ export default function PrintCertificate() {
     }
 
     setCertificateNo(certNo);
+
+    // ✅ ONLY FIX (NO CHANGE IN STRUCTURE)
+   const saveCert = async () => {
+  try {
+    await databases.updateDocument(
+      DATABASE_ID,
+      "student_admissions",
+      parsed.$id,
+      {
+        certificateNo: certNo
+      }
+    );
+    console.log("✅ Certificate No saved");
+  } catch (err) {
+    console.log("❌ CERT SAVE ERROR:", err);
+  }
+};
+
+saveCert();
 
     // ✅ DATE OF ISSUE
     const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
@@ -237,20 +257,9 @@ export default function PrintCertificate() {
 
         
         {/* COURSE */}
-        <div
-          className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
-        >
-          <div className="flex gap-2">
-            <span>Course Name:</span>
-            <span>{courseLines[0]}</span>
-          </div>
-
-          {courseLines.slice(1).map((line, index) => (
-            <div key={index} className="ml-[120px]">
-              {line}
-            </div>
-          ))}
-        </div>
+      <div className="absolute top-[837px] left-[270px] font-bold w-full text-center text-xl">
+  Course Name: {student.course}
+</div>
 
         {/* COURSE DURATION */}
         <div
@@ -260,7 +269,7 @@ export default function PrintCertificate() {
           }}
         >
           Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "1 year"
+            student.duration || student.courseDuration || "6 MONTHS"
           )}
         </div>
 

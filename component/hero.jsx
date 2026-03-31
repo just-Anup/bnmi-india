@@ -42,16 +42,15 @@ export default function Hero() {
 
   return (
     <section
-      className="relative h-screen bg-cover bg-center"
+      className="relative h-screen bg-cover bg-center flex items-center"
       style={{
         backgroundImage: `url(${hero.heroBgImage || '/bgimage.jpg'})`,
       }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 h-full flex items-center">
+      {/* <div className="relative z-10 max-w-7xl mx-auto px-6 h-full flex items-center">
         <div className="text-white max-w-xl">
           <p className="text-sky-400 mb-4 uppercase tracking-wide">
             {hero.heroSmallText || 'Welcome'}
@@ -66,7 +65,7 @@ export default function Hero() {
             DISCOVER MORE
           </button>
         </div>
-      </div>
+      </div> */}
     </section>
   )
 }

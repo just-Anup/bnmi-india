@@ -176,19 +176,7 @@ export default function PrintCertificate() {
 
   const printPage = () => window.print();
 
-  const formatCourseName = (text) => {
-    if (!text) return "";
 
-    const words = text.split(" ");
-    const lines = [];
-
-    for (let i = 0; i < words.length; i += 7) {
-      lines.push(words.slice(i, i + 7).join(" "));
-    }
-
-    return lines;
-  };
-  const courseLines = formatCourseName(student.course);
 
   return (
 
@@ -219,9 +207,18 @@ export default function PrintCertificate() {
         {student.logo && (
           <img
             src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[140px]"
+            className="absolute top-[10px] left-[385px] w-[160px] text-center"
           />
         )}
+
+         {/* <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
+          {signatureUrl && (
+            <img
+              src={signatureUrl}
+              className="max-w-full max-h-full object-contain"
+            />
+          )}
+        </div> */}
 
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
@@ -236,27 +233,12 @@ export default function PrintCertificate() {
         </div>
 
         {/* COURSE */}
-        <div
-          className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
-        >
-          <div className="flex gap-2">
-            <span>Course Name:</span>
-            <span>{courseLines[0]}</span>
-          </div>
-
-          {courseLines.slice(1).map((line, index) => (
-            <div key={index} className="ml-[120px]">
-              {line}
-            </div>
-          ))}
-        </div>
-
+       <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
+  {student.course}
+</div>
         {/* COURSE DURATION */}
         <div
-          className="absolute left-[270px] font-semibold"
-          style={{
-            top: 807 + (courseLines.length * 20) + 20
-          }}
+           className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
         >
           Course Duration: {getCourseDuration(
             student.duration || student.courseDuration || "1 year"

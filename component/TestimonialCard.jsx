@@ -34,6 +34,9 @@ export default function TestimonialCard({
         <p className="text-gray-700 text-sm leading-relaxed pl-6">
           {text}
         </p>
+        <span className="absolute top-30 left-30 text-5xl text-gray-200">
+          ”
+        </span>
       </div>
 
       {/* Name + Role */}

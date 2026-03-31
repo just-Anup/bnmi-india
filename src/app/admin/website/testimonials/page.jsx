@@ -34,28 +34,27 @@ export default function TestimonialsCMS() {
     fetchTestimonials()
   }, [])
 
-  const uploadImage = async (file) => {
-    try {
-      const uploaded = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        file
-      )
+const uploadImage = async (file) => {
+  try {
+    const uploaded = await storage.createFile(
+      BUCKET_ID,
+      ID.unique(),
+      file
+    )
 
-      const fileUrl = storage.getFileView(
-        BUCKET_ID,
-        uploaded.$id
-      )
+    const fileUrl = storage
+      .getFileView(BUCKET_ID, uploaded.$id)
+      .toString() // ✅ FIX
 
-      setNewTestimonial(prev => ({
-        ...prev,
-        imageUrl: fileUrl,
-      }))
-    } catch (err) {
-      console.error(err)
-      alert('Upload failed')
-    }
+    setNewTestimonial(prev => ({
+      ...prev,
+      imageUrl: fileUrl,
+    }))
+  } catch (err) {
+    console.error(err)
+    alert('Upload failed')
   }
+}
 
   const addTestimonial = async () => {
     try {

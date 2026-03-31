@@ -49,9 +49,10 @@ export default function ServicesSection() {
           <span className="text-[#19b9f1]">Trust-Focused</span>
         </h2>
 
-        <p className="mt-5 text-gray-400 max-w-2xl mx-auto text-lg">
-          We provide effective learning solutions, committed to delivering exceptional education.
-        </p>
+       <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+          OUR {' '}
+          <span className="text-[#19b9f1]">TOP INSTITUTE</span>
+        </h2>
 
         {/* EMPTY STATE */}
         {services.length === 0 && (
@@ -152,13 +153,13 @@ function ServiceCard({ title, text, imageUrl, state }) {
 
         {/* Image */}
         <div className="mb-5 flex justify-center">
-          <div className="w-16 h-16 flex items-center justify-center 
+          <div className="w-50 h-50 flex items-center justify-center 
             rounded-full bg-white/10 border border-white/20
             group-hover:bg-[#19b9f1]/20 transition">
             {imageUrl && (
               <img
                 src={imageUrl}
-                className="w-8 h-8 object-contain"
+                className="w-80 h-80 object-contain"
               />
             )}
           </div>

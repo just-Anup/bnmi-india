@@ -30,7 +30,7 @@ export default function StatsSection() {
 
   return (
     <section className="w-full py-24
-      bg-[repeating-linear-gradient(45deg,#f5f5f5,#f5f5f5_10px,#ffffff_10px,#ffffff_20px)]">
+      bg-">
       
       <div
         ref={sectionRef}
