@@ -5,6 +5,7 @@ import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import QRCode from "qrcode";
 import jsPDF from "jspdf";
 
 import QRCode from "qrcode";

@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-
+import * as htmlToImage from "html-to-image";
+import { useRef } from "react";
+import QRCode from "qrcode";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
+    const [qrCode, setQrCode] = useState("");
 
+  const printRef = useRef();
   useEffect(() => {
     const data = localStorage.getItem("marksheetStudent");
 
@@ -47,37 +49,33 @@ export default function PrintMarksheet() {
   });
 };
 
-const downloadPDF = async () => {
-  try {
-    const element = document.querySelector(".print-container");
+useEffect(() => {
+  const generateQR = async () => {
+    try {
+      console.log("STUDENT:", student);
 
-    if (!element) return alert("Page not ready");
+      if (!student?.studentId) {
+        console.log("❌ studentId missing");
+        return;
+      }
 
-    fixColors();
+      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
+      console.log("QR URL:", verifyUrl);
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-    });
+      const qr = await QRCode.toDataURL(verifyUrl);
 
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      console.log("QR GENERATED ✅");
 
-    const pdf = new jsPDF("p", "mm", "a4");
+      setQrCode(qr);
 
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    } catch (err) {
+      console.log("QR ERROR:", err);
+    }
+  };
 
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-
-    pdf.save(`${student?.studentName || "marksheet"}.pdf`);
-
-  } catch (err) {
-    console.log("PDF ERROR:", err);
-    alert("Download failed");
-  }
-};
+  if (student) generateQR();
+}, [student]);
+ 
 
   const fetchMarks = async (studentId, studentData) => {
     try {
@@ -111,7 +109,7 @@ const downloadPDF = async () => {
         // ✅ SINGLE + BEAUTY (UNCHANGED)
         const resultRes = await databases.listDocuments(
           DATABASE_ID,
-          "exam_results",
+          "student_subject_results",
           [Query.equal("studentId", studentId)]
         );
 
@@ -123,28 +121,52 @@ const downloadPDF = async () => {
             .map((s) => s.trim()) || [];
         }
 
-        const marksRes = await databases.listDocuments(
-          DATABASE_ID,
-          "exam_subject_marks",
-          [Query.equal("studentId", studentId)]
-        );
+        // 🔹 FIRST: try exam_subject_marks
+const marksRes = await databases.listDocuments(
+  DATABASE_ID,
+  "exam_subject_marks",
+  [Query.equal("studentId", studentId)]
+);
 
-        const marksDocs = marksRes.documents || [];
+let marksDocs = marksRes.documents || [];
 
-        const finalMarks = subjectList.map((sub, index) => {
-          const mark = marksDocs[index];
+// 🔥 FALLBACK: if empty → use student_subject_results
+if (marksDocs.length === 0) {
+  const fallbackRes = await databases.listDocuments(
+    DATABASE_ID,
+    "student_subject_results",
+    [Query.equal("studentId", studentId)]
+  );
 
-          return {
-            subject: sub,
-            objective: Number(mark?.theory || 0),
-            practical: Number(mark?.practical || 0),
-            total:
-              Number(mark?.theory || 0) +
-              Number(mark?.practical || 0),
-          };
-        });
+  const fallbackDocs = fallbackRes.documents || [];
 
-        setMarksArray(finalMarks);
+  const finalMarks = fallbackDocs.map((m) => ({
+    subject: m.subject,
+    objective: Number(m.objective || 0),
+    practical: Number(m.practical || 0),
+    total: Number(m.total || 0),
+  }));
+
+  setMarksArray(finalMarks);
+
+} else {
+  // ✅ NORMAL FLOW
+  const finalMarks = subjectList.map((sub, index) => {
+    const mark = marksDocs[index];
+
+    return {
+      subject: sub,
+      objective: Number(mark?.theory || 0),
+      practical: Number(mark?.practical || 0),
+      total:
+        Number(mark?.theory || 0) +
+        Number(mark?.practical || 0),
+    };
+  });
+
+  setMarksArray(finalMarks);
+}
+
       }
 
     } catch (err) {
@@ -159,6 +181,54 @@ const downloadPDF = async () => {
   if (!student) return <div className="p-10">Loading...</div>;
 
   const total = marksArray.reduce((sum, m) => sum + Number(m.total || 0), 0);
+
+
+  const handleDownload = async () => {
+      try {
+        const node = printRef.current;
+  const rect = node.getBoundingClientRect();
+  
+        const dataUrl = await htmlToImage.toPng(node, {
+    quality: 1,
+    pixelRatio: 3,
+    cacheBust: true,
+  
+    // 🔥 THIS FIXES HALF IMAGE
+    width: rect.width,
+    height: rect.height,
+  
+    style: {
+      width: rect.width + "px",
+      height: rect.height + "px",
+      transform: "scale(1)",
+      transformOrigin: "top left",
+      overflow: "visible"
+    }
+  });
+  
+        const link = document.createElement("a");
+        link.download = `${student.studentName}_marksheet.png`;
+        link.href = dataUrl;
+        link.click();
+  
+      } catch (err) {
+        console.log("DOWNLOAD ERROR:", err);
+      }
+    };
+    
+
+
+    const toBase64 = async (url) => {
+  const res = await fetch(url);
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
+
 
   const getGrade = () => {
     if (!marksArray.length) return "";
@@ -183,14 +253,20 @@ const downloadPDF = async () => {
   return (
     <div className="p-10 bg-white">
 
-  <button
-  onClick={downloadPDF}
-  className="bg-green-600 text-white px-6 py-2 mb-6 ml-2"
->
-  Download PDF
-</button>
+ <button
+        onClick={handleDownload}
+        className="bg-green-600 text-white px-6 py-2 mb-6"
+      >
+        Download Image
+      </button>
 
-      <div className="relative w-[900px] h-[1200px] mx-auto print-container">
+    <div ref={printRef}  style={{
+    width: "900px",
+    height: "1200px",
+    position: "relative",
+    overflow: "visible"
+  }}
+>
 
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
@@ -201,7 +277,17 @@ const downloadPDF = async () => {
     className="absolute top-[10px] left-[380px] w-[130px] h-[130px]"
   />
 )}
-
+{qrCode ? (
+  <img
+    src={qrCode}
+    alt="QR Code"
+    className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
+  />
+) : (
+  <div className="absolute top-[240px] right-[50px] text-xs">
+    Generating QR...
+  </div>
+)}
         {/* LEFT SIDE */}
         <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
         <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
