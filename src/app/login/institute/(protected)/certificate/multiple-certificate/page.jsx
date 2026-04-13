@@ -247,13 +247,14 @@ const [percentage, setPercentage] = useState(0);
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
+         <div className="absolute top-[20px] left-[410px] w-[120px] h-[120px] overflow-hidden bg-white">
         {student.logo && (
           <img
-            src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[140px]"
+            src={student.logo} 
+             className="w-full h-full object-cover"
           />
         )}
-
+</div>
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
           {photoUrl && (

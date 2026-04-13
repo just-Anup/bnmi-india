@@ -214,19 +214,31 @@ export default function Dashboard() {
       // ✅ Generate QR
       const qrCode = await QRCode.toDataURL(verifyUrl)
 
-      // ✅ Create approved document
-      await databases.createDocument(
-        DATABASE_ID,
-        'franchise_approved',
-        req.$id,
-        {
-          ...req,
-          qrCode,
-          verifyUrl,
-          wallet: req.wallet || "0.00",
-          courierWallet: req.courierWallet || "0.00"
-        }
-      )
+    // ✅ Generate Issue Date (Today)
+  const issueDate = new Date()
+
+    const expiryDate = new Date()
+    expiryDate.setFullYear(issueDate.getFullYear() + 1) 
+
+
+await databases.createDocument(
+  DATABASE_ID,
+  'franchise_approved',
+  req.$id,
+  {
+    ...req,
+    qrCode,
+    verifyUrl,
+    wallet: req.wallet || "0.00",
+    courierWallet: req.courierWallet || "0.00",
+
+    // ✅ NEW FIELDS
+    issueDate: issueDate.toISOString(),
+    expiryDate: expiryDate.toISOString()
+  }
+)
+
+
 
       // ✅ Delete from pending
       await databases.deleteDocument(
@@ -479,6 +491,29 @@ delete updatedData.newPlanAmount;
   }
 };
 
+
+const formatDate = (date) => {
+  if (!date) return "N/A"
+
+  const d = new Date(date)
+
+  if (isNaN(d.getTime())) return "N/A"
+
+  return d.toLocaleDateString("en-GB") // DD/MM/YYYY
+}
+
+
+const getIssueDate = () => {
+  return selectedFranchise?.issueDate || selectedFranchise?.$createdAt;
+};
+
+const getExpiryDate = () => {
+  const base = new Date(getIssueDate());
+  if (isNaN(base)) return null;
+
+  base.setFullYear(base.getFullYear() + 1);
+  return base;
+};
 
   if (loading) return <div className="p-10">Loading...</div>
 
@@ -896,6 +931,20 @@ delete updatedData.newPlanAmount;
               <div className="absolute top-[520px] w-full text-center text-sm px-10">
                 {selectedFranchise.address}{selectedFranchise.city}, {selectedFranchise.state} - {selectedFranchise.pincode}
               </div>
+
+                <div className="absolute bottom-[90px] left-[220px] font-bold">
+                ATC Code: {selectedFranchise.atcCode}
+              </div>
+
+              {/* Issue Date */}
+<div className="absolute bottom-[70px] left-[220px] font-semibold">
+  Issue Date: {formatDate(getIssueDate())}
+</div>
+
+{/* Expiry Date */}
+<div className="absolute bottom-[50px] left-[220px] font-semibold">
+Expiry Date: {formatDate(getExpiryDate())}
+</div>
 
             </div>
 

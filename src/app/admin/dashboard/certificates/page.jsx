@@ -222,10 +222,15 @@ try {
   studentId: cert.studentId,
 
   // ✅ MARKS
-  marksArray:
-    cert.marksArray && cert.marksArray.length > 0
-      ? cert.marksArray
-      : formattedMarks,
+marksArray: (() => {
+  try {
+    return typeof cert.marksArray === "string"
+      ? JSON.parse(cert.marksArray)
+      : cert.marksArray || formattedMarks;
+  } catch {
+    return formattedMarks;
+  }
+})(),
 
   grade: cert.grade || "",
   marksheetNo: cert.$id || "",
@@ -352,6 +357,7 @@ await databases.updateDocument(
       franchiseSignature: franchiseData?.signature || "",
       photoId: studentData.photoId || "",
       instituteName: studentData.instituteName || "",
+      semesterNumber: studentData.semesterNumber || "",
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
        certificateNo: `CERT-${Date.now()}`, // ✅ NEW

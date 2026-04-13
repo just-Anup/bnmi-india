@@ -324,12 +324,29 @@ const handleSubmit = async (e) => {
       return
     }
 
-    const ADMISSION_FEE = Number(form.examFees || 0)
+    let ADMISSION_FEE = Number(form.examFees || 0)
+    // ✅ SEMESTER ONE-TIME FEE LOGIC (ADD ONLY)
+if (form.courseType === "semester") {
 
-    if (!ADMISSION_FEE || ADMISSION_FEE <= 0) {
-      alert("Invalid exam fee")
-      return
-    }
+  const existing = await databases.listDocuments(
+    DATABASE_ID,
+    "student_admissions",
+    [
+      Query.equal("mobile", form.mobile), // better than name
+      Query.equal("courseName", form.courseName),
+      Query.equal("courseType", "semester")
+    ]
+  );
+
+  if (existing.documents.length > 0) {
+    ADMISSION_FEE = 0; // ✅ already paid
+  }
+}
+
+   if (ADMISSION_FEE < 0) {
+  alert("Invalid exam fee")
+  return
+}
 
     // 🔥 REQUIRE FILES
     if (!photo) {
@@ -386,7 +403,7 @@ const handleSubmit = async (e) => {
 
     const currentWallet = Number(franchiseDoc.wallet || 0)
 
-    if (currentWallet < ADMISSION_FEE) {
+    if (ADMISSION_FEE > 0 && currentWallet < ADMISSION_FEE) {
       alert("Insufficient Wallet Balance")
       return
     }
@@ -394,37 +411,38 @@ const handleSubmit = async (e) => {
     const newWallet = currentWallet - ADMISSION_FEE
 
     // ✅ UPDATE WALLET
-    await databases.updateDocument(
-      DATABASE_ID,
-      "franchise_approved",
-      franchise.franchiseId,
-      {
-        wallet: newWallet.toFixed(2)
-      }
-    )
-
+  if (ADMISSION_FEE > 0) {
+  await databases.updateDocument(
+    DATABASE_ID,
+    "franchise_approved",
+    franchise.franchiseId,
+    {
+      wallet: newWallet.toFixed(2)
+    }
+  )
+}
     if (!form.dob) {
   alert("Please select Date of Birth");
   return;
 }
 
-    // ✅ TRANSACTION
-    await databases.createDocument(
-      DATABASE_ID,
-      "wallet_transactions",
-      ID.unique(),
-      {
-        franchiseId: franchise.franchiseId,
-        amount: ADMISSION_FEE,
-        type: "deduct",
-        reason: "Student Admission",
-        studentName: form.studentName,
-        courseName: form.courseName,
-        remainingBalance: newWallet.toFixed(2),
-        date: new Date().toISOString()
-      }
-    )
-
+  if (ADMISSION_FEE > 0) {
+  await databases.createDocument(
+    DATABASE_ID,
+    "wallet_transactions",
+    ID.unique(),
+    {
+      franchiseId: franchise.franchiseId,
+      amount: ADMISSION_FEE,
+      type: "deduct",
+      reason: "Student Admission",
+      studentName: form.studentName,
+      courseName: form.courseName,
+      remainingBalance: newWallet.toFixed(2),
+      date: new Date().toISOString()
+    }
+  )
+}
     // ✅ CREATE STUDENT (FINAL)
     await databases.createDocument(
       DATABASE_ID,
@@ -513,7 +531,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 
           <input
             name="rollNumber"
-            value={form.rollNumber}
+            value={form.rollNumber} 
             onChange={handleChange}
             className="border p-2 w-full"
           />
