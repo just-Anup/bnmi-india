@@ -274,15 +274,15 @@ if (!student) return <div className="p-10">Loading...</div>;
         <img src="/marksheet.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
-        {/* {student?.logo && (
+        {student?.logo && (
           <img
   id="logo-img"
   src={student.logo + "&mode=admin"}  // 🔥 ADD THIS
   crossOrigin="anonymous"
-  className="absolute top-[10px] left-[400px] w-[102px] h-[120px]"
+  className="absolute top-[10px] left-[400px] w-[120px] h-[120px]"
 />
 
-        )} */}
+        )}
 
         {/* ===============================
             LEFT SIDE
@@ -342,7 +342,7 @@ if (!student) return <div className="p-10">Loading...</div>;
               <div
                 style={{
                   position: "absolute",
-                  top: topPosition,
+                  top: topPosition -10,
                   left: 150,
                   width: "420px",
                   wordWrap: "break-word",
@@ -353,22 +353,22 @@ if (!student) return <div className="p-10">Loading...</div>;
                 {index + 1}) {m.subject}
               </div>
               {/* MAX MARKS */}
-<div style={{ position: "absolute", top: topPosition, left: 525, textAlign: "center" }}>
+<div style={{ position: "absolute", top: topPosition - 10, left: 525, textAlign: "center" }}>
   100
 </div>
 
               {/* OBJECTIVE */}
-              <div style={{ position: "absolute", top: topPosition, left: 590, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 590, textAlign: "center" }}>
                 {m.objective}
               </div>
 
               {/* PRACTICAL */}
-              <div style={{ position: "absolute", top: topPosition, left: 660, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 660, textAlign: "center" }}>
                 {m.practical}
               </div>
 
               {/* TOTAL */}
-              <div style={{ position: "absolute", top: topPosition, left: 720, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 720, textAlign: "center" }}>
                 {m.total}
               </div>
 
