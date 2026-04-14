@@ -4,6 +4,13 @@ import { databases } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faFacebookF,
+  faTwitter,
+  faInstagram,
+  faYoutube
+} from '@fortawesome/free-brands-svg-icons'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -91,14 +98,24 @@ export default function Footer() {
               {data.footerAboutText}
             </p>
 
-            <div className="flex gap-4 mt-6 text-gray-400">
-              <span>f</span>
-              <span>t</span>
-              <span>p</span>
-              <span>◯</span>
-            </div>
-          </div>
+          <div className="flex gap-5 mt-6 text-gray-400 text-lg">
+  <a href="#" className="hover:text-[#19b9f1] transition">
+    <FontAwesomeIcon icon={faFacebookF} />
+  </a>
 
+  <a href="#" className="hover:text-[#19b9f1] transition">
+    <FontAwesomeIcon icon={faTwitter} />
+  </a>
+
+  <a href="#" className="hover:text-[#19b9f1] transition">
+    <FontAwesomeIcon icon={faInstagram} />
+  </a>
+
+  <a href="#" className="hover:text-[#19b9f1] transition">
+    <FontAwesomeIcon icon={faYoutube} />
+  </a>
+</div>
+          </div>
           <div className="footer-anim">
             <h4 className="font-bold text-lg mb-6">LINKS EXPLORE</h4>
             <ul className="space-y-3 text-gray-400 text-sm">

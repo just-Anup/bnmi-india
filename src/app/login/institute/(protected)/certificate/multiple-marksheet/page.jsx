@@ -188,14 +188,16 @@ const rect = node.getBoundingClientRect();
         (marksArray.length * 100)
       ).toFixed(2);
 
-      // ✅ UPDATE ONLY FIRST DOCUMENT (IMPORTANT)
-      await databases.updateDocument(
-        DATABASE_ID,
-        "student_subject_results",
-        res.documents[0].$id,
-        {
-          percentage: percent
-        }
+  // ✅ UPDATE ALL SUBJECTS
+      await Promise.all(
+        res.documents.map((doc) =>
+          databases.updateDocument(
+            DATABASE_ID,
+            "student_subject_results",
+            doc.$id,
+            { percentage: percent }
+          )
+        )
       );
 
     } catch (err) {
@@ -309,7 +311,7 @@ if (!student) return <div className="p-10">Loading...</div>;
           {student.dob || "N/A"}
         </div>
 
-  <div className="absolute top-[325px] left-[680px]">
+  <div className="absolute top-[325px] left-[680px] ">
   {courseData?.duration || "N/A"}
 </div>
 
@@ -391,7 +393,7 @@ if (!student) return <div className="p-10">Loading...</div>;
 </div>
 
 {/* GRADE */}
-<div className="absolute top-[560px] left-[780px] font-bold">
+<div className="absolute top-[550px] left-[780px] font-bold">
   {getGrade()}
 </div>
         {/* ===============================

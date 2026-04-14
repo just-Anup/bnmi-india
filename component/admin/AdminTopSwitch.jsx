@@ -75,12 +75,12 @@ export default function AdminSidebar() {
         />
   <MenuItem
           icon={<Image size={18} />}
-          label="Wallet List"
+          label="Wallet Recharge "
           href="/admin/dashboard/wallet"
         />
        <MenuItem
           icon={<Image size={18} />}
-          label="courier-Wallet List"
+          label="courier-Wallet Recharge "
           href="/admin/dashboard/courier-wallet"
         />
        <MenuItem
@@ -90,12 +90,12 @@ export default function AdminSidebar() {
         />
        <MenuItem
           icon={<Image size={18} />}
-          label="Helpdesk List"
+          label="Helpdesk"
           href="/admin/dashboard/helpdesk"
         />
        <MenuItem
           icon={<Image size={18} />}
-          label="Marketing List"
+          label="Marketing "
           href="/admin/dashboard/marketing-material"
         />
       

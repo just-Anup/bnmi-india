@@ -115,7 +115,7 @@ console.log("NAVBAR DATA:", res)
             <CTAButton text="CONTACT NOW" />
 </Link>
             <Link href="/franchise/signup">
-              <CTAButton text="FRANCHISE LOGIN" />
+              <CTAButton text="FRANCHISE FORM" />
             </Link>
             <Link href="/login/institute">
               <CTAButton text="LOGIN" />

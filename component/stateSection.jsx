@@ -30,29 +30,29 @@ export default function StatsSection() {
 
   return (
     <section className="w-full py-24
-      bg-">
+      bg-black/80 text-white relative overflow-hidden">
       
       <div
         ref={sectionRef}
         className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-14 text-center"
       >
         <div>
-          <CounterGSAP end={103} />
+          <CounterGSAP end={300} />
           <p className="mt-3 text-lg font-semibold">Total Institude</p>
         </div>
 
         <div>
-          <CounterGSAP end={311} />
+          <CounterGSAP end={1235} />
           <p className="mt-3 text-lg font-semibold">Total Course</p>
         </div>
 
         <div>
-          <CounterGSAP end={5153} />
+          <CounterGSAP end={7153} />
           <p className="mt-3 text-lg font-semibold">Total Student</p>
         </div>
 
         <div>
-          <CounterGSAP end={500} />
+          <CounterGSAP end={528} />
           <p className="mt-3 text-lg font-semibold"> Reviews</p>
         </div>
       </div>

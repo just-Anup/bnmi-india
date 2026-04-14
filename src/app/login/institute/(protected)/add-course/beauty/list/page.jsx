@@ -130,6 +130,8 @@ export default function ListBeautyCourses() {
       alert("Subject Saved Successfully")
 
       setSubject('')
+      const textarea = document.querySelector('textarea')
+if (textarea) textarea.style.height = "auto"
       setSelectedCourse(null)
 
     } catch (error) {
@@ -140,6 +142,13 @@ export default function ListBeautyCourses() {
     }
 
   }
+
+  const handleInput = (e) => {
+  setSubject(e.target.value)
+
+  e.target.style.height = "auto"
+  e.target.style.height = e.target.scrollHeight + "px"
+}
 
   return (
 
@@ -300,31 +309,42 @@ export default function ListBeautyCourses() {
               Add Course Subject
             </h3>
 
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Subject Name"
-              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
-            />
+              <div className="flex flex-col gap-4">
 
-            <div className="flex justify-end gap-2">
+<textarea
+  value={subject}
+  onChange={(e) => {
+    setSubject(e.target.value)
 
-              <button
-                onClick={() => setSelectedCourse(null)}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
-              >
-                Close
-              </button>
+    // auto expand height
+    e.target.style.height = "auto"
+    e.target.style.height = e.target.scrollHeight + "px"
+  }}
+  placeholder="Enter subjects "
+  rows={1}
+  className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded resize-none overflow-hidden  ... uppercase"
+/>
 
-              <button
-                onClick={saveSubject}
-                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
-              >
-                Save
-              </button>
 
-            </div>
+
+  <div className="flex justify-end gap-2">
+    <button
+      onClick={() => setSelectedCourse(null)}
+      className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
+    >
+      Close
+    </button>
+
+    <button
+      onClick={saveSubject}
+      className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
+    >
+      Save
+    </button>
+  </div>
+
+</div>
+
 
           </div>
 

@@ -14,6 +14,8 @@ export default function VerifyCertificate() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [percentage, setPercentage] = useState(null);
+const [isMultiple, setIsMultiple] = useState(false);
 
   useEffect(() => {
 
@@ -107,6 +109,45 @@ if (!courseDuration) {
 
   }, [id]);
 
+
+  useEffect(() => {
+  const fetchPercentage = async () => {
+    try {
+      if (!id) return;
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [Query.equal("studentId", id)]
+      );
+
+      // ✅ detect multiple course
+      if (res.documents.length > 1) {
+        setIsMultiple(true);
+
+        const total = res.documents.reduce(
+          (sum, m) => sum + Number(m.total || 0),
+          0
+        );
+
+        const percent = (
+          total / (res.documents.length * 100)
+        ).toFixed(2);
+
+        setPercentage(percent);
+      } else {
+        setIsMultiple(false);
+      }
+
+    } catch (err) {
+      console.log("VERIFY PERCENT ERROR:", err);
+    }
+  };
+
+  fetchPercentage();
+}, [id]);
+
+
   if (loading) return <p className="p-10 text-center">Loading...</p>;
 
   if (data === false)
@@ -184,9 +225,15 @@ if (!courseDuration) {
                 : certMeta?.issueDate || "N/A"}
             </p>
 
-            <p>
-              Marks : {certificate?.marks ? `${certificate.marks}%` : "N/A"}
-            </p>
+    <p>
+  {isMultiple
+    ? percentage
+      ? `Percentage : ${percentage}%`
+      : "Percentage : N/A"
+    : certificate?.marks
+    ? `Marks : ${certificate.marks}%`
+    : "Marks : N/A"}
+</p>
 
             <p>
               Grade : {certificate?.grade || "N/A"}

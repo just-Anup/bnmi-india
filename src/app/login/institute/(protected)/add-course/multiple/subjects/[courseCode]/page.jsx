@@ -37,14 +37,23 @@ export default function SubjectPage() {
     setSubjects(res.documents);
   };
 
-  const toggleSubject = (name) => {
-    setSelectedSubjects(prev =>
-      prev.includes(name)
-        ? prev.filter(s => s !== name)
-        : [...prev, name]
-    );
-  };
+const toggleSubject = (name) => {
+  setSelectedSubjects((prev) => {
+    // ❌ If already selected → remove
+    if (prev.includes(name)) {
+      return prev.filter((s) => s !== name);
+    }
 
+    // 🚫 Limit to 10 subjects
+    if (prev.length >= 10) {
+      alert("You can select maximum 10 subjects");
+      return prev;
+    }
+
+    // ✅ Add in order
+    return [...prev, name];
+  });
+};
   const saveCourse = async () => {
 
     if (selectedSubjects.length === 0) {
@@ -106,7 +115,15 @@ export default function SubjectPage() {
                 className="accent-orange-500"
               />
 
-              <span>{s.subjectName}</span>
+          <span className="flex justify-between w-full">
+  {s.subjectName}
+
+  {selectedSubjects.includes(s.subjectName) && (
+    <span className="bg-orange-500 text-black px-2 py-0.5 rounded text-xs">
+      {selectedSubjects.indexOf(s.subjectName) + 1}
+    </span>
+  )}
+</span>
 
             </label>
 

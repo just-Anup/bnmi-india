@@ -7,6 +7,7 @@ import QRCode from "qrcode"; // ✅ ADDED
 import { databases, ID } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import { Query } from "appwrite";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
@@ -67,33 +68,39 @@ const [percentage, setPercentage] = useState(0);
   useEffect(() => {
   const fetchMarks = async () => {
     try {
+      if (!student?.studentId) return; // ✅ VERY IMPORTANT
+
       const res = await databases.listDocuments(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
         "student_subject_results",
-        [Query.equal("studentId", student?.studentId)]
+        [Query.equal("studentId", student.studentId)]
       );
 
-      if (res.documents.length > 0) {
-        const total = res.documents.reduce(
-          (sum, m) => sum + Number(m.total || 0),
-          0
-        );
-
-        const percent = (
-          total / (res.documents.length * 100)
-        ).toFixed(2);
-
-        setPercentage(percent);
+      if (res.documents.length === 0) {
+        setPercentage(0);
+        return;
       }
+
+      const total = res.documents.reduce(
+        (sum, m) => sum + Number(m.total || 0),
+        0
+      );
+
+      const percent = (
+        (total / (res.documents.length * 100)) * 100
+      ).toFixed(2);
+
+      console.log("CERT PERCENT:", percent); // 🔥 DEBUG
+
+      setPercentage(percent);
 
     } catch (err) {
       console.log("PERCENT ERROR:", err);
     }
   };
 
-  if (student?.studentId) fetchMarks();
+  fetchMarks();
 }, [student]);
-
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
