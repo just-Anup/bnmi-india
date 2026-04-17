@@ -44,19 +44,19 @@ export default function AdminSidebar() {
 
         <MenuItem
           icon={<LayoutDashboard size={18} />}
-          label="Navbar"
+          label="Top Banner Section"
           href="/admin/website/navbar"
         />
 
         <MenuItem
           icon={<Image size={18} />}
-          label="Hero Section"
+          label="Banner Section"
           href="/admin/website/hero"
         />
 
         <MenuItem
           icon={<Image size={18} />}
-          label="Services Section"
+          label="Top Institute Section"
           href="/admin/website/services"
         />
 
@@ -81,7 +81,7 @@ export default function AdminSidebar() {
 
         <MenuItem
           icon={<Image size={18} />}
-          label="Footer Section"
+          label="Bottom Section"
           href="/admin/website/footer"
         />
 

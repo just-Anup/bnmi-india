@@ -300,7 +300,7 @@ if (!student) return <div className="p-10">Loading...</div>;
             RIGHT SIDE (FIXED)
         =============================== */}
     
-<div className="absolute top-[390px] left-[680px]">
+<div className="absolute top-[390px] left-[680px] text-sm">
   {getCoursePeriod(courseData?.duration)}
 </div>
         <div className="absolute top-[348px] left-[680px]">
