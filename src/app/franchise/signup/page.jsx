@@ -68,7 +68,7 @@ export default function FranchiseSignup() {
 
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(false)
-
+const [customCity, setCustomCity] = useState("")
   /* ---------------- STATE CHANGE ---------------- */
 
   const handleStateChange = (state) => {
@@ -93,10 +93,15 @@ export default function FranchiseSignup() {
       return
     }
 
-    if (!form.city) {
-      alert("Please select a city ❌")
-      return
-    }
+   if (!form.city) {
+  alert("Please select a city ❌")
+  return
+}
+
+if (form.city === "Other" && !customCity) {
+  alert("Please enter your city ❌")
+  return
+}
 
     setLoading(true)
 
@@ -119,6 +124,7 @@ export default function FranchiseSignup() {
         ID.unique(),
         {
           ...form,
+          city: form.city === "Other" ? customCity : form.city,
           franchiseEmail: form.email,
           atcCode,
           wallet: "0.00",
@@ -139,90 +145,115 @@ export default function FranchiseSignup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#394d6e] to-[#020617] p-6">
 
-      <form
-        onSubmit={handleSignup}
-        className="bg-white p-10 w-[900px] shadow-lg space-y-6"
-      >
+    <form
+      onSubmit={handleSignup}
+      className="w-full max-w-5xl bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl p-10 space-y-6 text-white"
+    >
 
-        <h2 className="text-2xl font-bold text-center">
-          Franchise Form
-        </h2>
+      <h2 className="text-3xl font-bold text-center tracking-wide">
+        Franchise Registration
+      </h2>
 
-        <div className="grid grid-cols-2 gap-4">
+      <p className="text-center text-gray-300 text-sm">
+        Fill in your details to apply for franchise
+      </p>
 
-          <input placeholder="Full Name" className="border p-3"
-            onChange={(e)=>setForm({...form,name:e.target.value})} required />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          <input placeholder="Institute Name" className="border p-3"
-            onChange={(e)=>setForm({...form,instituteName:e.target.value})} required />
+        <input placeholder="Full Name"
+          className="input"
+          onChange={(e)=>setForm({...form,name:e.target.value})} required />
 
-          <input type="email" placeholder="Email" className="border p-3"
-            onChange={(e)=>setForm({...form,email:e.target.value})} required />
+        <input placeholder="Institute Name"
+          className="input"
+          onChange={(e)=>setForm({...form,instituteName:e.target.value})} required />
 
-          <input type="password" placeholder="Password" className="border p-3"
-            onChange={(e)=>setForm({...form,password:e.target.value})} required />
+        <input type="email" placeholder="Email"
+          className="input"
+          onChange={(e)=>setForm({...form,email:e.target.value})} required />
 
-          <input placeholder="Mobile" className="border p-3"
-            onChange={(e)=>setForm({...form,mobile:e.target.value})} />
+        <input type="password" placeholder="Password"
+          className="input"
+          onChange={(e)=>setForm({...form,password:e.target.value})} required />
 
-          <select className="border p-3"
-            value={form.designation}
-            onChange={(e)=>setForm({...form,designation:e.target.value})}>
-            <option value="">Select Designation</option>
-            <option>Director</option>
-            <option>Employee</option>
-            <option>Partner</option>
-            <option>Proprietor</option>
-            <option>Trustee</option>
-            <option>Other</option>
-          </select>
+        <input placeholder="Mobile"
+          className="input"
+          onChange={(e)=>setForm({...form,mobile:e.target.value})} />
 
-          <input type="date" className="border p-3"
-            onChange={(e)=>setForm({...form,dob:e.target.value})} />
-
-          <input placeholder="Address" className="border p-3 col-span-2"
-            onChange={(e)=>setForm({...form,address:e.target.value})} />
-
-          <input placeholder="Pincode" className="border p-3"
-            onChange={(e)=>setForm({...form,pincode:e.target.value})} />
-
-          {/* ✅ STATE */}
-          <select
-            value={form.state}
-            className="border p-3"
-            onChange={(e)=>handleStateChange(e.target.value)}
-          >
-            <option value="">Select State</option>
-            {Object.keys(statesAndCities).map((state)=>(
-              <option key={state}>{state}</option>
-            ))}
-          </select>
-
-          {/* ✅ CITY */}
-          <select
-            value={form.city}
-            className="border p-3"
-            onChange={(e)=>setForm({...form,city:e.target.value})}
-          >
-            <option value="">Select City</option>
-            {cities.map((city)=>(
-              <option key={city}>{city}</option>
-            ))}
-          </select>
-
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-3 font-semibold"
+        <select
+          className="input"
+          value={form.designation}
+          onChange={(e)=>setForm({...form,designation:e.target.value})}
         >
-          {loading ? 'Creating...' : 'Create Account'}
-        </button>
+          <option value="">Select Designation</option>
+          <option>Director</option>
+          <option>Employee</option>
+          <option>Partner</option>
+          <option>Proprietor</option>
+          <option>Trustee</option>
+          <option>Other</option>
+        </select>
 
-      </form>
-    </div>
-  )
+        <input type="date"
+          className="input"
+          onChange={(e)=>setForm({...form,dob:e.target.value})} />
+
+        <input placeholder="Address"
+          className="input md:col-span-2"
+          onChange={(e)=>setForm({...form,address:e.target.value})} />
+
+        <input placeholder="Pincode"
+          className="input"
+          onChange={(e)=>setForm({...form,pincode:e.target.value})} />
+
+        {/* STATE */}
+        <select
+          value={form.state}
+          className="input"
+          onChange={(e)=>handleStateChange(e.target.value)}
+        >
+          <option value="">Select State</option>
+          {Object.keys(statesAndCities).map((state)=>(
+            <option key={state}>{state}</option>
+          ))}
+        </select>
+
+        {/* CITY */}
+        <select
+          value={form.city}
+         className="w-full p-3 rounded-xl  text-black border border-gray-300"
+          onChange={(e)=>setForm({...form,city:e.target.value})}
+        >
+          <option value="">Select City</option>
+          {cities.map((city)=>(
+            <option key={city}>{city}</option>
+          ))}
+          <option value="Other">Other</option>
+        </select>
+
+        {/* CUSTOM CITY */}
+        {form.city === "Other" && (
+          <input
+            placeholder="Enter your city"
+            className="input md:col-span-2"
+            value={customCity}
+            onChange={(e)=>setCustomCity(e.target.value)}
+          />
+        )}
+
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-orange-400 to-pink-500 hover:opacity-90 transition shadow-lg"
+      >
+        {loading ? 'Creating...' : 'Create Account'}
+      </button>
+
+    </form>
+  </div>
+)
 }

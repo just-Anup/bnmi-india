@@ -92,44 +92,39 @@ export default function StagesSection() {
           />
         </div>
 
-        {/* CONTENT */}
-        <div>
-          <h2 className="text-5xl font-extrabold mb-4">
-            {data.aboutTitle}{' '}
-          
-          </h2>
+   {/* CONTENT */}
+<div>
+  <h2 className="text-5xl font-extrabold mb-4">
+    {data.aboutTitle}
+  </h2>
 
-          <p className="text-gray-600 mb-8">
-            {data.aboutDescription}
-          </p>
+  <p className="text-gray-600 mb-10">
+    {data.aboutDescription}
+  </p>
 
-          <div className="space-y-5">
-            {items.map((item) => (
-              <div key={item.id} className="border bg-white">
-                <button
-                  onClick={() =>
-                    setOpen(open === item.id ? null : item.id)
-                  }
-                  className="w-full flex justify-between px-6 py-5"
-                >
-                  <span className="font-bold">
-                    {item.title}
-                  </span>
-                  <span>
-                    {open === item.id ? '−' : '+'}
-                  </span>
-                </button>
+  {/* MISSION */}
+  <div className="mb-8 p-6 rounded-xl bg-gray-50 shadow-sm border-l-4 border-blue-500">
+    <h3 className="text-2xl font-bold mb-2 text-gray-800">
+      {data.missionTitle}
+    </h3>
+    <p className="text-gray-600 leading-relaxed">
+      {data.missionContent}
+    </p>
+  </div>
 
-                {open === item.id && (
-                  <div className="px-6 pb-6 text-gray-600">
-                    {item.content}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+  {/* VISION */}
+  <div className="p-6 rounded-xl bg-gray-50 shadow-sm border-l-4 border-blue-500">
+    <h3 className="text-2xl font-bold mb-2 text-gray-800">
+      {data.visionTitle}
+    </h3>
+    <p className="text-gray-600 leading-relaxed">
+      {data.visionContent}
+    </p>
+  </div>
+</div>
+
         </div>
-      </div>
+  
     </section>
   )
 }

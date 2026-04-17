@@ -37,7 +37,7 @@ export default function StatsSection() {
         className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-14 text-center"
       >
         <div>
-          <CounterGSAP end={300} />
+          <CounterGSAP end={7687} />
           <p className="mt-3 text-lg font-semibold">Total Institude</p>
         </div>
 
@@ -47,12 +47,12 @@ export default function StatsSection() {
         </div>
 
         <div>
-          <CounterGSAP end={7153} />
+          <CounterGSAP end={151053} />
           <p className="mt-3 text-lg font-semibold">Total Student</p>
         </div>
 
         <div>
-          <CounterGSAP end={528} />
+          <CounterGSAP end={19728} />
           <p className="mt-3 text-lg font-semibold"> Reviews</p>
         </div>
       </div>

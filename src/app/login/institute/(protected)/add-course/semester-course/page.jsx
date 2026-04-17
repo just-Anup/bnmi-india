@@ -56,6 +56,7 @@ export default function SemesterCourseList() {
     <th className="p-4 text-left">Duration</th>
     <th className="p-4 text-left">Sem</th>
         <th className="p-4 text-left">Exam Fees</th> 
+        <th className="p-4 text-left">Action</th>
   </tr>
 </thead>
 
@@ -69,6 +70,14 @@ export default function SemesterCourseList() {
       <td className="p-4">{c.totalSemesters}</td>
       <td className="p-4 text-green-400 font-semibold">
   ₹{c.examFees}
+</td>
+<td className="p-4">
+  <Link
+    href={`/login/institute/add-course/semester-course/${c.courseCode}`}
+    className="bg-orange-500 px-3 py-1 rounded text-black"
+  >
+    Add Semester
+  </Link>
 </td>
     </tr>
   ))}

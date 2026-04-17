@@ -95,6 +95,12 @@ export default function CertificatePage() {
           photoId: student.photoId,
           marks: student.totalMarks,
           grade: student.grade,
+
+          // ✅ ADD THESE (VERY IMPORTANT)
+  marksArray: student.marksArray,
+  semesterNumber: student.semesterNumber,
+  courseType: student.courseType,
+  
           certificateNo: "BNMI-" + Date.now(),
           status: "pending",
           createdAt: new Date().toISOString()
@@ -174,12 +180,12 @@ export default function CertificatePage() {
 
                             try {
 
-                                const marks = JSON.parse(r.marks);
+                                const marks = JSON.parse(r.marksArray || "[]");
 
-                                marks.forEach(m => {
-                                    objective += Number(m.theory || 0);
-                                    practical += Number(m.practical || 0);
-                                });
+                              marks.forEach(m => {
+    objective += Number(m.objective || 0);
+    practical += Number(m.practical || 0);
+});
 
                             } catch { }
 

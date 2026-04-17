@@ -53,80 +53,56 @@ console.log("NAVBAR DATA:", res)
     >
       {/* ---------------- TOP INFO BAR ---------------- */}
       <div
-        className={`bg-black text-white text-sm transition-all duration-300
-        ${scrolled ? 'opacity-100 py-2' : 'opacity-0 h-0 overflow-hidden'}`}
-      >
-        <div className="flex justify-between px-16">
-          <span>
-            {navbarData?.topBarText ||
-              'Welcome To Bharat National Multimedia Institute'}
-          </span>
+  className={`bg-gradient-to-r from-[#0f4c75] via-[#0a6fa5] to-[#19b9f1]
+  h-[95px] flex items-center px-16 relative
+  transition-all duration-500 ease-in-out
+  ${scrolled ? 'w-full shadow-lg' : 'w-[60%]'}`}
+>
+  {/* ---------------- LOGO FROM CMS ---------------- */}
+  {navbarData?.logoUrl ? (
+    <img
+      src={navbarData.logoUrl}
+      alt="Website Logo"
+      className="h-16 object-contain transition-all duration-300"
+    />
+  ) : (
+    <div className="text-white font-bold text-2xl">
+      {navbarData?.siteName || 'LOGO'}
+    </div>
+  )}
 
-          <div className="flex gap-8">
-            <span>
-              {navbarData?.dateText || 'MON - SAT 10AM - 6PM'}
-            </span>
+  {/* ---------------- STATIC MENU ---------------- */}
+  <nav className="ml-auto hidden lg:flex gap-10 text-white font-semibold tracking-wide">
 
-            <span>
-              CALL ANYTIME : {navbarData?.phone || '000 888 0000'}
-            </span>
-          </div>
-        </div>
-      </div>
+    <Link href="/" className="hover:text-gray-200 transition">HOME</Link>
+    <Link href="/about" className="hover:text-gray-200 transition">ABOUT US</Link>
+    <Link href="/courses" className="hover:text-gray-200 transition">COURSES</Link>
+    <Link href="/certificate-demo" className="hover:text-gray-200 transition">CERTIFICATION</Link>
+    <Link href="/verify/verification" className="hover:text-gray-200 transition">VERIFICATION</Link>
 
-      {/* ---------------- NAVBAR ---------------- */}
-      <div className="relative w-full flex">
-        <div
-          className={`bg-[#19b9f1] h-[90px] flex items-center px-16 relative
-          transition-all duration-500 ease-in-out
-          ${scrolled ? 'w-full' : 'w-[60%]'}`}
-        >
-          {/* ---------------- LOGO FROM CMS ---------------- */}
-          {navbarData?.logoUrl ? (
-            <img
-              src={navbarData.logoUrl}
-              alt="Website Logo"
-              className="h-12 object-contain"
-            />
-          ) : (
-            <div className="text-white font-bold text-xl">
-              {navbarData?.siteName || 'LOGO'}
-            </div>
-          )}
+  </nav>
 
-          {/* ---------------- STATIC MENU ---------------- */}
-      <nav className="ml-auto hidden lg:flex gap-10 text-white font-semibold">
+  {/* ---------------- CTA BUTTONS ---------------- */}
+  <div
+    className={`absolute top-1/2 -translate-y-1/2 flex gap-4
+    transition-all duration-500
+    ${scrolled ? 'right-250' : '-right-[520px]'}`}
+  >
+    <Link href="/contact">
+      <CTAButton text="CONTACT NOW" />
+    </Link>
+    <Link href="/franchise/signup">
+      <CTAButton text="FRANCHISE FORM" />
+    </Link>
+    <Link href="/login/institute">
+      <CTAButton text="LOGIN" />
+    </Link>
+  </div>
+</div>
 
-  <Link href="/">HOME</Link>
-  <Link href="/about">ABOUT US</Link>
-  <Link href="/courses">COURSES</Link>
-  <Link href="/certificate-demo">CERTIFICATION</Link>
-  <Link href="/verify/verification">VERIFICATION</Link>
-
-</nav>
-
-          {/* ---------------- CTA BUTTONS ---------------- */}
-          <div
-            className={`absolute top-1/2 -translate-y-1/2 flex gap-4
-            transition-all duration-500
-            ${scrolled ? 'right-250' : '-right-[520px]'}`}
-          >
-            <Link href="/contact">
-            <CTAButton text="CONTACT NOW" />
-</Link>
-            <Link href="/franchise/signup">
-              <CTAButton text="FRANCHISE FORM" />
-            </Link>
-            <Link href="/login/institute">
-              <CTAButton text="LOGIN" />
-            </Link>
-
-
-          </div>
-        </div>
 
         {!scrolled && <div className="w-[40%]" />}
-      </div>
+   
     </header>
   )
 }

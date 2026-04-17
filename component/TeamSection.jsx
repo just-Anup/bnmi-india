@@ -53,7 +53,7 @@ export default function TeamSlider() {
         </h2>
 
         <p className="text-gray-400 max-w-2xl mx-auto mb-16">
-          We are committed to providing our customers with exceptional service.
+         OUR TEAM
         </p>
 
         <div className="overflow-hidden">

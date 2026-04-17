@@ -17,6 +17,7 @@ export default function ListSingleCourses() {
   const [courseFees, setCourseFees] = useState('')
   const [minimumFees, setMinimumFees] = useState('')
   const [subject, setSubject] = useState('')
+   const [search, setSearch] = useState('')
 
   const fetchCourses = async () => {
 
@@ -156,6 +157,15 @@ const handleInput = (e) => {
           Course List
         </h2>
 
+          {/* ✅ SEARCH BAR */}
+        <input
+          type="text"
+          placeholder="Search Course..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4 p-2 w-full bg-black border border-gray-700 rounded"
+        />
+
         <table className="w-full border border-gray-800">
 
           <thead className="bg-orange-500 text-black">
@@ -175,7 +185,11 @@ const handleInput = (e) => {
 
           <tbody>
 
-            {courses.map((course, index) => (
+              {courses
+              .filter(course =>
+                course.courseName.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((course, index) => (
 
               <tr key={course.$id} className="hover:bg-[#1a1a1a]">
 
@@ -195,26 +209,30 @@ const handleInput = (e) => {
 
                 <td className="border border-gray-800 p-2 space-x-2">
 
-                  <button
-                    onClick={() => openEdit(course)}
-                    className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
+ <div className="flex flex-wrap gap-2">
 
-                  <button
-                    onClick={() => setSelectedCourse(course)}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
-                  >
-                    Add Subject
-                  </button>
+    <button
+      onClick={() => openEdit(course)}
+      className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-sm font-medium"
+    >
+      Edit
+    </button>
 
-                  <button
-                    onClick={() => deleteCourse(course.$id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
+    <button
+      onClick={() => setSelectedCourse(course)}
+      className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium"
+    >
+      Add Subject
+    </button>
+
+    <button
+      onClick={() => deleteCourse(course.$id)}
+      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium"
+    >
+      Delete
+    </button>
+
+  </div>
 
                 </td>
 
