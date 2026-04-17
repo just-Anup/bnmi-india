@@ -49,11 +49,29 @@ export default function CourseCMS() {
     }
 
     const handleCategoryChange = (e) => {
-        setCategoryForm({
-            ...categoryForm,
-            [e.target.name]: e.target.value
-        })
-    }
+
+  const { name, value } = e.target
+
+  if (name === "name") {
+
+    const slug = value
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, "")   // remove special chars
+      .replace(/\s+/g, "-")         // space → dash
+
+    setCategoryForm({
+      ...categoryForm,
+      name: value,
+      slug: slug
+    })
+
+  } else {
+    setCategoryForm({
+      ...categoryForm,
+      [name]: value
+    })
+  }
+}
 
     const handleCourseChange = (e) => {
         setCourseForm({
@@ -144,14 +162,23 @@ export default function CourseCMS() {
                     title: courseForm.title,
                     slug: slug,
                     description: courseForm.description,
-                    category: courseForm.category,
+                   category: courseForm.category.trim(),
                     duration: courseForm.duration,
                     fees: Number(courseForm.fees),
                     imageId: imageId,
                     createdAt: new Date().toISOString()
                 }
             )
+if (!courseForm.category) {
+  alert("Please select a category")
+  return
+}
 
+// 🔥 Prevent wrong values (like uppercase names)
+if (courseForm.category !== courseForm.category.toLowerCase()) {
+  alert("Invalid category format. Please select from dropdown.")
+  return
+}
             alert("Course Added")
 
             setCourseForm({
@@ -202,14 +229,13 @@ export default function CourseCMS() {
                         className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
 
-                    <input
-                        name="slug"
-                        value={categoryForm.slug}
-                        onChange={handleCategoryChange}
-                        placeholder="Slug (computer)"
-                        className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-
+               <input
+  name="slug"
+  value={categoryForm.slug}
+  disabled
+  placeholder="Slug auto-generated"
+  className="border rounded-lg p-3 bg-gray-100"
+/>
                     <input
                         name="subtitle"
                         value={categoryForm.subtitle}

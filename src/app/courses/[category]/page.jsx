@@ -16,23 +16,28 @@ export default function CourseCategoryPage() {
 
   const [courses, setCourses] = useState([])
 
-  useEffect(() => {
-    loadCourses()
-  }, [])
+useEffect(() => {
+  if (!category) return
 
-  const loadCourses = async () => {
+  loadCourses()
+}, [category])
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTION,
-      [
-        Query.equal("category", category)
-      ]
-    )
+const loadCourses = async () => {
 
-    setCourses(res.documents)
+  const decodedCategory = decodeURIComponent(category)
+    .toLowerCase()
+    .replaceAll(" ", "-")   // 🔥 IMPORTANT
 
-  }
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COLLECTION,
+    [
+      Query.equal("category", decodedCategory)
+    ]
+  )
+
+  setCourses(res.documents)
+}
 
   const getImage = (imageId) => {
 
@@ -45,7 +50,7 @@ export default function CourseCategoryPage() {
     <div className="max-w-7xl mx-auto px-8 py-20">
 
       <h1 className="text-4xl font-bold mb-10 capitalize">
-        {category} Courses
+       {decodeURIComponent(category).replaceAll("-", " ")} 
       </h1>
 
       <div className="grid md:grid-cols-3 gap-8">

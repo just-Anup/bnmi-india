@@ -52,7 +52,7 @@ export default function TeamSlider() {
           <span className="text-[#19b9f1]">Solutions</span>
         </h2>
 
-        <p className="text-gray-400 max-w-2xl mx-auto mb-16">
+        <p className="text-gray-400 max-w-2xl mx-auto mb-16 font-extrabold">
          OUR TEAM
         </p>
 
