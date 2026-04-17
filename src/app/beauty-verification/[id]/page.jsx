@@ -231,7 +231,7 @@ if (!courseDuration) {
       ? `Percentage : ${percentage}%`
       : "Percentage : N/A"
     : certificate?.marks
-    ? `Marks : ${certificate.marks}%`
+    ? `Marks : ${certificate.marks}`
     : "Marks : N/A"}
 </p>
 
