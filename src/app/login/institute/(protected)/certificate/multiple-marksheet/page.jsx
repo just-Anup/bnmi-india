@@ -212,12 +212,12 @@ const rect = node.getBoundingClientRect();
  const getGrade = () => {
   const percent = percentage;
 
-  if (percent >= 90) return "A+";
-  if (percent >= 80) return "A";
-  if (percent >= 70) return "B+";
-  if (percent >= 60) return "B";
-  if (percent >= 50) return "C";
-  if (percent >= 40) return "D";
+  if (percent >= 85) return "A+";
+  if (percent >= 70) return "A";
+  if (percent >= 55) return "B";
+  if (percent >= 40) return "C";
+  if (percent >= 35) return "D";
+  if (percent >= 33) return "F";
 
   return "F";
 };
@@ -355,22 +355,22 @@ if (!student) return <div className="p-10">Loading...</div>;
                 {index + 1}) {m.subject}
               </div>
               {/* MAX MARKS */}
-<div style={{ position: "absolute", top: topPosition - 10, left: 525, textAlign: "center" }}>
+<div style={{ position: "absolute", top: topPosition - 10, left: 580, textAlign: "center" }}>
   100
 </div>
 
               {/* OBJECTIVE */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 590, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 650, textAlign: "center" }}>
                 {m.objective}
               </div>
 
               {/* PRACTICAL */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 660, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 710, textAlign: "center" }}>
                 {m.practical}
               </div>
 
               {/* TOTAL */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 720, textAlign: "center" }}>
+              <div style={{ position: "absolute", top: topPosition - 10, left: 780, textAlign: "center" }}>
                 {m.total}
               </div>
 
@@ -393,8 +393,8 @@ if (!student) return <div className="p-10">Loading...</div>;
 </div>
 
 {/* GRADE */}
-<div className="absolute top-[550px] left-[780px] font-bold">
-  {getGrade()}
+<div className="absolute bottom-[289px] left-[250px] font-bold">
+  Grade: {getGrade()}
 </div>
         {/* ===============================
             SIGNATURE
@@ -403,7 +403,7 @@ if (!student) return <div className="p-10">Loading...</div>;
 
 <img
   id="sign-img"
-  src={student.franchiseSignature + "&mode=admin"} // 🔥 ADD THIS
+  src={student.franchiseSignature + "&mode=admin"} 
   crossOrigin="anonymous"
   className="absolute bottom-[90px] left-[130px] w-[100px]"
 />
