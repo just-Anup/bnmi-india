@@ -563,15 +563,17 @@ const getExpiryDate = () => {
               <div className="space-y-1 text-sm text-gray-700">
 
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {req.name}
+                  
+                   Institute: {req.instituteName}
                 </h3>
 
+                <p><b>Name</b> {req.name}</p>
                 <p><b>Email:</b> {req.email}</p>
                 <p><b>Password:</b> {req.password}</p>
                 <p><b>Mobile:</b> {req.mobile}</p>
                 <p><b>State:</b> {req.state}</p>
                 <p><b>City:</b> {req.city}</p>
-                <p><b>Institute:</b> {req.instituteName}</p>
+                <p><b>Pincode:</b> {req.pincode}</p>
                 <p><b>ATC Code:</b> {req.atcCode}</p>
 
                 {/* Stats */}
