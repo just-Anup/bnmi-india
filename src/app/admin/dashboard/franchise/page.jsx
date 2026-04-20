@@ -619,7 +619,7 @@ const getExpiryDate = () => {
                     <ActionBtn label="Fix QR" color="purple" onClick={() => fixQR(req)} />
                     <ActionBtn label="Login" color="blue" onClick={() => loginAsFranchise(req)} />
                     <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
-                    <ActionBtn label="ID Card" color="indigo" onClick={() => openIdCard(req)} />
+                    <ActionBtn label="ATC " color="indigo" onClick={() => openIdCard(req)} />
                     <ActionBtn label="Print" color="dark" onClick={() => openPrint(req)} />
                     <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
                   </div>
@@ -885,7 +885,7 @@ const getExpiryDate = () => {
 
 
       {showIdCard && selectedFranchise && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-start overflow-y-auto z-50 p-6">
 
           <div className="bg-white p-4 relative">
 
