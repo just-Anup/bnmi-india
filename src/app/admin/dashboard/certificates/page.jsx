@@ -192,6 +192,36 @@ try {
         Number(m.practical || 0),
     }));
 
+    // 🔥 FETCH ONLY SELECTED SEMESTER RESULT
+// 🔥 SAFE SEMESTER FETCH
+const sem = Number(cert.semesterNumber);
+
+if (!sem || isNaN(sem)) {
+  alert("Semester number missing. Please re-apply certificate.");
+  console.log("CERT DATA:", cert);
+  return;
+}
+
+const resultRes = await databases.listDocuments(
+  DATABASE_ID,
+  "exam_results",
+  [
+    Query.equal("studentId", cert.studentId),
+    Query.equal("semesterNumber", sem)
+  ]
+);
+
+if (!resultRes.documents.length) {
+  alert("Result not found for this semester");
+  return;
+}
+const result = resultRes.documents[0];
+
+// ✅ FINAL MARKS ARRAY
+const marksArray =
+  typeof result.marksArray === "string"
+    ? JSON.parse(result.marksArray)
+    : result.marksArray || [];
     // ===============================
     // 🔥 FINAL DATA (FIXED DOB + DURATION)
     // ===============================
@@ -221,16 +251,8 @@ try {
   instituteName: studentData.instituteName || "",
   studentId: cert.studentId,
 
-  // ✅ MARKS
-marksArray: (() => {
-  try {
-    return typeof cert.marksArray === "string"
-      ? JSON.parse(cert.marksArray)
-      : cert.marksArray || formattedMarks;
-  } catch {
-    return formattedMarks;
-  }
-})(),
+  marksArray: marksArray,
+semesterNumber: result.semesterNumber,
 
   grade: cert.grade || "",
   marksheetNo: cert.$id || "",
@@ -240,7 +262,7 @@ marksArray: (() => {
   logo: franchiseData?.logo || "",
 
   // ✅ OWNER NAME (OPTIONAL)
-  ownerName:
+  ownerName: 
     franchiseData?.ownerName ||
     franchiseData?.owner ||
     franchiseData?.name ||
@@ -344,12 +366,35 @@ await databases.updateDocument(
   }
 );
 
+
+let finalMarks = cert.marks;
+
+if (studentData.courseType === "semester") {
+
+  const allResults = await databases.listDocuments(
+    DATABASE_ID,
+    "exam_results",
+    [Query.equal("studentId", cert.studentId)]
+  );
+
+  const total = allResults.documents.reduce(
+    (sum, r) => sum + Number(r.percentage || 0),
+    0
+  );
+
+  finalMarks =
+    allResults.documents.length > 0
+      ? Math.round(total / allResults.documents.length)
+      : 0;
+}
+
+
     // ===============================
     // 🔥 FINAL DATA (UNCHANGED)
     // ===============================
     const data = {
       studentName: studentData.studentName || "",
-      marks: cert.marks,
+      marks: finalMarks,
       grade: cert.grade,
       course: studentData.courseName || "",
       duration: studentData.duration || "",

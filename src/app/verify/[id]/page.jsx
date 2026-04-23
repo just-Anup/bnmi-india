@@ -63,7 +63,7 @@ export default function VerifyPage() {
 
         {/* HEADER */}
         <h1 className="text-2xl font-bold text-black mb-2">
-          Bharat National Multimedia Institute
+         Franchise Verification Certificate
         </h1>
 
         <p className="text-green-600 font-semibold mb-4">

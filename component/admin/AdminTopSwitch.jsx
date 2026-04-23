@@ -83,6 +83,11 @@ export default function AdminSidebar() {
           label="courier-Wallet Recharge "
           href="/admin/dashboard/courier-wallet"
         />
+        <MenuItem
+          icon={<Image size={18} />}
+          label="View Installment"
+          href="/admin/dashboard/installment"
+        />
        <MenuItem
           icon={<Image size={18} />}
           label="upload Image"

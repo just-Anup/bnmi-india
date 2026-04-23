@@ -103,6 +103,7 @@ useEffect(() => {
   <NavItem href="/login/institute/manage-attendance/student-wise" label="Student Wise Report" />
 </DropdownMenu>
 
+        <NavItem href="/login/institute/installment" label="Installment" />
         <NavItem href="/login/institute/help-support" label="Help Support" />
         <NavItem href="/login/institute/marketing" label="Marketing Material" />
         <NavItem href="/login/institute/recharge-request" label="Recharge Request" />

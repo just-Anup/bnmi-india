@@ -111,12 +111,13 @@ export default function PrintCertificate() {
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
-        {student.logo && (
-          <img
-            src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[180px]"
-          />
-        )}
+            {student?.logo && (
+  <img
+    src={student.logo}
+    className="absolute top-[20px] left-[380px] w-[120px]"
+  />
+)}
+
 
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
@@ -126,7 +127,7 @@ export default function PrintCertificate() {
         </div>
 
         {/* NAME */}s
-        <div className="absolute top-[660px] left-[425px] w-[400px] text-3xl font-bold">
+        <div className="absolute top-[660px] left-[270px]  w-[400px] text-3xl font-bold text-center">
           {student.studentName}
         </div>
 

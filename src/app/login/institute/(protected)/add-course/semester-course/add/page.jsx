@@ -12,6 +12,8 @@ const router = useRouter();
   const [courseName, setCourseName] = useState("");
   const [duration, setDuration] = useState("");
   const [semesters, setSemesters] = useState([]);
+const [courseFees, setCourseFees] = useState("");
+
 
   const addSemester = () => {
     setSemesters([...semesters, { semester: semesters.length + 1, subjects: [] }]);
@@ -62,6 +64,7 @@ const saveCourse = async () => {
       duration,
       totalSemesters: semesters.length,
       examFees: examFee,
+      courseFees: Number(courseFees || 0), // 🔥 ADD THIS
       createdById: user.$id,
       createdAt: new Date().toISOString()
     }
@@ -112,6 +115,12 @@ const saveCourse = async () => {
             <input className="input" placeholder="Course Code" onChange={(e)=>setCourseCode(e.target.value)} />
             <input className="input" placeholder="Course Name" onChange={(e)=>setCourseName(e.target.value)} />
             <input className="input" placeholder="Duration" onChange={(e)=>setDuration(e.target.value)} />
+            <input
+  className="input"
+  type="number"
+  placeholder="Course Fees"
+  onChange={(e) => setCourseFees(e.target.value)}
+/>
           </div>
 
         </div>

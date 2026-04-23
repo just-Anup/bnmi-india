@@ -102,10 +102,11 @@ export default function OfflineExamList() {
                 <td className="border border-gray-800 p-3">
                   {student.studentName}
                 </td>
-
-                <td className="border border-gray-800 p-3">
-                  {student.courseName}
-                </td>
+<td className="border border-gray-800 p-3">
+  {student.courseType === "semester" && student.courseName?.length > 20
+    ? "Semester Course"
+    : student.courseName}
+</td>
 
                 <td className="border border-gray-800 p-3">
 

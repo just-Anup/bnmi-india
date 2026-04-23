@@ -206,54 +206,69 @@ export default function Dashboard() {
     }
   }
   const approveFranchise = async (req) => {
-    try {
+  try {
+    // ✅ 1. CREATE USER IN AUTH (via API)
+    const res = await fetch("/api/create-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: req.email,
+        password: req.password
+      })
+    });
 
-      // ✅ Always use LIVE DOMAIN
-      const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${req.$id}`
+    const data = await res.json();
 
-      // ✅ Generate QR
-      const qrCode = await QRCode.toDataURL(verifyUrl)
-
-    // ✅ Generate Issue Date (Today)
-  const issueDate = new Date()
-
-    const expiryDate = new Date()
-    expiryDate.setFullYear(issueDate.getFullYear() + 1) 
-
-
-await databases.createDocument(
-  DATABASE_ID,
-  'franchise_approved',
-  req.$id,
-  {
-    ...req,
-    qrCode,
-    verifyUrl,
-    wallet: req.wallet || "0.00",
-    courierWallet: req.courierWallet || "0.00",
-
-    // ✅ NEW FIELDS
-    issueDate: issueDate.toISOString(),
-    expiryDate: expiryDate.toISOString()
-  }
-)
-
-
-
-      // ✅ Delete from pending
-      await databases.deleteDocument(
-        DATABASE_ID,
-        'franchise_requests',
-        req.$id
-      )
-
-      fetchAll()
-
-    } catch (error) {
-      console.error("APPROVE ERROR:", error)
-      alert(error.message)
+    if (!data.userId) {
+      throw new Error(data.error || "User creation failed");
     }
+
+    const userId = data.userId; // ✅ NOW WE HAVE REAL USER ID
+
+    // ✅ 2. VERIFY URL
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${req.$id}`;
+
+    // ✅ 3. QR CODE
+    const qrCode = await QRCode.toDataURL(verifyUrl);
+
+    // ✅ 4. DATES
+    const issueDate = new Date();
+    const expiryDate = new Date();
+    expiryDate.setFullYear(issueDate.getFullYear() + 1);
+
+    // ✅ 5. SAVE IN DATABASE (WITH userId)
+    await databases.createDocument(
+      DATABASE_ID,
+      'franchise_approved',
+      req.$id,
+      {
+        ...req,
+        userId, // ✅ IMPORTANT
+        qrCode,
+        verifyUrl,
+        wallet: req.wallet || "0.00",
+        courierWallet: req.courierWallet || "0.00",
+        issueDate: issueDate.toISOString(),
+        expiryDate: expiryDate.toISOString()
+      }
+    );
+
+    // ✅ 6. DELETE FROM PENDING
+    await databases.deleteDocument(
+      DATABASE_ID,
+      'franchise_requests',
+      req.$id
+    );
+
+    fetchAll();
+
+  } catch (error) {
+    console.error("APPROVE ERROR:", error);
+    alert(error.message);
   }
+};
   /* ---------------- REJECT ---------------- */
 
   const rejectFranchise = async (req) => {
@@ -386,7 +401,21 @@ delete updatedData.newPlanAmount;
         editing, // make sure this is ID
         updatedData
       )
+      
+      // ✅ UPDATE AUTH PASSWORD ALSO
 
+if (editData.password && editData.userId) {
+  await fetch("/api/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userId: editData.userId,
+      newPassword: editData.password
+    })
+  });
+}
       alert("Updated successfully")
 
       setEditing(null)
@@ -400,6 +429,58 @@ delete updatedData.newPlanAmount;
 
     }
   }
+
+const fixUser = async (req) => {
+  try {
+    // ✅ 1. Create / Get user
+    const res = await fetch("/api/create-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: req.email,
+        password: req.password
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.userId) {
+      throw new Error(data.error || "User creation failed");
+    }
+
+    const userId = data.userId;
+
+    // ✅ 2. FORCE UPDATE PASSWORD IN AUTH (IMPORTANT)
+    await fetch("/api/change-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId,
+        newPassword: req.password
+      })
+    });
+
+    // ✅ 3. Save userId in DB
+    await databases.updateDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      req.$id,
+      { userId }
+    );
+
+    alert("User fixed successfully ✅");
+
+    fetchAll();
+
+  } catch (err) {
+    console.error(err);
+    alert("Fix failed: " + err.message);
+  }
+};
   /* ---------------- FILTER ---------------- */
 
   const getCurrentData = () => {
@@ -617,9 +698,10 @@ const getExpiryDate = () => {
                     )}
 
                     <ActionBtn label="Fix QR" color="purple" onClick={() => fixQR(req)} />
+                      <ActionBtn label="Fix User" color="purple" onClick={() => fixUser(req)} />
                     <ActionBtn label="Login" color="blue" onClick={() => loginAsFranchise(req)} />
                     <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
-                    <ActionBtn label="ATC " color="indigo" onClick={() => openIdCard(req)} />
+                    <ActionBtn label="ATC" color="indigo" onClick={() => openIdCard(req)} />
                     <ActionBtn label="Print" color="dark" onClick={() => openPrint(req)} />
                     <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
                   </div>

@@ -24,7 +24,8 @@ export default function AddStudent() {
   const [courses, setCourses] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
 const [semesterSubjects, setSemesterSubjects] = useState([]);
-  
+ 
+
   const [form, setForm] = useState({
     
     rollNumber: "",
@@ -70,6 +71,25 @@ const [semesterSubjects, setSemesterSubjects] = useState([]);
   const username = form.mobile || form.email
 const password = form.aadhar?.slice(-4) || "1234"
   
+ 
+useEffect(() => {
+  const fees = Number(form.courseFees) || 0;
+  const disc = Number(form.discount) || 0;
+  const received = Number(form.feesReceived) || 0;
+
+  const total = fees - disc;
+  const balance = total - received;
+
+  setForm(prev => ({
+    ...prev,
+    totalFees: total,
+    balance: balance
+  }));
+
+}, [form.courseFees, form.discount, form.feesReceived]);
+
+
+
   useEffect(() => {
     loadCourses("single");
   }, []);
@@ -130,6 +150,7 @@ try {
   const loadSemesterSubjects = async (courseCode, semester) => {
 
   try {
+
 
     const user = await account.get();
 
@@ -210,6 +231,7 @@ const handleFeesReceived = (value) => {
 
 };
 
+
  const handleCourseChange = async (e) => {
   try {
 
@@ -223,8 +245,12 @@ const handleFeesReceived = (value) => {
 if (form.courseType === "semester") {
   setForm({
     ...form,
-    courseName: course.$id,
-    subjects: ""
+        courseName: course.courseName || course.courseCode, // ✅ FIX
+            courseCode: course.courseCode,     // 🔥 IMPORTANT
+
+    subjects: "",
+    courseFees: Number(course.courseFees || 0), // ✅ AUTO
+    examFees: Number(course.examFees || 0)      // ✅ AUTO
   });
   return;
 }
@@ -931,7 +957,9 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <input
             type="number"
             value={form.courseFees}
-            onChange={(e) => calculateFees(e.target.value, form.discount)}
+            onChange={(e) =>
+  setForm({ ...form, courseFees: e.target.value })
+}
             className="border p-2 w-full"
           />
 
@@ -946,7 +974,9 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <input
             type="number"
             value={form.discount}
-            onChange={(e) => calculateFees(form.courseFees, e.target.value)}
+          onChange={(e) =>
+  setForm({ ...form, discount: e.target.value })
+}
             className="border p-2 w-full"
           />
 
@@ -975,7 +1005,9 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <input
             type="number"
             value={form.feesReceived}
-            onChange={(e) => handleFeesReceived(e.target.value)}
+           onChange={(e) =>
+  setForm({ ...form, feesReceived: e.target.value })
+}
             className="border p-2 w-full"
           />
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { databases, account } from "@/lib/appwrite";
 import { useParams, useRouter } from "next/navigation";
 import { ID } from "appwrite";
-
+import { Query } from "appwrite";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const ADMISSION_COLLECTION = "student_admissions";
 const RESULT_COLLECTION = "exam_results";
@@ -18,10 +18,23 @@ export default function ResultPage() {
   const [student, setStudent] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [marks, setMarks] = useState([]);
+  const [selectedSem, setSelectedSem] = useState(1);
+  const [totalSem, setTotalSem] = useState(1);
 
   useEffect(() => {
     if (id) loadStudent();
   }, [id]);
+
+useEffect(() => {
+  if (
+    student?.courseType === "semester" &&
+    student?.courseCode &&
+    selectedSem
+  ) {
+    loadSemesterSubjects(student.courseCode, selectedSem);
+  }
+}, [selectedSem, student]);
+
 
 const loadStudent = async () => {
   try {
@@ -35,10 +48,55 @@ const loadStudent = async () => {
     setStudent(res);
 
     // ✅ SEMESTER SUPPORT (NEW)
-    if (res.courseType === "semester") {
-      await loadSemesterSubjects(res.courseName, res.semesterNumber);
-      return; // stop old logic
+if (res.courseType === "semester") {
+
+  let courseCode = res.courseCode;
+
+  // 🔥 fallback if missing
+  if (!courseCode) {
+    const courseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "semester_courses",
+      [Query.equal("courseName", res.courseName)]
+    );
+
+    if (courseRes.documents.length > 0) {
+      courseCode = courseRes.documents[0].courseCode;
     }
+  }
+
+  if (!courseCode) {
+    alert("Course code not found");
+    return;
+  }
+
+  // ✅ FETCH COURSE DETAILS (THIS IS THE KEY FIX)
+  const courseRes = await databases.listDocuments(
+    DATABASE_ID,
+    "semester_courses",
+    [Query.equal("courseCode", courseCode)]
+  );
+
+  if (courseRes.documents.length > 0) {
+
+    const courseData = courseRes.documents[0];
+
+    // 🔥 SET TOTAL SEMESTERS
+    setTotalSem(courseData.totalSemesters || 1);
+
+  }
+
+  // ✅ STORE COURSE CODE
+  setStudent((prev) => ({
+    ...prev,
+    courseCode
+  }));
+
+  // ✅ LOAD FIRST SEMESTER
+  await loadSemesterSubjects(courseCode, 1);
+
+  return;
+}
 
     // ✅ OLD LOGIC (UNCHANGED)
     let subjectList = [];
@@ -83,18 +141,28 @@ const loadSemesterSubjects = async (courseCode, semester) => {
 
   try {
 
+    const semNumber = Number(semester);
+
+    console.log("FETCHING:", courseCode, semNumber);
+
     const res = await databases.listDocuments(
       DATABASE_ID,
       "semester_subjects",
       [
         Query.equal("courseCode", courseCode),
-        Query.equal("semesterNumber", Number(semester))
+        Query.equal("semesterNumber", semNumber)
       ]
     );
 
-    const subjectList = res.documents.map(s => s.subjectName);
+    console.log("RESULT:", res.documents);
 
-    setSubjects(subjectList);
+    if (res.documents.length === 0) {
+      alert(`No subjects found for Semester ${semNumber}`);
+    }
+
+    const subjectList = [
+  ...new Set(res.documents.map(s => s.subjectName))
+];
 
     const initialMarks = subjectList.map(sub => ({
       subject: sub,
@@ -103,10 +171,11 @@ const loadSemesterSubjects = async (courseCode, semester) => {
       total: 0
     }));
 
+    setSubjects(subjectList);
     setMarks(initialMarks);
 
   } catch (err) {
-    console.log("SEM RESULT ERROR:", err);
+    console.log("SEM ERROR:", err);
   }
 };
   const updateMarks = (index, field, value) => {
@@ -183,8 +252,9 @@ const loadSemesterSubjects = async (courseCode, semester) => {
   subjects: subjects.join(", "),
 
   // ✅ ADD THESE (IMPORTANT)
-  semesterNumber: student.semesterNumber || null,
-  courseType: student.courseType,
+ semesterNumber: Number(selectedSem),
+courseCode: student.courseCode,
+courseType: student.courseType,
 
   // ✅ KEEP THIS (already correct)
   marksArray: JSON.stringify(
@@ -320,7 +390,27 @@ if (student.courseType === "multiple") {
 
       {/* Marks Table */}
       <div className="bg-[#121212] border border-gray-800 p-6 rounded shadow">
+{student.courseType === "semester" && (
+  <div className="mb-6">
 
+    <label className="mr-3 font-semibold">
+      Select Semester:
+    </label>
+
+<select
+  value={selectedSem}
+  onChange={(e) => setSelectedSem(Number(e.target.value))}
+  className="border px-3 py-2 bg-black text-white"
+>
+  {[...Array(totalSem)].map((_, i) => (
+    <option key={i} value={i + 1}>
+      Semester {i + 1}
+    </option>
+  ))}
+</select>
+
+  </div>
+)}
         <table className="w-full border border-gray-800">
 
           <thead className="bg-orange-500 text-black">
@@ -333,7 +423,7 @@ if (student.courseType === "multiple") {
             </tr>
           </thead>
 
-          <tbody>
+          <tbody key={selectedSem}>
 
             {subjects.map((sub, index) => {
 

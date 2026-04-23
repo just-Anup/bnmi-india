@@ -13,6 +13,7 @@ export default function AdmissionList() {
 
   const [students, setStudents] = useState([]);
   const router = useRouter();
+  const [courseMap, setCourseMap] = useState({});
 
   useEffect(() => {
 
@@ -30,12 +31,39 @@ export default function AdmissionList() {
       [
         Query.equal("createdById", user.$id),
         Query.orderDesc("createdAt")
+        
       ]
     );
 
     setStudents(res.documents);
 
+loadSemesterCourseNames(res.documents);
+
   };
+const loadSemesterCourseNames = async (students) => {
+  const ids = [...new Set(
+    students
+      .filter(s => s.courseType === "semester" && s.courseName?.length > 20)
+      .map(s => s.courseName)
+  )];
+
+  const map = {};
+
+  for (const id of ids) {
+    try {
+      const course = await databases.getDocument(
+        DATABASE_ID,
+        "semester_courses",
+        id
+      );
+      map[id] = course.courseName;
+    } catch {
+      map[id] = "Unknown";
+    }
+  }
+
+  setCourseMap(map);
+};
 
   return (
 
@@ -120,9 +148,9 @@ export default function AdmissionList() {
                   {item.studentName}
                 </td>
 
-                <td className="border p-2">
-                  {item.courseName}
-                </td>
+    <td className="border p-2">
+  {item.courseName?.length > 20 ? "Semester Course" : item.courseName}
+</td>
 
                 <td className="border p-2">
                   {item.mobile}

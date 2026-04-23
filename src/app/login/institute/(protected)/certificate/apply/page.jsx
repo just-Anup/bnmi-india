@@ -60,53 +60,59 @@ export default function CertificatePage() {
 
     };
 
-  const applyCertificate = async () => {
+const applyCertificate = async () => {
   try {
-    const uniqueStudents = {};
 
-    selected.forEach(id => {
-      const student = results.find(r => r.$id === id);
-      if (student) {
-        uniqueStudents[student.studentId] = student;
-      }
-    });
+    const selectedResults = selected.map(id =>
+      results.find(r => r.$id === id)
+    );
 
-    for (const key in uniqueStudents) {
-      const student = uniqueStudents[key];
+ for (const item of selectedResults) {
 
-      const existing = await databases.listDocuments(
-        DATABASE_ID,
-        CERT_COLLECTION,
-        [Query.equal("studentId", student.studentId)]
-      );
+  const fullResult = await databases.getDocument(
+    DATABASE_ID,
+    RESULT_COLLECTION,
+    item.$id
+  );
 
-      if (existing.documents.length > 0) continue;
+  const sem = Number(fullResult.semesterNumber);
 
-      console.log("Creating certificate for:", student.studentId);
+  if (!sem) {
+    alert("Semester missing in result");
+    continue;
+  }
 
-      await databases.createDocument(
-        DATABASE_ID,
-        CERT_COLLECTION,
-        ID.unique(),
-        {
-          studentId: student.studentId,
-          studentName: student.studentName,
-          course: student.course,
-          photoId: student.photoId,
-          marks: student.totalMarks,
-          grade: student.grade,
+  const existing = await databases.listDocuments(
+    DATABASE_ID,
+    CERT_COLLECTION,
+    [
+      Query.equal("studentId", fullResult.studentId),
+      Query.equal("semesterNumber", sem)
+    ]
+  );
 
-          // ✅ ADD THESE (VERY IMPORTANT)
-  marksArray: student.marksArray,
-  semesterNumber: student.semesterNumber,
-  courseType: student.courseType,
-  
-          certificateNo: "BNMI-" + Date.now(),
-          status: "pending",
-          createdAt: new Date().toISOString()
-        }
-      );
+  if (existing.documents.length > 0) continue;
+
+  await databases.createDocument(
+    DATABASE_ID,
+    CERT_COLLECTION,
+    ID.unique(),
+    {
+      studentId: fullResult.studentId,
+      studentName: fullResult.studentName,
+      course: fullResult.course,
+      photoId: fullResult.photoId,
+      marks: fullResult.totalMarks,
+      grade: fullResult.grade,
+      semesterNumber: sem, // ✅ FIXED
+      marksArray: fullResult.marksArray,
+      courseType: fullResult.courseType,
+      certificateNo: "BNMI-" + Date.now(),
+      status: "pending",
+      createdAt: new Date().toISOString()
     }
+  );
+}
 
     alert("Certificate request sent to admin");
     setSelected([]);
@@ -116,6 +122,9 @@ export default function CertificatePage() {
     alert(err.message);
   }
 };
+
+    // 🔥 GET ALL SEMESTER RESULTS
+
    
     const getPhoto = (photoId) => {
 
@@ -225,8 +234,10 @@ export default function CertificatePage() {
                                     </td>
 
                                     <td className="border p-2">
-                                        {r.course}
-                                    </td>
+  {r.courseType === "semester" && r.course?.length > 20
+    ? "Semester Course"
+    : r.course}
+</td>
 
                                     <td className="border p-2">
                                         OFFLINE

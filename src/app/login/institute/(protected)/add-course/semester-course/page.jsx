@@ -56,6 +56,7 @@ export default function SemesterCourseList() {
     <th className="p-4 text-left">Duration</th>
     <th className="p-4 text-left">Sem</th>
         <th className="p-4 text-left">Exam Fees</th> 
+        <th className="p-4 text-left">Course Fees</th>
         <th className="p-4 text-left">Action</th>
   </tr>
 </thead>
@@ -70,6 +71,9 @@ export default function SemesterCourseList() {
       <td className="p-4">{c.totalSemesters}</td>
       <td className="p-4 text-green-400 font-semibold">
   ₹{c.examFees}
+</td>
+<td className="p-4 text-blue-400 font-semibold">
+  ₹{c.courseFees || 0}
 </td>
 <td className="p-4">
   <Link
