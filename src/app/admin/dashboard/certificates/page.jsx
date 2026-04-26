@@ -33,7 +33,9 @@ const printMarksheet = async (cert) => {
     let studentData = null;
     let franchiseData = null;
 
+    // ===============================
     // 🔹 FETCH STUDENT
+    // ===============================
     if (cert.studentId) {
       studentData = await databases.getDocument(
         DATABASE_ID,
@@ -55,7 +57,9 @@ const printMarksheet = async (cert) => {
       studentData = res.documents[0];
     }
 
+    // ===============================
     // 🔹 FETCH FRANCHISE
+    // ===============================
     const franchiseRes = await databases.listDocuments(
       DATABASE_ID,
       "franchise_approved",
@@ -67,71 +71,55 @@ const printMarksheet = async (cert) => {
     }
 
     // ===============================
-    // 🔥 FETCH COURSE DURATION (FINAL FIX)
+    // 🔥 FETCH COURSE DURATION
     // ===============================
-   let courseDuration = "";
+    let courseDuration = "";
 
-try {
+    try {
+      if (studentData.courseType === "beauty") {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "beauty_courses_single",
+          [
+            Query.equal("courseName", studentData.courseName),
+            Query.equal("franchiseEmail", studentData.franchiseEmail)
+          ]
+        );
+        if (res.documents.length > 0) {
+          courseDuration = res.documents[0].duration || "";
+        }
 
-  // 🔥 BEAUTY COURSE
-  if (studentData.courseType === "beauty") {
+      } else if (studentData.courseType === "single") {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "courses_single",
+          [
+            Query.equal("courseName", studentData.courseName),
+            Query.equal("franchiseEmail", studentData.franchiseEmail)
+          ]
+        );
+        if (res.documents.length > 0) {
+          courseDuration = res.documents[0].duration || "";
+        }
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "beauty_courses_single",
-      [
-        Query.equal("courseName", studentData.courseName),
-        Query.equal("franchiseEmail", studentData.franchiseEmail)
-      ]
-    );
-
-    if (res.documents.length > 0) {
-      courseDuration = res.documents[0].duration || "";
+      } else if (studentData.courseType === "multiple") {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "course_master_multiple",
+          [
+            Query.equal("courseName", studentData.courseName)
+          ]
+        );
+        if (res.documents.length > 0) {
+          courseDuration = res.documents[0].duration || "";
+        }
+      }
+    } catch (err) {
+      console.log("COURSE DURATION ERROR:", err);
     }
-
-  }
-
-  // 🔥 SINGLE COURSE
-  else if (studentData.courseType === "single") {
-
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "courses_single",
-      [
-        Query.equal("courseName", studentData.courseName),
-        Query.equal("franchiseEmail", studentData.franchiseEmail)
-      ]
-    );
-
-    if (res.documents.length > 0) {
-      courseDuration = res.documents[0].duration || "";
-    }
-
-  }
-
-  // 🔥 MULTIPLE COURSE
-  else if (studentData.courseType === "multiple") {
-
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "course_master_multiple",
-      [
-        Query.equal("courseName", studentData.courseName)
-      ]
-    );
-
-    if (res.documents.length > 0) {
-      courseDuration = res.documents[0].duration || "";
-    }
-
-  }
-
-} catch (err) {
-  console.log("COURSE DURATION ERROR:", err);
-}
 
     // ===============================
-    // 🔥 SUBJECT LOGIC
+    // 🔥 SUBJECT LIST
     // ===============================
     let subjectList = [];
 
@@ -153,7 +141,7 @@ try {
     }
 
     // ===============================
-    // 🔥 MARKS PARSE (OLD SUPPORT)
+    // 🔥 MARKS PARSE
     // ===============================
     let parsedMarks = [];
 
@@ -192,107 +180,107 @@ try {
         Number(m.practical || 0),
     }));
 
-    // 🔥 FETCH ONLY SELECTED SEMESTER RESULT
-// 🔥 SAFE SEMESTER FETCH
-const sem = Number(cert.semesterNumber);
-
-if (!sem || isNaN(sem)) {
-  alert("Semester number missing. Please re-apply certificate.");
-  console.log("CERT DATA:", cert);
-  return;
-}
-
-const resultRes = await databases.listDocuments(
-  DATABASE_ID,
-  "exam_results",
-  [
-    Query.equal("studentId", cert.studentId),
-    Query.equal("semesterNumber", sem)
-  ]
-);
-
-if (!resultRes.documents.length) {
-  alert("Result not found for this semester");
-  return;
-}
-const result = resultRes.documents[0];
-
-// ✅ FINAL MARKS ARRAY
-const marksArray =
-  typeof result.marksArray === "string"
-    ? JSON.parse(result.marksArray)
-    : result.marksArray || [];
     // ===============================
-    // 🔥 FINAL DATA (FIXED DOB + DURATION)
+    // 🔥 FINAL MARKS LOGIC
+    // ===============================
+    let marksArray = [];
+
+    if (studentData.courseType === "semester") {
+
+      const sem = Number(cert.semesterNumber);
+
+      if (!sem || isNaN(sem)) {
+        alert("Semester number missing. Please re-apply certificate.");
+        return;
+      }
+
+      const resultRes = await databases.listDocuments(
+        DATABASE_ID,
+        "exam_results",
+        [
+          Query.equal("studentId", cert.studentId),
+          Query.equal("semesterNumber", sem)
+        ]
+      );
+
+      if (!resultRes.documents.length) {
+        alert("Result not found for this semester");
+        return;
+      }
+
+      const result = resultRes.documents[0];
+
+      marksArray =
+        typeof result.marksArray === "string"
+          ? JSON.parse(result.marksArray)
+          : result.marksArray || [];
+
+    } else {
+      // ✅ SINGLE / BEAUTY / MULTIPLE
+      marksArray = formattedMarks;
+    }
+
+    // ===============================
+    // 🔥 FINAL DATA
     // ===============================
     const data = {
-  studentName: studentData.studentName || "",
-  fatherName: studentData.fatherName || "",
+      studentName: studentData.studentName || "",
+      fatherName: studentData.fatherName || "",
+      surname: studentData.surname || "N/A",
+      motherName: studentData.motherName || "N/A",
 
-  // ✅ FIXED (NOW ALWAYS COMES)
-  surname: studentData.surname || "N/A",
-  motherName: studentData.motherName || "N/A",
+      dob: studentData.dob
+        ? new Date(studentData.dob).toLocaleDateString("en-GB")
+        : "N/A",
 
-  // ✅ DOB FIX
-  dob: studentData.dob
-    ? new Date(studentData.dob).toLocaleDateString("en-GB")
-    : "N/A",
+      course: studentData.courseName || "",
 
-  // ✅ COURSE NAME
-  course: studentData.courseName || "",
+      coursePeriod:
+        courseDuration ||
+        studentData.duration ||
+        studentData.courseDuration ||
+        "N/A",
 
-  // ✅ 🔥 COURSE PERIOD FIX (MAIN ISSUE)
-  coursePeriod:
-    courseDuration ||
-    studentData.duration ||
-    studentData.courseDuration ||
-    "N/A",
+      instituteName: studentData.instituteName || "",
+      studentId: cert.studentId,
 
-  instituteName: studentData.instituteName || "",
-  studentId: cert.studentId,
+      marksArray: marksArray,
 
-  marksArray: marksArray,
-semesterNumber: result.semesterNumber,
+      semesterNumber:
+        studentData.courseType === "semester"
+          ? cert.semesterNumber
+          : null,
 
-  grade: cert.grade || "",
-  marksheetNo: cert.$id || "",
+      grade: cert.grade || "",
+      marksheetNo: cert.$id || "",
 
-  // ✅ SIGNATURE + LOGO
-  franchiseSignature: franchiseData?.signature || "",
-  logo: franchiseData?.logo || "",
+      franchiseSignature: franchiseData?.signature || "",
+      logo: franchiseData?.logo || "",
 
-  // ✅ OWNER NAME (OPTIONAL)
-  ownerName: 
-    franchiseData?.ownerName ||
-    franchiseData?.owner ||
-    franchiseData?.name ||
-    ""
-};
-    // ✅ SAVE TO LOCAL STORAGE
-    localStorage.setItem(
-      "marksheetStudent",
-      JSON.stringify(data)
-    );
+      ownerName:
+        franchiseData?.ownerName ||
+        franchiseData?.owner ||
+        franchiseData?.name ||
+        ""
+    };
 
-    // 🔥 OPEN MARKSHEET
+    // ===============================
+    // ✅ SAVE + OPEN
+    // ===============================
+    localStorage.setItem("marksheetStudent", JSON.stringify(data));
+
     if (studentData.courseType === "beauty") {
+      window.open("/login/institute/certificate/beauty-marksheet", "_blank");
 
-  window.open("/login/institute/certificate/beauty-marksheet", "_blank");
+    } else if (studentData.courseType === "semester") {
+      window.open("/login/institute/certificate/semester-marksheet", "_blank");
 
-} else if (studentData.courseType === "semester") {
+    } else if (studentData.courseType === "multiple") {
+      window.open("/login/institute/certificate/multiple-marksheet", "_blank");
 
-  window.open("/login/institute/certificate/semester-marksheet", "_blank");
-
-} else if (studentData.courseType === "multiple") {
-
-  window.open("/login/institute/certificate/multiple-marksheet", "_blank");
-}else {
-
-  window.open("/login/institute/certificate/marksheet", "_blank");
-
-}
-
- 
+    } else {
+      window.open("/login/institute/certificate/marksheet", "_blank");
+    }
 
   } catch (err) {
     console.error("MARKSHEET ERROR:", err);
@@ -402,7 +390,10 @@ if (studentData.courseType === "semester") {
       franchiseSignature: franchiseData?.signature || "",
       photoId: studentData.photoId || "",
       instituteName: studentData.instituteName || "",
-      semesterNumber: studentData.semesterNumber || "",
+      semesterNumber:
+  studentData.courseType === "semester"
+    ? cert.semesterNumber
+    : null,
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
        certificateNo: `CERT-${Date.now()}`, // ✅ NEW

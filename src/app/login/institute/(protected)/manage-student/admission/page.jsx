@@ -31,39 +31,39 @@ export default function AdmissionList() {
       [
         Query.equal("createdById", user.$id),
         Query.orderDesc("createdAt")
-        
+
       ]
     );
 
     setStudents(res.documents);
 
-loadSemesterCourseNames(res.documents);
+    loadSemesterCourseNames(res.documents);
 
   };
-const loadSemesterCourseNames = async (students) => {
-  const ids = [...new Set(
-    students
-      .filter(s => s.courseType === "semester" && s.courseName?.length > 20)
-      .map(s => s.courseName)
-  )];
+  const loadSemesterCourseNames = async (students) => {
+    const ids = [...new Set(
+      students
+        .filter(s => s.courseType === "semester" && s.courseName?.length > 20)
+        .map(s => s.courseName)
+    )];
 
-  const map = {};
+    const map = {};
 
-  for (const id of ids) {
-    try {
-      const course = await databases.getDocument(
-        DATABASE_ID,
-        "semester_courses",
-        id
-      );
-      map[id] = course.courseName;
-    } catch {
-      map[id] = "Unknown";
+    for (const id of ids) {
+      try {
+        const course = await databases.getDocument(
+          DATABASE_ID,
+          "semester_courses",
+          id
+        );
+        map[id] = course.courseName;
+      } catch {
+        map[id] = "Unknown";
+      }
     }
-  }
 
-  setCourseMap(map);
-};
+    setCourseMap(map);
+  };
 
   return (
 
@@ -96,8 +96,10 @@ const loadSemesterCourseNames = async (students) => {
             <th className="border p-2">Batch</th>
             <th className="border p-2">Student Name</th>
             <th className="border p-2">Course</th>
-            <th className="border p-2">Mobile</th>
-            <th className="border p-2">Action</th>
+         <th className="border p-2">Mobile</th>
+<th className="border p-2">Username</th>
+<th className="border p-2">Password</th>
+<th className="border p-2">Action</th>
 
           </tr>
 
@@ -108,7 +110,7 @@ const loadSemesterCourseNames = async (students) => {
           {students.length === 0 ? (
 
             <tr>
-              <td colSpan="8" className="text-center p-4">
+              <td colSpan="10" className="text-center p-4">
                 No Data Found
               </td>
             </tr>
@@ -148,36 +150,43 @@ const loadSemesterCourseNames = async (students) => {
                   {item.studentName}
                 </td>
 
-    <td className="border p-2">
-  {item.courseName?.length > 20 ? "Semester Course" : item.courseName}
-</td>
+                <td className="border p-2">
+                  {item.courseName?.length > 20 ? "Semester Course" : item.courseName}
+                </td>
 
                 <td className="border p-2">
                   {item.mobile}
                 </td>
+                <td className="border p-2">
+  {item.username || "-"}
+</td>
+
+<td className="border p-2">
+  {item.password || "-"}
+</td>
 
                 <td className="border p-2 space-x-2">
 
-                <button
-onClick={()=>router.push(`/login/institute/manage-student/admission/edit/${item.$id}`)}
-className="bg-blue-500 text-white px-2 py-1 rounded"
->
-Edit
-</button>
+                  <button
+                    onClick={() => router.push(`/login/institute/manage-student/admission/edit/${item.$id}`)}
+                    className="bg-blue-500 text-white px-2 py-1 rounded"
+                  >
+                    Edit
+                  </button>
 
-                 <button
-onClick={()=>router.push(`/login/institute/manage-student/admission/form/${item.$id}`)}
-className="bg-yellow-500 text-white px-2 py-1 rounded"
->
-Admission Form
-</button>
+                  <button
+                    onClick={() => router.push(`/login/institute/manage-student/admission/form/${item.$id}`)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded"
+                  >
+                    Admission Form
+                  </button>
 
-<button
-onClick={()=>router.push(`/login/institute/manage-student/admission/idcard/${item.$id}`)}
-className="bg-green-600 text-white px-2 py-1 rounded"
->
-ID Card
-</button>
+                  <button
+                    onClick={() => router.push(`/login/institute/manage-student/admission/idcard/${item.$id}`)}
+                    className="bg-green-600 text-white px-2 py-1 rounded"
+                  >
+                    ID Card
+                  </button>
 
                 </td>
 

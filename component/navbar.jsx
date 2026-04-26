@@ -47,64 +47,58 @@ console.log("NAVBAR DATA:", res)
 
   fetchNavbar()
 }, [])
-  return (
-    <header
-      className={`${scrolled ? 'fixed' : 'absolute'} top-0 left-0 w-full z-50`}
-    >
-      {/* ---------------- TOP INFO BAR ---------------- */}
-      <div
-  className={`bg-gradient-to-r from-[#0f4c75] via-[#0a6fa5] to-[#19b9f1]
-  h-[95px] flex items-center px-16 relative
-  transition-all duration-500 ease-in-out
-  ${scrolled ? 'w-full shadow-lg' : 'w-[60%]'}`}
->
-  {/* ---------------- LOGO FROM CMS ---------------- */}
-  {navbarData?.logoUrl ? (
-    <img
-      src={navbarData.logoUrl}
-      alt="Website Logo"
-      className="h-16 object-contain transition-all duration-300"
-    />
-  ) : (
-    <div className="text-white font-bold text-2xl">
-      {navbarData?.siteName || 'LOGO'}
+ return (
+  <header className="fixed top-0 left-0 w-full z-50 shadow-lg">
+    
+    <div className="bg-gradient-to-r from-[#0f4c75] via-[#0a6fa5] to-[#19b9f1] px-10 py-4">
+      
+      <div className="flex items-center justify-between">
+        
+        {/* LOGO */}
+        <div className="flex items-center gap-3">
+          {navbarData?.logoUrl ? (
+            <img
+              src={navbarData.logoUrl}
+              alt="Logo"
+              className="h-14 object-contain"
+            />
+          ) : (
+            <div className="text-white font-bold text-xl">
+              {navbarData?.siteName || 'LOGO'}
+            </div>
+          )}
+        </div>
+
+        {/* MENU */}
+        <nav className="hidden lg:flex gap-8 text-white font-semibold">
+          <Link href="/">HOME</Link>
+          <Link href="/about">ABOUT US</Link>
+          <Link href="/courses">COURSES</Link>
+          <Link href="/certificate-demo">CERTIFICATION</Link>
+          <Link href="/verify/verification">VERIFICATION</Link>
+          <Link href="/verify/verification">VERIFICATION</Link>
+        </nav>
+
+        {/* BUTTONS */}
+        <div className="flex gap-3">
+          <Link href="/contact">
+            <CTAButton text="CONTACT" />
+          </Link>
+          <Link href="/franchise/signup">
+            <CTAButton text="FRANCHISE" />
+          </Link>
+          <Link href="/login/institute">
+            <CTAButton text="LOGIN" />
+          </Link>
+          <Link href="/login/student/login">
+            <CTAButton text="STUDENT LOGIN" />
+          </Link>
+        </div>
+
+      </div>
     </div>
-  )}
-
-  {/* ---------------- STATIC MENU ---------------- */}
-  <nav className="ml-auto hidden lg:flex gap-10 text-white font-semibold tracking-wide">
-
-    <Link href="/" className="hover:text-gray-200 transition">HOME</Link>
-    <Link href="/about" className="hover:text-gray-200 transition">ABOUT US</Link>
-    <Link href="/courses" className="hover:text-gray-200 transition">COURSES</Link>
-    <Link href="/certificate-demo" className="hover:text-gray-200 transition">CERTIFICATION</Link>
-    <Link href="/verify/verification" className="hover:text-gray-200 transition">VERIFICATION</Link>
-
-  </nav>
-
-  {/* ---------------- CTA BUTTONS ---------------- */}
-  <div
-    className={`absolute top-1/2 -translate-y-1/2 flex gap-4
-    transition-all duration-500
-    ${scrolled ? 'right-250' : '-right-[520px]'}`}
-  >
-    <Link href="/contact">
-      <CTAButton text="CONTACT NOW" />
-    </Link>
-    <Link href="/franchise/signup">
-      <CTAButton text="FRANCHISE FORM" />
-    </Link>
-    <Link href="/login/institute">
-      <CTAButton text="LOGIN" />
-    </Link>
-  </div>
-</div>
-
-
-        {!scrolled && <div className="w-[40%]" />}
-   
-    </header>
-  )
+  </header>
+)
 }
 
 /* ---------------- CTA BUTTON ---------------- */

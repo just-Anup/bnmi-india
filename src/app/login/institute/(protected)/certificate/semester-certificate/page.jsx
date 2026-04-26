@@ -11,6 +11,7 @@ export default function PrintCertificate() {
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
+  const [qrCode, setQrCode] = useState("");
 
   useEffect(() => {
 
@@ -41,6 +42,23 @@ export default function PrintCertificate() {
     setIssueDate(today);
 
   }, []);
+
+ useEffect(() => {
+  const generateQR = async () => {
+    if (!student?.studentId) return;
+
+    const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId} ?sem=${student.semesterNumber || 0}`;
+
+    const qr = await QRCode.toDataURL(verifyUrl, {
+      width: 300,
+      margin: 1
+    });
+
+    setQrCode(qr);
+  };
+
+  if (student) generateQR();
+}, [student]);
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
@@ -125,6 +143,13 @@ export default function PrintCertificate() {
             <img src={photoUrl} className="w-full h-full object-cover" />
           )}
         </div>
+
+ {qrCode && (
+  <img
+    src={qrCode}
+    className="absolute top-[320px] right-[90px] w-[120px]"
+  />
+)}
 
         {/* NAME */}s
         <div className="absolute top-[660px] left-[270px]  w-[400px] text-3xl font-bold text-center">

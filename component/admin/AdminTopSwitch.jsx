@@ -73,6 +73,11 @@ export default function AdminSidebar() {
           label="Beauty Course Section"
           href="/admin/dashboard/beauty-course"
         />
+         <MenuItem
+          icon={<Image size={18} />}
+          label="Upload Question Bank"
+          href="/admin/dashboard/upload-questions"
+        />
   <MenuItem
           icon={<Image size={18} />}
           label="Wallet Recharge "

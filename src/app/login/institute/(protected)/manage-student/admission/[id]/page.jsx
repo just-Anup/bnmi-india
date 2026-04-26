@@ -407,8 +407,22 @@ if (form.courseType === "semester") {
     console.log("Signature uploaded:", signatureId)
 
     // ✅ USERNAME & PASSWORD (FIXED)
-    const username = form.rollNumber || form.studentName
-    const password = form.aadhar?.slice(-4) || "1234"
+  // ✅ USERNAME = student name
+const username = form.studentName;
+
+// ✅ PASSWORD = 8 digit numeric random
+const generatePassword = () => {
+  let pass = "";
+  const digits = "0123456789";
+
+  for (let i = 0; i < 8; i++) {
+    pass += digits[Math.floor(Math.random() * digits.length)];
+  }
+
+  return pass;
+};
+
+const password = generatePassword();
 
     // ✅ FINAL DATA
     const finalData = {

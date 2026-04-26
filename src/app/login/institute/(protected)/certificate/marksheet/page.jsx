@@ -337,9 +337,19 @@ if (marksDocs.length === 0) {
   // ✅ SINGLE + BEAUTY (UNCHANGED)
   marksArray.slice(0, 1).map((m, index) => (
     <div key={index}>
-      <div style={{ top: 570, left: 150, position: "absolute", width: 420 }}>
-        {marksArray.map((s) => s.subject).join(", ")}
-      </div>
+    <div style={{ top: 570, left: 150, position: "absolute", width: 420 }}>
+{marksArray.map((s, i) => (
+  <div
+    key={i}
+    style={{
+      display: "block",
+      marginBottom: "4px"
+    }}
+  >
+    {i + 1}. {s.subject}
+  </div>
+))}
+</div>
 
       <div className="absolute top-[570px] left-[620px] font-bold">
         {m.objective}

@@ -30,6 +30,22 @@ const [courseData, setCourseData] = useState(null);
   }, []);
 
   useEffect(() => {
+  const generateQR = async () => {
+    if (!student?.studentId) return;
+
+    const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}?sem=${student.semesterNumber || 0}`;
+
+    const qr = await QRCode.toDataURL(verifyUrl, {
+      width: 300,
+      margin: 1
+    });
+
+    setQrCode(qr);
+  };
+
+  if (student) generateQR();
+}, [student]);
+  useEffect(() => {
   const fetchCourse = async () => {
     try {
       if (!student?.courseCode) return;
@@ -95,18 +111,7 @@ setMarksArray(finalMarks);
   // ===============================
   // ✅ QR
   // ===============================
-  useEffect(() => {
-    const generateQR = async () => {
-      if (!student?.studentId) return;
-
-      const url = `https://www.bnmiindia.org/verify/${student.studentId}`;
-      const qr = await QRCode.toDataURL(url);
-      setQrCode(qr);
-    };
-
-    if (student) generateQR();
-  }, [student]);
-
+ 
   // ===============================
   // ✅ AUTO PRINT
   // ===============================
