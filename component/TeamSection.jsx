@@ -101,9 +101,13 @@ export default function TeamSlider() {
                     <h4 className="text-base md:text-lg font-bold">
                       {member.name}
                     </h4>
-                    <p className="text-[#19b9f1] text-xs md:text-sm mt-1">
-                      {member.role}
-                    </p>
+                   <p className="text-[#19b9f1] text-xs md:text-sm mt-1">
+  {member.role}
+</p>
+
+<p className="text-gray-400 text-xs mt-1">
+  {member.experience}
+</p>
                   </div>
 
                 </div>

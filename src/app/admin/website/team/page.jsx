@@ -15,6 +15,7 @@ export default function TeamCMS() {
   const [newMember, setNewMember] = useState({
     name: '',
     role: '',
+    experience: '',
     imageUrl: null,
   })
 
@@ -77,6 +78,7 @@ export default function TeamCMS() {
         {
           name: newMember.name,
           role: newMember.role,
+          experience: newMember.experience,
           imageUrl: newMember.imageUrl || null,
           order: team.length + 1,
         }
@@ -85,6 +87,7 @@ export default function TeamCMS() {
       setNewMember({
         name: '',
         role: '',
+        experience: '',
         imageUrl: null,
       })
 
@@ -118,6 +121,7 @@ export default function TeamCMS() {
         {
           name: editingMember.name,
           role: editingMember.role,
+          experience: editingMember.experience,
           imageUrl: editingMember.imageUrl,
         }
       )
@@ -154,6 +158,15 @@ export default function TeamCMS() {
           value={newMember.role}
           onChange={e =>
             setNewMember({ ...newMember, role: e.target.value })
+          }
+        />
+
+        <input
+          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="Experience (e.g. 5 Years)"
+          value={newMember.experience}
+          onChange={e =>
+            setNewMember({ ...newMember, experience: e.target.value })
           }
         />
 
@@ -218,6 +231,17 @@ export default function TeamCMS() {
                 />
 
                 <input
+                  className="border p-2 rounded w-full"
+                  value={editingMember.experience || ''}
+                  onChange={e =>
+                    setEditingMember({
+                      ...editingMember,
+                      experience: e.target.value,
+                    })
+                  }
+                />
+
+                <input
                   type="file"
                   onChange={e => uploadImage(e.target.files[0], true)}
                 />
@@ -267,6 +291,9 @@ export default function TeamCMS() {
                     </h3>
                     <p className="text-sm text-gray-500">
                       {member.role}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {member.experience}
                     </p>
                   </div>
 
