@@ -471,142 +471,148 @@ if (studentData.courseType === "semester") {
   if (loading) return <p className="p-10">Loading...</p>;
 
  return (
-  <div className="p-10 bg-gray-100 min-h-screen">
 
-    <h1 className="text-3xl font-bold mb-8 text-gray-800">
-      Certificate Approval Panel
-    </h1>
+<div className="min-h-screen bg-gray-100 p-4 md:p-6">
 
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+    {/* HEADER */}
+    <div className="mb-6">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+        Certificate Approval Panel
+      </h1>
+      <p className="text-gray-500 text-sm">
+        Manage and approve student certificates
+      </p>
+    </div>
 
-      <table className="w-full border-collapse text-sm">
+    {/* LIST */}
+    <div className="flex flex-col gap-5">
 
-        <thead className="bg-gray-200 text-gray-700">
-          <tr>
-            <th className="p-3 border">#</th>
-            <th className="p-3 border">Photo</th>
-            <th className="p-3 border">Student</th>
-            <th className="p-3 border">Course</th>
-            <th className="p-3 border">Marks</th>
-            <th className="p-3 border">Grade</th>
-            <th className="p-3 border">Status</th>
-            <th className="p-3 border">Action</th>
-          </tr>
-        </thead>
+      {certificates.length === 0 && (
+        <div className="bg-white rounded-xl shadow p-10 text-center text-gray-500">
+          No certificates found
+        </div>
+      )}
 
-        <tbody>
+      {certificates.map((c, index) => {
 
-          {certificates.map((c, index) => {
+        const photoUrl = getPhoto(c.photoId)
 
-            const photoUrl = getPhoto(c.photoId);
+        return (
+          <div
+            key={c.$id}
+            className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 md:p-6 flex flex-col lg:flex-row justify-between gap-5"
+          >
 
-            return (
-              <tr
-                key={c.$id}
-                className="hover:bg-gray-50 transition duration-200"
-              >
+            {/* LEFT */}
+            <div className="flex-1 min-w-[250px]">
 
-                <td className="p-3 border text-center">{index + 1}</td>
+              <div className="flex items-center gap-4 mb-3">
+                <img
+                  src={photoUrl}
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border"
+                />
 
-                <td className="p-3 border text-center">
-                  <img
-                    src={photoUrl}
-                    className="w-12 h-12 rounded-full object-cover mx-auto"
-                  />
-                </td>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {c.studentName}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {c.course}
+                  </p>
+                </div>
+              </div>
 
-                <td className="p-3 border font-medium">
-                  {c.studentName}
-                </td>
+              {/* INFO */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-700">
 
-                <td className="p-3 border">
-                  {c.course}
-                </td>
+                <p><b>Marks:</b> {c.marks}</p>
+                <p><b>Grade:</b> {c.grade}</p>
 
-                <td className="p-3 border text-center">
-                  {c.marks}
-                </td>
-
-                <td className="p-3 border text-center font-semibold">
-                  {c.grade}
-                </td>
-
-                <td className="p-3 border text-center">
-
+                <p>
+                  <b>Status:</b>{" "}
                   {c.status === "pending" && (
                     <span className="text-yellow-600 font-semibold">
                       Pending
                     </span>
                   )}
-
                   {c.status === "approved" && (
                     <span className="text-green-600 font-semibold">
                       Approved
                     </span>
                   )}
-
                   {c.status === "rejected" && (
                     <span className="text-red-600 font-semibold">
                       Rejected
                     </span>
                   )}
+                </p>
 
-                </td>
+              </div>
 
-                <td className="p-3 border">
+            </div>
 
-                  <div className="flex gap-2 justify-center flex-wrap">
+            {/* RIGHT */}
+            <div className="flex flex-wrap items-center gap-3">
 
-                    {c.status === "pending" && (
-                      <>
-                        <button
-                          onClick={() => approveCertificate(c.$id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Approve
-                        </button>
+              {c.status === "pending" && (
+                <>
+                  <ActionBtn
+                    label="Approve"
+                    color="green"
+                    onClick={() => approveCertificate(c.$id)}
+                  />
 
-                        <button
-                          onClick={() => rejectCertificate(c.$id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
+                  <ActionBtn
+                    label="Reject"
+                    color="red"
+                    onClick={() => rejectCertificate(c.$id)}
+                  />
+                </>
+              )}
 
-                    {c.status === "approved" && (
-                      <>
-                        <button
-                          onClick={() => printCertificate(c)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Certificate
-                        </button>
+              {c.status === "approved" && (
+                <>
+                  <ActionBtn
+                    label="Certificate"
+                    color="blue"
+                    onClick={() => printCertificate(c)}
+                  />
 
-                        <button
-                          onClick={() => printMarksheet(c)}
-                          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs"
-                        >
-                          Marksheet
-                        </button>
-                      </>
-                    )}
+                  <ActionBtn
+                    label="Marksheet"
+                    color="purple"
+                    onClick={() => printMarksheet(c)}
+                  />
+                </>
+              )}
 
-                  </div>
+            </div>
 
-                </td>
-
-              </tr>
-            );
-          })}
-
-        </tbody>
-
-      </table>
+          </div>
+        )
+      })}
 
     </div>
 
   </div>
-);
+)
+}
+
+function ActionBtn({ label, color, onClick }) {
+
+  const colors = {
+    blue: "from-blue-500 to-cyan-500",
+    green: "from-green-500 to-emerald-500",
+    red: "from-red-500 to-pink-500",
+    purple: "from-purple-500 to-indigo-500",
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-sm font-medium text-white rounded-lg bg-gradient-to-r ${colors[color]} shadow hover:scale-105 hover:shadow-lg transition`}
+    >
+      {label}
+    </button>
+  )
 }

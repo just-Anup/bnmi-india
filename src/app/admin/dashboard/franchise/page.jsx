@@ -600,15 +600,15 @@ const getExpiryDate = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-8">
+  <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
 
         {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-6 md:mb-8">
           Franchise Dashboard
         </h1>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6">
+   <div className="flex flex-wrap gap-3 mb-6">
           <Tab label={`Pending (${pending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
           <Tab label={`Approved (${approved.length})`} active={activeTab === 'approved'} onClick={() => setActiveTab('approved')} />
           <Tab label={`Rejected (${rejected.length})`} active={activeTab === 'rejected'} onClick={() => setActiveTab('rejected')} />
@@ -637,26 +637,27 @@ const getExpiryDate = () => {
           {getCurrentData().map((req) => (
             <div
               key={req.$id}
-              className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-6 flex flex-col md:flex-row justify-between gap-6"
+            className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-4 md:p-6 flex flex-col lg:flex-row justify-between gap-4 md:gap-6"
             >
 
               {/* LEFT */}
-              <div className="space-y-1 text-sm text-gray-700">
+             <div className="flex-1 min-w-[250px] space-y-1 text-sm text-gray-700">
 
                 <h3 className="text-lg font-semibold text-gray-900">
                   
                    Institute: {req.instituteName}
                 </h3>
 
-                <p><b>Name</b> {req.name}</p>
-                <p><b>Email:</b> {req.email}</p>
-                <p><b>Password:</b> {req.password}</p>
-                <p><b>Mobile:</b> {req.mobile}</p>
-                <p><b>State:</b> {req.state}</p>
-                <p><b>City:</b> {req.city}</p>
-                <p><b>Pincode:</b> {req.pincode}</p>
-                <p><b>ATC Code:</b> {req.atcCode}</p>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+  <p><b>Name:</b> {req.name}</p>
+  <p><b>Email:</b> {req.email}</p>
+  <p><b>Password:</b> {req.password}</p>
+  <p><b>Mobile:</b> {req.mobile}</p>
+  <p><b>State:</b> {req.state}</p>
+  <p><b>City:</b> {req.city}</p>
+  <p><b>Pincode:</b> {req.pincode}</p>
+  <p><b>ATC Code:</b> {req.atcCode}</p>
+</div>
                 {/* Stats */}
                 <div className="flex flex-wrap gap-2 mt-2 text-xs">
                   <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
@@ -675,11 +676,11 @@ const getExpiryDate = () => {
               </div>
 
               {/* RIGHT */}
-              <div className="flex flex-col justify-center gap-3">
+            <div className="w-full lg:w-auto flex flex-wrap items-center gap-3 justify-start lg:justify-end">
 
                 {/* Pending */}
                 {activeTab === 'pending' && (
-                  <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 md:gap-3">
                     <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
                     <ActionBtn label="Approve" color="green" onClick={() => approveFranchise(req)} />
                     <ActionBtn label="Reject" color="red" onClick={() => rejectFranchise(req)} />
@@ -693,7 +694,7 @@ const getExpiryDate = () => {
                     {req.logo && (
                       <img
                         src={req.logo}
-                        className="h-16 w-16 rounded-lg object-cover border"
+                      className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover border"
                       />
                     )}
 
@@ -720,7 +721,7 @@ const getExpiryDate = () => {
       {editing && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
 
-          <div className="bg-white p-8 w-[650px] rounded-xl shadow-xl space-y-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-4 md:p-6 w-full max-w-2xl rounded-xl shadow-xl space-y-6 max-h-[90vh] overflow-y-auto">
 
             <h2 className="text-2xl font-bold text-center border-b pb-3">
               Edit Franchise Details
@@ -728,7 +729,7 @@ const getExpiryDate = () => {
 
             {/* -------- BASIC DETAILS -------- */}
 
-            <div className="grid grid-cols-2 gap-4">
+   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <div>
                 <label className="text-sm font-medium">Name</label>
@@ -877,7 +878,7 @@ const getExpiryDate = () => {
                 Upload Documents
               </h3>
 
-              <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                 <div>
                   <label className="text-sm">Owner Photo</label>
@@ -969,7 +970,7 @@ const getExpiryDate = () => {
       {showIdCard && selectedFranchise && (
       <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-start overflow-y-auto z-50 p-6">
 
-          <div className="bg-white p-4 relative">
+          <div className="bg-white p-4 md:p-6 relative max-w-full overflow-auto">
 
             <button
               onClick={() => setShowIdCard(false)}

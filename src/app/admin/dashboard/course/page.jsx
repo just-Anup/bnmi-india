@@ -271,220 +271,132 @@ export default function CourseCMS() {
   const getImage = (imageId) => {
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${imageId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
   }
+return (
+  <div className="min-h-screen bg-gray-100 p-4 md:p-6 space-y-6">
 
-  return (
-
-    <div className="p-10 space-y-12 bg-gray-50 min-h-screen">
-
-      <h1 className="text-3xl font-bold text-gray-800">
+    {/* HEADER */}
+    <div>
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
         Course CMS Panel
       </h1>
+      <p className="text-gray-500 text-sm">
+        Manage categories and courses easily
+      </p>
+    </div>
 
-      {/* CATEGORY SECTION */}
+    {/* CATEGORY */}
+    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
 
-      <div className="bg-white p-8 rounded-xl shadow-lg">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800">
+        Add Category
+      </h2>
 
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <input name="name" value={categoryForm.name} onChange={handleCategoryChange} placeholder="Category Name" className="input-clean"/>
+
+        <input name="slug" value={categoryForm.slug} disabled placeholder="Slug auto-generated" className="input-clean bg-gray-100"/>
+
+        <input name="subtitle" value={categoryForm.subtitle} onChange={handleCategoryChange} placeholder="Subtitle" className="input-clean"/>
+
+        <input type="file" onChange={(e)=>setCatImage(e.target.files[0])} className="input-clean"/>
+
+        <button onClick={addCategory} className="btn-primary col-span-full">
           Add Category
-        </h2>
-
-        <div className="grid grid-cols-2 gap-5">
-
-          <input
-            name="name"
-            value={categoryForm.name}
-            onChange={handleCategoryChange}
-            placeholder="Category Name"
-            className="border rounded-lg p-3"
-          />
-
-          <input
-            name="slug"
-            value={categoryForm.slug}
-            disabled
-            placeholder="Slug auto-generated"
-            className="border rounded-lg p-3 bg-gray-100"
-          />
-
-          <input
-            name="subtitle"
-            value={categoryForm.subtitle}
-            onChange={handleCategoryChange}
-            placeholder="Subtitle"
-            className="border rounded-lg p-3"
-          />
-
-          <input
-            type="file"
-            onChange={(e) => setCatImage(e.target.files[0])}
-            className="border rounded-lg p-3"
-          />
-
-          <button
-            onClick={addCategory}
-            className="col-span-2 bg-blue-600 text-white py-3 rounded-lg"
-          >
-            Add Category
-          </button>
-
-        </div>
+        </button>
 
       </div>
+    </div>
 
-      {/* COURSE SECTION */}
+    {/* COURSE */}
+    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
 
-      <div className="bg-white p-8 rounded-xl shadow-lg">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800">
+        {editingCourseId ? "Edit Course" : "Add Course"}
+      </h2>
 
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
-          {editingCourseId ? "Edit Course" : "Add Course"}
-        </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <div className="grid grid-cols-2 gap-5">
+        <input name="title" value={courseForm.title} onChange={handleCourseChange} placeholder="Course Title" className="input-clean"/>
 
-          <input
-            name="title"
-            value={courseForm.title}
-            onChange={handleCourseChange}
-            placeholder="Course Title"
-            className="border rounded-lg p-3"
-          />
+        <select name="category" value={courseForm.category} onChange={handleCourseChange} className="input-clean">
+          <option value="">Select Category</option>
+          {categories.map(cat => (
+            <option key={cat.$id} value={cat.slug}>{cat.name}</option>
+          ))}
+        </select>
 
-          <select
-            name="category"
-            value={courseForm.category}
-            onChange={handleCourseChange}
-            className="border rounded-lg p-3"
-          >
-            <option value="">Select Category</option>
+        <input name="duration" value={courseForm.duration} onChange={handleCourseChange} placeholder="Course Duration" className="input-clean"/>
 
-            {categories.map(cat => (
-              <option key={cat.$id} value={cat.slug}>
-                {cat.name}
-              </option>
-            ))}
+        <input name="Rating" value={courseForm.fees} onChange={handleCourseChange} placeholder="Course Rating (out of 5)" className="input-clean"/>
 
-          </select>
+        <input type="file" onChange={(e)=>setCourseImage(e.target.files[0])} className="input-clean"/>
 
-          <input
-            name="duration"
-            value={courseForm.duration}
-            onChange={handleCourseChange}
-            placeholder="Course Duration"
-            className="border rounded-lg p-3"
-          />
+        <textarea name="description" value={courseForm.description} onChange={handleCourseChange} placeholder="Course Description" className="input-clean col-span-full h-28"/>
 
-          <input
-            name="Rating"
-            value={courseForm.fees}
-            onChange={handleCourseChange}
-            placeholder="Course Rating (out of 5)"
-            className="border rounded-lg p-3"
-          />
+        <button onClick={saveCourse} className="btn-success col-span-full">
+          {editingCourseId ? "Update Course" : "Add Course"}
+        </button>
 
-          <input
-            type="file"
-            onChange={(e) => setCourseImage(e.target.files[0])}
-            className="border rounded-lg p-3"
-          />
-
-          <textarea
-            name="description"
-            value={courseForm.description}
-            onChange={handleCourseChange}
-            placeholder="Course Description"
-            className="border rounded-lg p-3 col-span-2 h-32"
-          />
-
-          <button
-            onClick={saveCourse}
-            className="col-span-2 bg-green-600 text-white py-3 rounded-lg"
-          >
-            {editingCourseId ? "Update Course" : "Add Course"}
+        {editingCourseId && (
+          <button onClick={cancelEdit} className="btn-secondary col-span-full">
+            Cancel Edit
           </button>
-
-          {editingCourseId && (
-            <button
-              onClick={cancelEdit}
-              className="col-span-2 bg-gray-500 text-white py-3 rounded-lg"
-            >
-              Cancel Edit
-            </button>
-          )}
-
-        </div>
+        )}
 
       </div>
+    </div>
 
-      {/* COURSE LIST */}
+    {/* COURSE LIST */}
+    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
 
-      <div className="bg-white p-8 rounded-xl shadow-lg">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800">
+        All Courses
+      </h2>
 
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
-          All Courses
-        </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
-        <div className="grid md:grid-cols-2 gap-6">
+        {courses.map(course => (
+          <div key={course.$id} className="border rounded-xl p-4 hover:shadow-md transition">
 
-          {courses.map(course => (
+            {course.imageId && (
+              <img
+                src={getImage(course.imageId)}
+                className="h-36 w-full object-cover rounded-lg mb-3"
+              />
+            )}
 
-            <div
-              key={course.$id}
-              className="border rounded-xl p-5 shadow-sm"
-            >
+            <h3 className="font-semibold text-gray-800">
+              {course.title}
+            </h3>
 
-              {course.imageId && (
-                <img
-                  src={getImage(course.imageId)}
-                  className="h-40 w-full object-cover rounded-lg mb-4"
-                />
-              )}
+            <p className="text-sm text-gray-500">
+              {course.category}
+            </p>
 
-              <h3 className="text-lg font-bold">
-                {course.title}
-              </h3>
+            <p className="text-sm mt-2 line-clamp-2">
+              {course.description}
+            </p>
 
-              <p className="text-sm text-gray-500 mt-1">
-                {course.category}
-              </p>
-
-              <p className="mt-2 text-sm">
-                {course.description}
-              </p>
-
-              <p className="mt-2 text-sm">
-                Duration: {course.duration}
-              </p>
-
-              <p className="text-sm">
-                Rating: {course.fees} ⭐⭐⭐⭐⭐
-              </p>
-
-              <div className="flex gap-3 mt-4">
-
-                <button
-                  onClick={() => editCourse(course)}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => deleteCourse(course.$id)}
-                  className="flex-1 bg-red-600 text-white py-2 rounded-lg"
-                >
-                  Delete
-                </button>
-
-              </div>
-
+            <div className="flex justify-between mt-3 text-sm">
+              <span>⏱ {course.duration}</span>
+              <span className="text-yellow-500 font-semibold">
+                ⭐ {course.fees}
+              </span>
             </div>
 
-          ))}
+            <div className="flex gap-2 mt-4">
+              <button onClick={()=>editCourse(course)} className="btn-primary flex-1">Edit</button>
+              <button onClick={()=>deleteCourse(course.$id)} className="btn-danger flex-1">Delete</button>
+            </div>
 
-        </div>
+          </div>
+        ))}
 
       </div>
 
     </div>
-  )
+
+  </div>
+)
 }
