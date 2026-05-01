@@ -265,7 +265,7 @@ export default function AuroraHero() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded"
+              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 text-[11px] md:text-xs rounded max-w-[140px] md:max-w-[180px]"
             >
               {name}
             </motion.div>
@@ -280,7 +280,7 @@ export default function AuroraHero() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded"
+              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 text-[11px] md:text-xs rounded max-w-[140px] md:max-w-[180px]"
             >
               {name}
             </motion.div>
