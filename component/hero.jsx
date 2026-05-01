@@ -247,7 +247,7 @@ export default function AuroraHero() {
 
       {/* RIGHT SIDE GLOBE */}
      {/* 🌍 GLOBE FIRST ON MOBILE */}
-<div className="relative w-full md:w-[45%] h-[350px] md:h-[500px] order-1 md:order-2 left-[200px]">
+<div className="relative w-full md:w-[45%] h-[350px] md:h-[500px] order-1 md:order-2 left-[60px]">
 
   <WorldCanvas states={states} setActiveState={setActiveState} />
 
