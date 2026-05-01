@@ -10,7 +10,6 @@ export default function CMSPage() {
   const [states, setStates] = useState([]);
   const [stateName, setStateName] = useState("");
   const [institutes, setInstitutes] = useState("");
-
   const [editingId, setEditingId] = useState(null);
 
   /* ================= FETCH ================= */
@@ -32,6 +31,15 @@ export default function CMSPage() {
     fetchStates();
   }, []);
 
+  /* ================= FORMAT FUNCTION ================= */
+  const formatInstitutes = (text) => {
+    return text
+      .split("\n")            // split by new line
+      .map((i) => i.trim())  // trim spaces
+      .filter((i) => i !== "") // remove empty
+      .slice(0, 20);         // max 20
+  };
+
   /* ================= ADD ================= */
   const addState = async () => {
     if (!stateName) return;
@@ -40,7 +48,7 @@ export default function CMSPage() {
       await databases.createDocument(DB, COLLECTION, ID.unique(), {
         type: "state",
         name: stateName,
-        institutes: institutes.split(",").map((i) => i.trim()),
+        institutes: formatInstitutes(institutes),
       });
 
       setStateName("");
@@ -65,14 +73,14 @@ export default function CMSPage() {
   const startEdit = (state) => {
     setEditingId(state.$id);
     setStateName(state.name);
-    setInstitutes(state.institutes.join(", "));
+    setInstitutes(state.institutes.join("\n")); // show vertical
   };
 
   const updateState = async () => {
     try {
       await databases.updateDocument(DB, COLLECTION, editingId, {
         name: stateName,
-        institutes: institutes.split(",").map((i) => i.trim()),
+        institutes: formatInstitutes(institutes),
       });
 
       setEditingId(null);
@@ -88,7 +96,7 @@ export default function CMSPage() {
     <div className="p-10 bg-black text-white min-h-screen">
       <h1 className="text-3xl mb-6">State CMS</h1>
 
-      {/* FORM */}
+      {/* ================= FORM ================= */}
       <div className="mb-6">
         <input
           placeholder="State Name"
@@ -97,31 +105,35 @@ export default function CMSPage() {
           className="p-2 bg-gray-800 mr-2"
         />
 
-        <input
-          placeholder="Institutes (comma separated)"
+        <textarea
+          placeholder="Enter one institute per line (max 20)"
           value={institutes}
           onChange={(e) => setInstitutes(e.target.value)}
-          className="p-2 bg-gray-800 w-[400px]"
+          className="p-2 bg-gray-800 w-[400px] h-[150px] mt-2 block"
         />
+
+        <p className="text-xs text-gray-500 mt-1">
+          Max 20 institutes
+        </p>
 
         {editingId ? (
           <button
             onClick={updateState}
-            className="bg-yellow-500 px-4 py-2 ml-2"
+            className="bg-yellow-500 px-4 py-2 mt-2"
           >
             Update
           </button>
         ) : (
           <button
             onClick={addState}
-            className="bg-cyan-500 px-4 py-2 ml-2"
+            className="bg-cyan-500 px-4 py-2 mt-2"
           >
             Add State
           </button>
         )}
       </div>
 
-      {/* LIST */}
+      {/* ================= LIST ================= */}
       <div className="space-y-4">
         {states.map((state) => (
           <div
@@ -150,8 +162,11 @@ export default function CMSPage() {
               </div>
             </div>
 
-            <div className="mt-2 text-sm text-gray-400">
-              {state.institutes.join(", ")}
+            {/* 🔥 Vertical Institute List */}
+            <div className="mt-2 text-sm text-gray-400 space-y-1">
+              {state.institutes.map((inst, i) => (
+                <div key={i}>• {inst}</div>
+              ))}
             </div>
           </div>
         ))}
