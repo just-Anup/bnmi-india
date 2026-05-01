@@ -9,29 +9,27 @@ const COLLECTION_ID = "team";
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function TeamSlider() {
-  const sliderRef = useRef(null);
-
   const [team, setTeam] = useState([]);
+  const [current, setCurrent] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(3);
-  const [index, setIndex] = useState(0);
 
-  const [startX, setStartX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+  const isDragging = useRef(false);
 
   /* ================= RESPONSIVE ================= */
   useEffect(() => {
-    const handleResize = () => {
+    const updateView = () => {
       if (window.innerWidth < 640) setItemsPerView(1);
       else if (window.innerWidth < 1024) setItemsPerView(2);
       else setItemsPerView(3);
     };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    updateView();
+    window.addEventListener("resize", updateView);
+    return () => window.removeEventListener("resize", updateView);
   }, []);
 
-  /* ================= FETCH ================= */
+  /* ================= FETCH CMS ================= */
   useEffect(() => {
     const fetchTeam = async () => {
       try {
@@ -40,63 +38,60 @@ export default function TeamSlider() {
           COLLECTION_ID,
           [Query.orderAsc("order")]
         );
-        setTeam(res.documents);
+        setTeam(res.documents || []);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error:", err);
       }
     };
 
     fetchTeam();
   }, []);
 
-  const safeItems = Math.min(itemsPerView, team.length || 1);
-  const maxIndex = Math.max(0, team.length - safeItems);
+  /* ================= SAFE VALUES ================= */
+  const safeTeam = Array.isArray(team) ? team : [];
+  const maxIndex = Math.max(0, safeTeam.length - itemsPerView);
 
   /* ================= NAVIGATION ================= */
   const next = () => {
-    setIndex((prev) => {
-      if (prev === maxIndex) return 0; // 🔥 strict check
-      return prev + 1;
-    });
+    setCurrent((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
   const prev = () => {
-    setIndex((prev) => {
-      if (prev === 0) return maxIndex;
-      return prev - 1;
-    });
+    setCurrent((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
-  /* ================= AUTO ================= */
+  /* ================= AUTO SLIDE ================= */
   useEffect(() => {
-    if (!team.length) return;
+    if (!safeTeam.length) return;
 
-    const timer = setInterval(() => {
-      if (!isDragging) next();
+    const interval = setInterval(() => {
+      next();
     }, 4000);
 
-    return () => clearInterval(timer);
-  }, [team, isDragging]);
+    return () => clearInterval(interval);
+  }, [safeTeam.length, itemsPerView]);
 
   /* ================= DRAG ================= */
   const handleStart = (e) => {
-    setIsDragging(true);
-    setStartX(e.touches ? e.touches[0].clientX : e.clientX);
+    isDragging.current = true;
+    startX.current = e.touches
+      ? e.touches[0].clientX
+      : e.clientX;
   };
 
   const handleEnd = (e) => {
-    if (!isDragging) return;
+    if (!isDragging.current) return;
 
     const endX = e.changedTouches
       ? e.changedTouches[0].clientX
       : e.clientX;
 
-    const diff = startX - endX;
+    const diff = startX.current - endX;
 
     if (diff > 50) next();
     else if (diff < -50) prev();
 
-    setIsDragging(false);
+    isDragging.current = false;
   };
 
   /* ================= IMAGE ================= */
@@ -113,9 +108,9 @@ export default function TeamSlider() {
       }
 
       if (typeof image === "object") {
-        const fileId = image.$id || image.fileId || image.id;
-        if (fileId) {
-          return storage.getFileView(BUCKET_ID, fileId).href;
+        const id = image.$id || image.fileId || image.id;
+        if (id) {
+          return storage.getFileView(BUCKET_ID, id).href;
         }
       }
 
@@ -125,7 +120,14 @@ export default function TeamSlider() {
     }
   };
 
-  if (!team.length) return null;
+  /* ================= UI ================= */
+  if (!safeTeam.length) {
+    return (
+      <section className="py-16 text-center text-white bg-[#1e1e1e]">
+        Loading team...
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-[#1e1e1e] text-white">
@@ -135,26 +137,25 @@ export default function TeamSlider() {
           Our <span className="text-cyan-400">Team</span>
         </h2>
 
+        {/* SLIDER */}
         <div
-          className="overflow-hidden cursor-grab active:cursor-grabbing"
+          className="overflow-hidden"
           onMouseDown={handleStart}
           onMouseUp={handleEnd}
           onTouchStart={handleStart}
           onTouchEnd={handleEnd}
         >
           <div
-            ref={sliderRef}
-            className="flex transition-transform duration-700 ease-in-out"
+            className="flex transition-transform duration-500 ease-in-out"
             style={{
-              transform: `translateX(-${index * (100 / safeItems)}%)`,
-              width: `${(team.length * 100) / safeItems}%`,
+              transform: `translateX(-${current * (100 / itemsPerView)}%)`,
             }}
           >
-            {team.map((member) => (
+            {safeTeam.map((member) => (
               <div
                 key={member.$id}
                 className="px-3"
-                style={{ width: `${100 / safeItems}%` }}
+                style={{ flex: `0 0 ${100 / itemsPerView}%` }}
               >
                 <div className="bg-black rounded-lg overflow-hidden">
                   <img
@@ -166,10 +167,28 @@ export default function TeamSlider() {
 
                 <h4 className="mt-4 font-bold">{member.name}</h4>
                 <p className="text-cyan-400 text-sm">{member.role}</p>
-                <p className="text-gray-400 text-xs">{member.experience}</p>
+                <p className="text-gray-400 text-xs">
+                  {member.experience}
+                </p>
               </div>
             ))}
           </div>
+        </div>
+
+        {/* BUTTONS */}
+        <div className="flex justify-center gap-4 mt-8">
+          <button
+            onClick={prev}
+            className="px-4 py-2 bg-gray-700 rounded"
+          >
+            ←
+          </button>
+          <button
+            onClick={next}
+            className="px-4 py-2 bg-cyan-500 rounded"
+          >
+            →
+          </button>
         </div>
 
       </div>
