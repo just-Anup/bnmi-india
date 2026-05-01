@@ -273,6 +273,7 @@ export default function AuroraHero() {
         </div>
 
         {/* RIGHT */}
+        
         <div className="absolute right-2 md:-right-20 top-1/2 -translate-y-1/2 w-40 md:w-64 space-y-2">
           {activeState.institutes.slice(half).map((name, i) => (
             <motion.div
