@@ -2,14 +2,39 @@
 
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, useGLTF } from "@react-three/drei";
+import { Stars, useGLTF, Html } from "@react-three/drei";
 import { FiArrowRight } from "react-icons/fi";
-import { motion, useMotionTemplate, useMotionValue, animate } from "framer-motion";
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  animate,
+} from "framer-motion";
 import gsap from "gsap";
-import { Html } from "@react-three/drei";
+import { databases } from "@/lib/appwrite";
 
-/* ================= COLORS ================= */
-const COLORS_TOP = ["#13FFAA", "#1E67C6", "#CE84CF", "#DD335C"];
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+const COLLECTION_ID = "website";
+
+/* ================= AUTO POSITION ================= */
+function generatePositions(states) {
+  const radius = 2.2;
+
+  return states.map((state, index) => {
+    const phi = Math.acos(-1 + (2 * index) / states.length);
+    const theta = Math.sqrt(states.length * Math.PI) * phi;
+
+    return {
+      ...state,
+      position: [
+        radius * Math.cos(theta) * Math.sin(phi),
+        radius * Math.sin(theta) * Math.sin(phi),
+        radius * Math.cos(phi),
+      ],
+      institutes: state.institutes || [],
+    };
+  });
+}
 
 /* ================= STARS ================= */
 function StarsBackground({ scrollY }) {
@@ -19,11 +44,10 @@ function StarsBackground({ scrollY }) {
     const { mouse } = state;
 
     if (ref.current) {
-      ref.current.rotation.x += (mouse.y * 0.3 - ref.current.rotation.x) * 0.05;
-      ref.current.rotation.y += (mouse.x * 0.5 - ref.current.rotation.y) * 0.05;
-
-      // scroll parallax
-      ref.current.position.y = scrollY.current * 0.02;
+      ref.current.rotation.x +=
+        (mouse.y * 0.3 - ref.current.rotation.x) * 0.05;
+      ref.current.rotation.y +=
+        (mouse.x * 0.5 - ref.current.rotation.y) * 0.05;
     }
   });
 
@@ -36,144 +60,48 @@ function StarsBackground({ scrollY }) {
 
 function StarCanvas({ scrollY }) {
   return (
-    <Canvas camera={{ position: [0, 0, 50] }} dpr={[1, 1.5]}>
+    <Canvas camera={{ position: [0, 0, 50] }}>
       <StarsBackground scrollY={scrollY} />
     </Canvas>
   );
 }
 
-const STATES = [
-  {
-    name: "Assam",
-    position: [1.2, 0.6, 1.8],
-    institutes: [
-    
-      "AM Unisex Salon",
-      "Computer Idea Institute",
-      "Multination Computer Academy",
-      "Future Tech Institute",
-      "Bright Career Academy",
-      "Smart Skill Centre",
-      "Digital Learning Hub",
-      "EduTech Assam",
-      "Global Computer Training",
-      "SkillUp Institute",
-      "Assam IT Academy",
-      "Tech Vision Institute",
-      "NextGen Learning Centre",
-      "ProSkill Institute",
-      "Career Boost Academy",
-      "Knowledge Hub Assam",
-      "Advanced Computer School",
-      "Skill Development Centre",
-      "Modern IT Institute",
-      "Professional Training Hub"
-    ]
-  },
-
-  {
-    name: "Delhi",
-    position: [0.5, 1.2, 2],
-    institutes: [
-      "OUR TOP INSTITUTES",
-      "Delhi Computer Institute",
-      "Skill India Training Center",
-      "Tech Guru Academy",
-      "Digital Delhi Institute",
-      "Smart Career Hub",
-      "Future IT Academy",
-      "Delhi Skill Centre",
-      "Advance Tech Institute",
-      "Urban Learning Hub",
-      "Computer World Delhi",
-      "Elite IT Academy",
-      "Pro Digital Institute",
-      "Skill Boost Delhi",
-      "Career Maker Institute",
-      "Bright Future Delhi",
-      "EduSmart Centre",
-      "Global Skill Academy",
-      "Tech Advance Delhi",
-      "IT Training Hub",
-      "Next Level Institute"
-    ]
-  },
-
-  {
-    name: "Mumbai",
-    position: [0.2, 0.5, 2],
-    institutes: [
-    "OUR TOP INSTITUTES",
-      "Mumbai IT Academy",
-      "Tech Skill Mumbai",
-      "Digital Training Hub",
-      "Future Vision Institute",
-      "SkillUp Mumbai",
-      "Computer Pro Academy",
-      "Smart Tech Centre",
-      "Urban Skill Institute",
-      "IT Hub Mumbai",
-      "NextGen Tech",
-      "Advance Learning Mumbai",
-      "Career IT Centre",
-      "Modern Tech Academy",
-      "Professional Skill Hub",
-      "Bright IT Institute",
-      "EduTech Mumbai",
-      "Skill Booster Mumbai",
-      "Digital Pro Institute",
-      "Tech Master Academy",
-      "Global Learning Mumbai"
-    ]
-  }
-];
-
 /* ================= WORLD MODEL ================= */
-function WorldModel({ setActiveState }) {
+function WorldModel({ states, setActiveState }) {
   const { scene } = useGLTF("/models/world.glb");
   const ref = useRef();
 
   useFrame(() => {
-    if (ref.current) {
-      ref.current.rotation.y += 0.003;
-    }
+    if (ref.current) ref.current.rotation.y += 0.003;
   });
 
   return (
     <group ref={ref}>
-      <primitive object={scene} scale={2.5} position={[0, 0, 0]} />
+      <primitive object={scene} scale={2.5} />
 
-      {/* STATES LABELS (HOVER HERE) */}
-      {STATES.map((state, i) => (
+      {states.map((state, i) => (
         <group key={i} position={state.position}>
-
-          {/* 👉 LABEL */}
           <Html distanceFactor={10}>
             <div
               onMouseEnter={() => setActiveState(state)}
               onMouseLeave={() => setActiveState(null)}
-              className={`text-xs px-2 py-1 rounded-md cursor-pointer transition ${
-                state.name === state?.name
-                  ? "bg-black/60 text-white"
-                  : "bg-black/60 text-white"
-              }`}
+              className="text-xs px-2 py-1 bg-black/60 rounded cursor-pointer hover:bg-cyan-500 transition"
             >
               {state.name}
             </div>
           </Html>
-
         </group>
       ))}
     </group>
   );
 }
 
-function WorldCanvas({ setActiveState }) {
+function WorldCanvas({ states, setActiveState }) {
   return (
-    <Canvas camera={{ position: [0, 0, 5] }} dpr={[1, 1.5]}>
+    <Canvas camera={{ position: [0, 0, 5] }}>
       <ambientLight intensity={1} />
       <Suspense fallback={null}>
-        <WorldModel setActiveState={setActiveState} />
+        <WorldModel states={states} setActiveState={setActiveState} />
       </Suspense>
     </Canvas>
   );
@@ -219,12 +147,12 @@ function TypingTextLoop() {
 
   useEffect(() => {
     const current = texts[index];
-    const speed = del ? 40 : 80;
+    const speed = del ? 40 : 60;
 
     const t = setTimeout(() => {
       if (!del) {
         setText(current.substring(0, text.length + 1));
-        if (text === current) setTimeout(() => setDel(true), 1000);
+        if (text === current) setTimeout(() => setDel(true), 1200);
       } else {
         setText(current.substring(0, text.length - 1));
         if (text === "") {
@@ -248,136 +176,126 @@ function TypingTextLoop() {
 /* ================= HERO ================= */
 export default function AuroraHero() {
   const sectionRef = useRef();
-  const scrollY = useRef(0);
-  const color = useMotionValue(COLORS_TOP[0]);
-  const [activeState, setActiveState] = useState(null);
+  const color = useMotionValue("#13FFAA");
 
-  /* Aurora animation */
+  const [activeState, setActiveState] = useState(null);
+  const [states, setStates] = useState([]);
+
+  /* FETCH FROM APPWRITE */
   useEffect(() => {
-    animate(color, COLORS_TOP, {
+    const fetchData = async () => {
+      try {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID
+        );
+
+        const statesData = res.documents.filter(
+          (d) => d.type === "state"
+        );
+
+        setStates(generatePositions(statesData));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  /* ANIMATION */
+  useEffect(() => {
+    animate(color, ["#13FFAA", "#1E67C6"], {
       duration: 10,
       repeat: Infinity,
       repeatType: "mirror",
     });
   }, []);
 
-  /* Scroll tracking */
-  useEffect(() => {
-    const handleScroll = () => {
-      scrollY.current = window.scrollY;
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  /* GSAP animation */
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(".hero-item", {
-        y: 80,
-        opacity: 0,
-        stagger: 0.2,
-        duration: 1.2,
-        ease: "power3.out",
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  /* Mouse spotlight */
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-
   return (
-    <section
-      ref={sectionRef}
-      onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+  <section className="relative min-h-screen flex items-center bg-black text-white">
+
+    {/* BG */}
+    <motion.div
       style={{
-        background: `radial-gradient(circle at ${mouse.x}px ${mouse.y}px, rgba(255,255,255,0.12), transparent 40%)`,
+        background: useMotionTemplate`
+          radial-gradient(120% 120% at 50% 0%, #020617 40%, ${color})
+        `,
       }}
-      className="relative min-h-screen flex items-center overflow-hidden bg-black text-white"
-    >
-      {/* Aurora */}
-      <motion.div
-        style={{
-          background: useMotionTemplate`
-            radial-gradient(120% 120% at 50% 0%, #020617 40%, ${color})
-          `,
-        }}
-        className="absolute inset-0 z-0"
-      />
+      className="absolute inset-0"
+    />
 
-      {/* Stars */}
-      <div className="absolute inset-0 z-0">
-        <StarCanvas scrollY={scrollY} />
+    {/* PARTICLES */}
+    <Particles />
+
+    {/* MAIN CONTENT WRAPPER */}
+   <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row items-center justify-between gap-10">
+
+      {/* LEFT SIDE TEXT */}
+      <div className="max-w-3xl">
+
+        <span className="inline-block mb-4 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-sm">
+          Now Live
+        </span>
+
+        <TypingTextLoop />
+
+        <p className="mt-6 text-gray-400 text-lg max-w-xl">
+          Manage your franchise, students, QR verification and certificates in one powerful platform.
+        </p>
       </div>
 
-      {/* Particles */}
-      <Particles />
+      {/* RIGHT SIDE GLOBE */}
+     {/* 🌍 GLOBE FIRST ON MOBILE */}
+<div className="relative w-full md:w-[45%] h-[350px] md:h-[500px] order-1 md:order-2 left-[200px]">
 
-      {/* CONTENT */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
+  <WorldCanvas states={states} setActiveState={setActiveState} />
 
-        {/* LEFT SIDE */}
-        <div className="max-w-xl">
+  {/* 📋 LIST (MOBILE + DESKTOP) */}
+  {activeState && activeState.institutes && (() => {
+    const half = Math.ceil(activeState.institutes.length / 2);
 
-          <span className="hero-item inline-block mb-4 px-3 py-1 bg-white/10 rounded-full text-sm">
-            Now Live
-          </span>
-
-          <div className="hero-item">
-            <TypingTextLoop />
-          </div>
-
-          <p className="hero-item mt-6 text-gray-400">
-            Manage your franchise, students, QR verification and certificates in one powerful platform.
-          </p>
-
-          <button className="hero-item mt-8 px-6 py-3 rounded-full border border-white/30 hover:bg-white/10 transition flex items-center gap-2">
-            Get Started <FiArrowRight />
-          </button>
+    return (
+      <>
+        {/* LEFT */}
+        <div className="absolute left-2 md:-left-30 top-1/2 -translate-y-1/2 w-40 md:w-64 space-y-2">
+          {activeState.institutes.slice(0, half).map((name, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded"
+            >
+              {name}
+            </motion.div>
+          ))}
         </div>
 
-        {/* RIGHT SIDE 3D MODEL */}
-        <div className="hidden md:block w-[40%] h-[500px]">
-          <WorldCanvas setActiveState={setActiveState} />
+        {/* RIGHT */}
+        <div className="absolute right-2 md:-right-30 top-1/2 -translate-y-1/2 w-40 md:w-64 space-y-2">
+          {activeState.institutes.slice(half).map((name, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white/10 backdrop-blur-md border border-white/20 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm rounded"
+            >
+              {name}
+            </motion.div>
+          ))}
         </div>
+      </>
+    );
+  })()}
+
+</div>
+
+
 
       </div>
 
-      {activeState && (
-  <>
-    {/* LEFT SIDE */}
-    <div className="absolute left-5 top-1/2 -translate-y-1/2 w-64 space-y-2 z-20">
-      {activeState.institutes.slice(0, 10).map((name, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.05 }}
-          className="bg-white/10 px-3 py-2 rounded-lg text-sm backdrop-blur"
-        >
-          {name}
-        </motion.div>
-      ))}
-    </div>
-
-    {/* RIGHT SIDE */}
-    <div className="absolute right-5 top-1/2 -translate-y-1/2 w-64 space-y-2 z-20">
-      {activeState.institutes.slice(10, 20).map((name, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.05 }}
-          className="bg-white/10 px-3 py-2 rounded-lg text-sm backdrop-blur"
-        >
-          {name}
-        </motion.div>
-      ))}
-    </div>
-  </>
-)}
-    </section>
-  );
+  </section>
+);
 }

@@ -92,7 +92,7 @@ export default function TeamSlider() {
                       <img
                         src={member.imageUrl}
                         alt={member.name}
-                        className="w-full h-[250px] sm:h-[300px] md:h-[360px] object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-[3000px] sm:h-[300px] md:h-[360px] object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     )}
                   </div>

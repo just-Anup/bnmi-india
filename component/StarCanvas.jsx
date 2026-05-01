@@ -11,7 +11,6 @@ function StarsBackground() {
     const { mouse } = state;
 
     if (groupRef.current) {
-      // Smooth parallax movement
       groupRef.current.rotation.x +=
         (mouse.y * 0.3 - groupRef.current.rotation.x) * 0.05;
 

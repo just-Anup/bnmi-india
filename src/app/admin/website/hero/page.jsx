@@ -1,220 +1,161 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { databases, storage } from '@/lib/appwrite'
-import { ID, Query } from 'appwrite'
+import { useState, useEffect } from "react";
+import { databases, ID } from "@/lib/appwrite";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = 'website'
-const BUCKET_ID = '6986e8a4001925504f6b'
+const DB = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+const COLLECTION = "website";
 
-export default function HeroCMSPage() {
-  const [docId, setDocId] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
+export default function CMSPage() {
+  const [states, setStates] = useState([]);
+  const [stateName, setStateName] = useState("");
+  const [institutes, setInstitutes] = useState("");
 
-  const [form, setForm] = useState({
-    heroSmallText: '',
-    heroTitle: '',
-    heroSubtitle: '',
-    heroBgImage: '',
-  })
+  const [editingId, setEditingId] = useState(null);
+
+  /* ================= FETCH ================= */
+  const fetchStates = async () => {
+    try {
+      const res = await databases.listDocuments(DB, COLLECTION);
+
+      const filtered = res.documents.filter(
+        (d) => d.type === "state"
+      );
+
+      setStates(filtered);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.limit(1)]
-        )
+    fetchStates();
+  }, []);
 
-        if (res.documents.length > 0) {
-          const doc = res.documents[0]
-          setDocId(doc.$id)
-          setForm({
-            heroSmallText: doc.heroSmallText || '',
-            heroTitle: doc.heroTitle || '',
-            heroSubtitle: doc.heroSubtitle || '',
-            heroBgImage: doc.heroBgImage || '',
-          })
-        } else {
-          const doc = await databases.createDocument(
-            DATABASE_ID,
-            COLLECTION_ID,
-            ID.unique(),
-            {
-              heroSmallText: '',
-              heroTitle: '',
-              heroSubtitle: '',
-              heroBgImage: '',
-            }
-          )
-          setDocId(doc.$id)
-        }
-      } catch (err) {
-        console.error('INIT ERROR:', err)
-        alert('Failed to load CMS')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    init()
-  }, [])
-
-  const uploadImage = async (file) => {
-    try {
-      const uploaded = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        file
-      )
-
-      const url = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-
-      setForm(prev => ({
-        ...prev,
-        heroBgImage: url,
-      }))
-
-      alert('Image uploaded ✅')
-    } catch (err) {
-      console.error(err)
-      alert('Image upload failed')
-    }
-  }
-
-  const saveHero = async () => {
-    if (!docId) return
-
-    setSaving(true)
+  /* ================= ADD ================= */
+  const addState = async () => {
+    if (!stateName) return;
 
     try {
-      await databases.updateDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        docId,
-        form
-      )
-      alert('Hero saved successfully ✅')
-    } catch (err) {
-      console.error('SAVE ERROR:', err)
-      alert('Save failed')
-    } finally {
-      setSaving(false)
-    }
-  }
+      await databases.createDocument(DB, COLLECTION, ID.unique(), {
+        type: "state",
+        name: stateName,
+        institutes: institutes.split(",").map((i) => i.trim()),
+      });
 
-  if (loading) return <p className="p-10">Loading Hero CMS…</p>
+      setStateName("");
+      setInstitutes("");
+      fetchStates();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ================= DELETE ================= */
+  const deleteState = async (id) => {
+    try {
+      await databases.deleteDocument(DB, COLLECTION, id);
+      fetchStates();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ================= EDIT ================= */
+  const startEdit = (state) => {
+    setEditingId(state.$id);
+    setStateName(state.name);
+    setInstitutes(state.institutes.join(", "));
+  };
+
+  const updateState = async () => {
+    try {
+      await databases.updateDocument(DB, COLLECTION, editingId, {
+        name: stateName,
+        institutes: institutes.split(",").map((i) => i.trim()),
+      });
+
+      setEditingId(null);
+      setStateName("");
+      setInstitutes("");
+      fetchStates();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
+    <div className="p-10 bg-black text-white min-h-screen">
+      <h1 className="text-3xl mb-6">State CMS</h1>
 
-    <div className="max-w-5xl mx-auto p-8">
+      {/* FORM */}
+      <div className="mb-6">
+        <input
+          placeholder="State Name"
+          value={stateName}
+          onChange={(e) => setStateName(e.target.value)}
+          className="p-2 bg-gray-800 mr-2"
+        />
 
-      <div className="bg-white shadow-xl rounded-xl p-8 space-y-6">
+        <input
+          placeholder="Institutes (comma separated)"
+          value={institutes}
+          onChange={(e) => setInstitutes(e.target.value)}
+          className="p-2 bg-gray-800 w-[400px]"
+        />
 
-        <h1 className="text-3xl font-bold border-b pb-4">
-          Hero Section CMS
-        </h1>
-
-        {/* Small Text */}
-
-        <div className="space-y-2">
-          <label className="font-semibold text-gray-700">
-            Small Text
-          </label>
-
-          <input
-            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Small Text"
-            value={form.heroSmallText}
-            onChange={(e) =>
-              setForm({ ...form, heroSmallText: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Hero Title */}
-
-        <div className="space-y-2">
-          <label className="font-semibold text-gray-700">
-            Hero Title
-          </label>
-
-          <input
-            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Hero Title"
-            value={form.heroTitle}
-            onChange={(e) =>
-              setForm({ ...form, heroTitle: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Subtitle */}
-
-        <div className="space-y-2">
-          <label className="font-semibold text-gray-700">
-            Hero Subtitle
-          </label>
-
-          <input
-            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Hero Subtitle"
-            value={form.heroSubtitle}
-            onChange={(e) =>
-              setForm({ ...form, heroSubtitle: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Image Upload */}
-
-        <div className="space-y-3">
-
-          <label className="font-semibold text-gray-700">
-            Upload Background Image
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            className="border rounded-lg p-3 w-full"
-            onChange={(e) => uploadImage(e.target.files?.[0])}
-          />
-
-          {uploading && (
-            <p className="text-sm text-gray-500">Uploading image…</p>
-          )}
-
-        </div>
-
-        {/* Image Preview */}
-
-        {form.heroBgImage && (
-          <div className="border rounded-lg overflow-hidden">
-            <img
-              src={form.heroBgImage}
-              className="w-full h-52 object-cover"
-            />
-          </div>
+        {editingId ? (
+          <button
+            onClick={updateState}
+            className="bg-yellow-500 px-4 py-2 ml-2"
+          >
+            Update
+          </button>
+        ) : (
+          <button
+            onClick={addState}
+            className="bg-cyan-500 px-4 py-2 ml-2"
+          >
+            Add State
+          </button>
         )}
-
-        {/* Save Button */}
-
-        <button
-          onClick={saveHero}
-          disabled={saving}
-          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-medium"
-        >
-          {saving ? 'Saving…' : 'Save Hero'}
-        </button>
-
       </div>
 
-    </div>
+      {/* LIST */}
+      <div className="space-y-4">
+        {states.map((state) => (
+          <div
+            key={state.$id}
+            className="bg-gray-900 p-4 rounded-lg"
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">
+                {state.name}
+              </h2>
 
-  )
+              <div className="flex gap-2">
+                <button
+                  onClick={() => startEdit(state)}
+                  className="bg-blue-500 px-3 py-1 text-sm"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => deleteState(state.$id)}
+                  className="bg-red-500 px-3 py-1 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-2 text-sm text-gray-400">
+              {state.institutes.join(", ")}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
