@@ -243,6 +243,6 @@ export default function AuroraHero() {
 /* PRELOAD ONLY FOR DESKTOP */
 if (typeof window !== "undefined" && window.innerWidth > 768) {
   setTimeout(() => {
-    useGLTF.preload("/models/world-final.glb");
+    useGLTF.preload("/models/world.glb");
   }, 2000);
 }
