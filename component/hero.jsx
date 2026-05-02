@@ -45,16 +45,13 @@ function generatePositions(states) {
   });
 }
 
-/* ================= WORLD MODEL ================= */
+/* ================= GLOBE ================= */
 function WorldModel({ states, setActiveState }) {
   const { scene } = useGLTF("/models/world.glb");
   const ref = useRef();
 
-  // 🔥 Smooth rotation (optimized)
   useFrame((_, delta) => {
-    if (ref.current) {
-      ref.current.rotation.y += delta * 0.4;
-    }
+    if (ref.current) ref.current.rotation.y += delta * 0.4;
   });
 
   return (
@@ -67,7 +64,7 @@ function WorldModel({ states, setActiveState }) {
             <div
               onMouseEnter={() => setActiveState(state)}
               onMouseLeave={() => setActiveState(null)}
-              className="text-xs px-2 py-1 bg-black/60 rounded cursor-pointer hover:bg-cyan-500 transition"
+              className="text-xs px-2 py-1 bg-black/60 rounded cursor-pointer hover:bg-cyan-500"
             >
               {state.name}
             </div>
@@ -78,17 +75,11 @@ function WorldModel({ states, setActiveState }) {
   );
 }
 
-/* ================= CANVAS ================= */
-function WorldCanvas({ states, setActiveState }) {
+/* ================= DESKTOP CANVAS ================= */
+function GlobeCanvas({ states, setActiveState }) {
   return (
-    <Canvas
-      camera={{ position: [0, 0, 5] }}
-      frameloop="always"   // 🔥 needed for rotation
-      dpr={[1, 1.5]}       // performance control
-    >
+    <Canvas camera={{ position: [0, 0, 5] }} dpr={[1, 1.5]}>
       <ambientLight intensity={1} />
-
-      {/* ⭐ optimized stars */}
       <Stars radius={40} count={300} factor={3} fade />
 
       <Suspense fallback={null}>
@@ -98,30 +89,62 @@ function WorldCanvas({ states, setActiveState }) {
   );
 }
 
-/* ================= LAZY LOAD ================= */
-const LazyWorld = dynamic(() => Promise.resolve(WorldCanvas), {
-  ssr: false,
-});
+function TypingTextLoop() {
+  const texts = [
+    "BNMIIS India No.1 Franchise Provider",
+    "Get QR Verification System",
+    "Student Login & Certificate Access",
+  ];
 
-/* ================= PARTICLES ================= */
-function Particles() {
+  const [index, setIndex] = useState(0);
+  const [display, setDisplay] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = texts[index];
+    let speed = isDeleting ? 40 : 70;
+
+    const timeout = setTimeout(() => {
+      setDisplay((prev) =>
+        isDeleting
+          ? current.substring(0, prev.length - 1)
+          : current.substring(0, prev.length + 1)
+      );
+
+      // when finished typing
+      if (!isDeleting && display === current) {
+        setTimeout(() => setIsDeleting(true), 1200);
+      }
+
+      // when finished deleting
+      if (isDeleting && display === "") {
+        setIsDeleting(false);
+        setIndex((prev) => (prev + 1) % texts.length);
+      }
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [display, isDeleting, index]);
+
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full opacity-60"
-          initial={{
-            x: Math.random() * 100 + "%",
-            y: Math.random() * 100 + "%",
-          }}
-          animate={{ y: ["0%", "100%"], opacity: [0, 1, 0] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-      ))}
-    </div>
+    <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent min-h-[120px]">
+      {display}
+      <span className="animate-pulse ml-1">|</span>
+    </h1>
   );
 }
+/* ================= MOBILE CANVAS ================= */
+function StarsOnlyCanvas() {
+  return (
+    <Canvas camera={{ position: [0, 0, 5] }} dpr={[1, 1]}>
+      <Stars radius={40} count={250} factor={3} fade speed={1} />
+    </Canvas>
+  );
+}
+
+/* ================= LAZY ================= */
+const LazyGlobe = dynamic(() => Promise.resolve(GlobeCanvas), { ssr: false });
+const LazyStars = dynamic(() => Promise.resolve(StarsOnlyCanvas), { ssr: false });
 
 /* ================= HERO ================= */
 export default function AuroraHero() {
@@ -131,7 +154,6 @@ export default function AuroraHero() {
   const [activeState, setActiveState] = useState(null);
   const [states, setStates] = useState([]);
 
-  /* FETCH DATA */
   useEffect(() => {
     const fetchData = async () => {
       const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
@@ -141,7 +163,6 @@ export default function AuroraHero() {
     fetchData();
   }, []);
 
-  /* BG ANIMATION */
   useEffect(() => {
     animate(color, ["#13FFAA", "#1E67C6"], {
       duration: 8,
@@ -163,8 +184,6 @@ export default function AuroraHero() {
         className="absolute inset-0"
       />
 
-      <Particles />
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row items-center justify-between gap-10">
 
         {/* LEFT */}
@@ -173,9 +192,7 @@ export default function AuroraHero() {
             Now Live
           </span>
 
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-            BNMIIS India No.1 Franchise Provider
-          </h1>
+          <TypingTextLoop />
 
           <p className="mt-6 text-gray-400 text-lg max-w-xl">
             Manage your franchise, students, QR verification and certificates in one platform.
@@ -185,19 +202,15 @@ export default function AuroraHero() {
         {/* RIGHT */}
         <div className="relative w-full md:w-[45%] h-[350px] md:h-[500px]">
 
-          {/* MOBILE FALLBACK (OPTIONAL BUT SMART) */}
+          {/* 🔥 SWITCH BASED ON DEVICE */}
           {isMobile ? (
-            <img
-              src="/globe.png"
-              alt="globe"
-              className="w-full h-full object-contain opacity-80"
-            />
+            <LazyStars />
           ) : (
-            <LazyWorld states={states} setActiveState={setActiveState} />
+            <LazyGlobe states={states} setActiveState={setActiveState} />
           )}
 
-          {/* 🔥 INSTITUTES LIST (SAME AS YOUR OLD UI) */}
-          {activeState && activeState.institutes && (() => {
+          {/* INSTITUTES UI (DESKTOP ONLY) */}
+          {!isMobile && activeState && activeState.institutes && (() => {
             const half = Math.ceil(activeState.institutes.length / 2);
 
             return (
@@ -227,7 +240,9 @@ export default function AuroraHero() {
   );
 }
 
-/* PRELOAD */
-setTimeout(() => {
-  useGLTF.preload("/models/world-final.glb");
-}, 2000);
+/* PRELOAD ONLY FOR DESKTOP */
+if (typeof window !== "undefined" && window.innerWidth > 768) {
+  setTimeout(() => {
+    useGLTF.preload("/models/world-final.glb");
+  }, 2000);
+}
