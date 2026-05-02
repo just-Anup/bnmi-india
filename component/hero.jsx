@@ -4,26 +4,88 @@ import React, { useEffect, useRef, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Stars, useGLTF, Html } from "@react-three/drei";
-import { motion, useMotionTemplate, useMotionValue, animate } from "framer-motion";
 import { databases } from "@/lib/appwrite";
+import { motion, useMotionTemplate, useMotionValue, animate } from "framer-motion";
 
 /* ================= CONFIG ================= */
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "website";
 
-/* ================= MOBILE DETECTION ================= */
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
+/* ================= TYPING ================= */
+function TypingTextLoop() {
+  const texts = [
+    "BNMIIS India No.1 Franchise Provider",
+    "Get QR Verification System",
+    "Student Login & Certificate Access",
+  ];
+
+  const [index, setIndex] = useState(0);
+  const [display, setDisplay] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const current = texts[index];
+    const speed = isDeleting ? 40 : 70;
+
+    const timer = setTimeout(() => {
+      setDisplay((prev) =>
+        isDeleting
+          ? current.substring(0, prev.length - 1)
+          : current.substring(0, prev.length + 1)
+      );
+
+      if (!isDeleting && display === current) {
+        setTimeout(() => setIsDeleting(true), 1200);
+      }
+
+      if (isDeleting && display === "") {
+        setIsDeleting(false);
+        setIndex((prev) => (prev + 1) % texts.length);
+      }
+    }, speed);
+
+    return () => clearTimeout(timer);
+  }, [display, isDeleting, index]);
+
+  return (
+    <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent min-h-[120px]">
+      {display}
+      <span className="animate-pulse ml-1">|</span>
+    </h1>
+  );
+}
+
+/* ================= PERFORMANCE DETECTION ================= */
+function usePerformanceLevel() {
+  const [level, setLevel] = useState("LOW");
+
+  useEffect(() => {
+    let frames = 0;
+    let last = performance.now();
+
+    function loop() {
+      frames++;
+      const now = performance.now();
+
+      if (now - last >= 1000) {
+        const fps = frames;
+
+        if (fps > 50) setLevel("HIGH");
+        else if (fps > 30) setLevel("MEDIUM");
+        else setLevel("LOW");
+
+        frames = 0;
+        last = now;
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
   }, []);
 
-  return isMobile;
-};
+  return level;
+}
 
 /* ================= POSITION ================= */
 function generatePositions(states) {
@@ -45,8 +107,8 @@ function generatePositions(states) {
   });
 }
 
-/* ================= GLOBE ================= */
-function WorldModel({ states, setActiveState }) {
+/* ================= WORLD ================= */
+function WorldModel({ states, setActiveState, quality }) {
   const { scene } = useGLTF("/models/world.glb");
   const ref = useRef();
 
@@ -58,133 +120,128 @@ function WorldModel({ states, setActiveState }) {
     <group ref={ref}>
       <primitive object={scene} scale={2.3} />
 
-      {states.map((state, i) => (
-        <group key={i} position={state.position}>
-          <Html distanceFactor={10}>
-            <div
-              onMouseEnter={() => setActiveState(state)}
-              onMouseLeave={() => setActiveState(null)}
-              className="text-xs px-2 py-1 bg-black/60 rounded cursor-pointer hover:bg-cyan-500"
-            >
-              {state.name}
-            </div>
-          </Html>
-        </group>
-      ))}
+      {quality !== "LOW" &&
+        states.map((state, i) => (
+          <group key={i} position={state.position}>
+            <Html distanceFactor={10}>
+              <div
+                onMouseEnter={() => setActiveState(state)}
+                onMouseLeave={() => setActiveState(null)}
+                className="text-xs px-2 py-1 bg-black/60 rounded cursor-pointer hover:bg-cyan-500 transition"
+              >
+                {state.name}
+              </div>
+            </Html>
+          </group>
+        ))}
     </group>
   );
 }
 
-/* ================= DESKTOP CANVAS ================= */
-function GlobeCanvas({ states, setActiveState }) {
+/* ================= CANVAS ================= */
+function GlobeCanvas({ states, setActiveState, quality }) {
+  const starCount = quality === "HIGH" ? 400 : 200;
+
   return (
     <Canvas camera={{ position: [0, 0, 5] }} dpr={[1, 1.5]}>
       <ambientLight intensity={1} />
-      <Stars radius={40} count={300} factor={3} fade />
+      <Stars radius={40} count={starCount} factor={3} fade />
 
-      <Suspense fallback={null}>
-        <WorldModel states={states} setActiveState={setActiveState} />
+      <Suspense
+        fallback={
+          <Html center>
+            <div className="text-white">Loading...</div>
+          </Html>
+        }
+      >
+        <WorldModel
+          states={states}
+          setActiveState={setActiveState}
+          quality={quality}
+        />
       </Suspense>
     </Canvas>
   );
 }
 
-function TypingTextLoop() {
-  const texts = [
-    "BNMIIS India No.1 Franchise Provider",
-    "Get QR Verification System",
-    "Student Login & Certificate Access",
-  ];
-
-  const [index, setIndex] = useState(0);
-  const [display, setDisplay] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = texts[index];
-    let speed = isDeleting ? 40 : 70;
-
-    const timeout = setTimeout(() => {
-      setDisplay((prev) =>
-        isDeleting
-          ? current.substring(0, prev.length - 1)
-          : current.substring(0, prev.length + 1)
-      );
-
-      // when finished typing
-      if (!isDeleting && display === current) {
-        setTimeout(() => setIsDeleting(true), 1200);
-      }
-
-      // when finished deleting
-      if (isDeleting && display === "") {
-        setIsDeleting(false);
-        setIndex((prev) => (prev + 1) % texts.length);
-      }
-    }, speed);
-
-    return () => clearTimeout(timeout);
-  }, [display, isDeleting, index]);
-
+/* ================= STARS ================= */
+function StarsOnly() {
   return (
-    <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent min-h-[120px]">
-      {display}
-      <span className="animate-pulse ml-1">|</span>
-    </h1>
-  );
-}
-/* ================= MOBILE CANVAS ================= */
-function StarsOnlyCanvas() {
-  return (
-    <Canvas camera={{ position: [0, 0, 5] }} dpr={[1, 1]}>
-      <Stars radius={40} count={250} factor={3} fade speed={1} />
+    <Canvas>
+      <Stars radius={40} count={200} factor={3} fade />
     </Canvas>
   );
 }
 
 /* ================= LAZY ================= */
-const LazyGlobe = dynamic(() => Promise.resolve(GlobeCanvas), { ssr: false });
-const LazyStars = dynamic(() => Promise.resolve(StarsOnlyCanvas), { ssr: false });
+const LazyGlobe = dynamic(() => Promise.resolve(GlobeCanvas), {
+  ssr: false,
+});
+const LazyStars = dynamic(() => Promise.resolve(StarsOnly), {
+  ssr: false,
+});
 
 /* ================= HERO ================= */
 export default function AuroraHero() {
+  const perf = usePerformanceLevel();
   const color = useMotionValue("#13FFAA");
 
-  const isMobile = useIsMobile();
-  const [activeState, setActiveState] = useState(null);
   const [states, setStates] = useState([]);
+  const [activeState, setActiveState] = useState(null);
 
+  /* FETCH DATA */
   useEffect(() => {
     const fetchData = async () => {
-      const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
-      const statesData = res.documents.filter((d) => d.type === "state");
-      setStates(generatePositions(statesData));
+      try {
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID
+        );
+        const statesData = res.documents.filter(
+          (d) => d.type === "state"
+        );
+        setStates(generatePositions(statesData));
+      } catch (err) {
+        console.error(err);
+      }
     };
+
     fetchData();
   }, []);
 
+  /* BACKGROUND ANIMATION */
   useEffect(() => {
-    animate(color, ["#13FFAA", "#1E67C6"], {
-      duration: 8,
+    animate(color, ["#13FFAA", "#1E67C6", "#9333EA"], {
+      duration: 10,
       repeat: Infinity,
       repeatType: "mirror",
     });
   }, []);
 
-  return (
-    <section className="relative min-h-screen flex items-center bg-black text-white">
+  /* SAFE PRELOAD */
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        useGLTF.preload("/models/world.glb");
+      } catch {}
+    }, 2000);
+    return () => clearTimeout(t);
+  }, []);
 
-      {/* BG */}
+  return (
+    <section className="relative min-h-screen flex items-center bg-black text-white overflow-hidden">
+
+      {/* 🔥 BACKGROUND */}
       <motion.div
         style={{
           background: useMotionTemplate`
             radial-gradient(120% 120% at 50% 0%, #020617 40%, ${color})
           `,
         }}
-        className="absolute inset-0"
+        className="absolute inset-0 z-0"
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row items-center justify-between gap-10">
+      <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-10 px-6">
 
         {/* LEFT */}
         <div className="max-w-3xl">
@@ -200,17 +257,20 @@ export default function AuroraHero() {
         </div>
 
         {/* RIGHT */}
-        <div className="relative w-full md:w-[45%] h-[350px] md:h-[500px]">
+        <div className="w-full md:w-[45%] h-[400px] relative">
 
-          {/* 🔥 SWITCH BASED ON DEVICE */}
-          {isMobile ? (
-            <LazyStars />
-          ) : (
-            <LazyGlobe states={states} setActiveState={setActiveState} />
+          {perf === "HIGH" && (
+            <LazyGlobe states={states} setActiveState={setActiveState} quality="HIGH" />
           )}
 
-          {/* INSTITUTES UI (DESKTOP ONLY) */}
-          {!isMobile && activeState && activeState.institutes && (() => {
+          {perf === "MEDIUM" && (
+            <LazyGlobe states={states} setActiveState={setActiveState} quality="MEDIUM" />
+          )}
+
+          {perf === "LOW" && <LazyStars />}
+
+          {/* INSTITUTES */}
+          {perf !== "LOW" && activeState && activeState.institutes && (() => {
             const half = Math.ceil(activeState.institutes.length / 2);
 
             return (
@@ -238,11 +298,4 @@ export default function AuroraHero() {
       </div>
     </section>
   );
-}
-
-/* PRELOAD ONLY FOR DESKTOP */
-if (typeof window !== "undefined" && window.innerWidth > 768) {
-  setTimeout(() => {
-    useGLTF.preload("/models/world.glb");
-  }, 2000);
 }
