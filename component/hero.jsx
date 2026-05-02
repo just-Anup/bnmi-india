@@ -229,5 +229,5 @@ export default function AuroraHero() {
 
 /* PRELOAD */
 setTimeout(() => {
-  useGLTF.preload("/models/world.glb");
+  useGLTF.preload("/models/world-final.glb");
 }, 2000);
