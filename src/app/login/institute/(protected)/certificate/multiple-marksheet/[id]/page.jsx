@@ -61,10 +61,7 @@ const printRef = useRef();
     }
   }, []);
 
-  useEffect(() => {
-    setTimeout(() => window.print(), 500);
-  }, []);
-
+  
 
 useEffect(() => {
   const fetchCourse = async () => {

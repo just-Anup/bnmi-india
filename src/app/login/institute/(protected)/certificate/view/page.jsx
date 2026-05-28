@@ -296,40 +296,125 @@ export default function FranchiseCertificateView() {
 
       }
 
-      // OPEN MARKSHEET
-      if (studentData.courseType === "beauty") {
 
-        window.open(
-          "/login/institute/certificate/beauty-marksheet",
-          "_blank"
-        );
+      // ✅ SAVE NEW STUDENT DATA
+const finalData = {
 
-      } else if (
-        studentData.courseType === "semester"
-      ) {
+  ...studentData,
+  ...cert,
 
-        window.open(
-          "/login/institute/certificate/semester-marksheet",
-          "_blank"
-        );
+  studentId: cert.studentId,
 
-      } else if (
-        studentData.courseType === "multiple"
-      ) {
+  studentName:
+    cert.studentName ||
+    studentData.studentName ||
+    "",
 
-        window.open(
-          "/login/institute/certificate/multiple-marksheet",
-          "_blank"
-        );
+  fatherName:
+    cert.fatherName ||
+    studentData.fatherName ||
+    "",
 
-      } else {
+  motherName:
+    cert.motherName ||
+    studentData.motherName ||
+    "",
 
-        window.open(
-          "/login/institute/certificate/marksheet",
-          "_blank"
-        );
-      }
+  course:
+    cert.course ||
+    studentData.courseName ||
+    "",
 
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName ||
+    "",
+
+  duration:
+    cert.duration || "",
+
+  marks:
+    cert.marks || "",
+
+  grade:
+    cert.grade || "",
+
+  logo:
+    franchiseData?.logo || "",
+
+  ownerName:
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "",
+
+  franchiseSignature:
+    franchiseData?.signature || "",
+
+  photoId:
+    studentData.photoId || "",
+
+  signatureId:
+    studentData.signatureId || "",
+
+  dob:
+    studentData.dob || "",
+
+  coursePeriod:
+    cert.duration || "",
+
+  courseType:
+    studentData.courseType || "",
+
+  marksheetNo:
+    cert.certificateNo || "",
+
+  marksArray
+};
+
+// ✅ REMOVE OLD DATA
+localStorage.removeItem("marksheetStudent");
+
+// ✅ SAVE NEW DATA
+localStorage.setItem(
+  "marksheetStudent",
+  JSON.stringify(finalData)
+);
+
+
+   // OPEN MARKSHEET WITH ID
+if (studentData.courseType === "beauty") {
+
+  window.open(
+    `/login/institute/certificate/beauty-marksheet/${cert.$id}`,
+    "_blank"
+  );
+
+} else if (
+  studentData.courseType === "semester"
+) {
+
+  window.open(
+    `/login/institute/certificate/semester-marksheet/${cert.$id}`,
+    "_blank"
+  );
+
+} else if (
+  studentData.courseType === "multiple"
+) {
+
+  window.open(
+    `/login/institute/certificate/multiple-marksheet/${cert.$id}`,
+    "_blank"
+  );
+
+} else {
+
+  window.open(
+    `/login/institute/certificate/marksheet/${cert.$id}`,
+    "_blank"
+  );
+}
     } catch (err) {
 
       console.log(err);

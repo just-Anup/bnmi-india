@@ -25,13 +25,7 @@ export default function PrintMarksheet() {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.print();
-    }, 500);
 
-    return () => clearTimeout(timer);
-  }, []);
 
   const fixColors = () => {
   const all = document.querySelectorAll("*");
@@ -259,6 +253,13 @@ if (marksDocs.length === 0) {
       >
         Download Image
       </button>
+
+<button
+  onClick={() => window.print()}
+  className="bg-blue-600 text-white px-6 py-2 mb-6 ml-3"
+>
+  Print
+</button>
 
     <div ref={printRef}  style={{
     width: "900px",

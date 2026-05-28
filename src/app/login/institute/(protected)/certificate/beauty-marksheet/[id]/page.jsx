@@ -79,13 +79,7 @@ export default function PrintMarksheet() {
     if (student) generateQR();
 
   }, [student]);
-  // ✅ AUTO PRINT
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.print();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+
 
   // ✅ FETCH MARKS
   const fetchMarks = async (studentId) => {
