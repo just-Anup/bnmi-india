@@ -352,16 +352,29 @@ const data = {
     localStorage.setItem("marksheetStudent", JSON.stringify(data));
 
     if (studentData.courseType === "beauty") {
-      window.open("/login/institute/certificate/beauty-marksheet", "_blank");
+      window.open(
+        `/login/institute/certificate/beauty-marksheet/${cert.$id}`,
+        "_blank"
+      );
 
     } else if (studentData.courseType === "semester") {
-      window.open("/login/institute/certificate/semester-marksheet", "_blank");
+      window.open(
+        `/login/institute/certificate/semester-marksheet/${cert.$id}`,
+        "_blank"
+      );
 
     } else if (studentData.courseType === "multiple") {
-      window.open("/login/institute/certificate/multiple-marksheet", "_blank");
+      
+  window.open(
+    `/login/institute/certificate/multiple-marksheet/${cert.$id}`,
+    "_blank"
+  );
 
     } else {
-      window.open("/login/institute/certificate/marksheet", "_blank");
+      window.open(
+        `/login/institute/certificate/marksheet/${cert.$id}`,
+        "_blank"
+      );
     }
 
   } catch (err) {
