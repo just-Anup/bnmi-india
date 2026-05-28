@@ -10,35 +10,97 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 export default function WalletPage() {
 
   const [data, setData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
+  const [search, setSearch] = useState("")
+
   const router = useRouter()
 
   const fetchData = async () => {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved"
-      [
-      Query.limit(1000) // increase limit
-    ]
-    )
-    setData(res.documents)
+
+    try {
+
+      let allDocuments = []
+      let offset = 0
+      let hasMore = true
+
+      // ✅ Fetch all documents (more than 25)
+      while (hasMore) {
+
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.limit(100),
+            Query.offset(offset),
+            Query.orderAsc("instituteName")
+          ]
+        )
+
+        allDocuments = [...allDocuments, ...res.documents]
+
+        if (res.documents.length < 100) {
+          hasMore = false
+        } else {
+          offset += 100
+        }
+      }
+
+      setData(allDocuments)
+      setFilteredData(allDocuments)
+
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   useEffect(() => {
     fetchData()
   }, [])
 
+  // ✅ Search Filter
+  useEffect(() => {
+
+    if (!search) {
+      setFilteredData(data)
+    } else {
+
+      const filtered = data.filter((item) =>
+        item.instituteName
+          ?.toLowerCase()
+          .includes(search.toLowerCase())
+      )
+
+      setFilteredData(filtered)
+    }
+
+  }, [search, data])
+
   return (
 
     <div className="p-6 bg-gray-50 min-h-screen">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800">
-          Franchise Wallet
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Manage franchise balances and transactions
-        </p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+        <div>
+          <h1 className="text-3xl font-semibold text-gray-800">
+            Franchise Wallet
+          </h1>
+
+          <p className="text-gray-500 text-sm">
+            Manage franchise balances and transactions
+          </p>
+        </div>
+
+        {/* ✅ Search Box */}
+        <input
+          type="text"
+          placeholder="Search Franchise Name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
       </div>
 
       {/* Card */}
@@ -64,7 +126,7 @@ export default function WalletPage() {
             {/* Table Body */}
             <tbody>
 
-              {data.map((item, i) => (
+              {filteredData.map((item, i) => (
                 <tr
                   key={item.$id}
                   className="border-t hover:bg-gray-50 transition"
@@ -116,7 +178,7 @@ export default function WalletPage() {
                 </tr>
               ))}
 
-              {data.length === 0 && (
+              {filteredData.length === 0 && (
                 <tr>
                   <td colSpan="7" className="p-6 text-center text-gray-400">
                     No franchise data found

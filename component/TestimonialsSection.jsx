@@ -12,23 +12,30 @@ const DATABASE_ID =
 const COLLECTION_ID = 'testimonials'
 
 export default function TestimonialsSection() {
-  const [testimonials, setTestimonials] = useState([])
-  const [isPaused, setIsPaused] = useState(false)
-  const [currentX, setCurrentX] = useState(0)
+  const [testimonials, setTestimonials] =
+    useState([])
+
+  const [isPaused, setIsPaused] =
+    useState(false)
 
   /* ================= FETCH ================= */
+
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        if (!databases || !DATABASE_ID) return
+        if (!databases || !DATABASE_ID)
+          return
 
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [Query.orderAsc('order')]
+        const res =
+          await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTION_ID,
+            [Query.orderAsc('order')]
+          )
+
+        setTestimonials(
+          res?.documents || []
         )
-
-        setTestimonials(res?.documents || [])
       } catch (err) {
         console.error(
           'Testimonials load failed:',
@@ -42,18 +49,8 @@ export default function TestimonialsSection() {
     fetchTestimonials()
   }, [])
 
-  /* ================= AUTO MOVE ================= */
-  useEffect(() => {
-    if (isPaused) return
-
-    const interval = setInterval(() => {
-      setCurrentX((prev) => prev - 3)
-    }, 10)
-
-    return () => clearInterval(interval)
-  }, [isPaused])
-
   /* ================= EMPTY ================= */
+
   if (
     !Array.isArray(testimonials) ||
     testimonials.length === 0
@@ -74,7 +71,9 @@ export default function TestimonialsSection() {
     >
 
       {/* HEADING */}
+
       <div className="text-center mb-16">
+
         <h2 className="text-4xl font-extrabold">
           What Says Our <br />
 
@@ -83,13 +82,12 @@ export default function TestimonialsSection() {
           </span>{' '}
           Response
         </h2>
+
       </div>
 
       {/* LEFT BUTTON */}
+
       <button
-        onClick={() =>
-          setCurrentX((prev) => prev + 350)
-        }
         className="
           absolute
           left-4
@@ -112,10 +110,8 @@ export default function TestimonialsSection() {
       </button>
 
       {/* RIGHT BUTTON */}
+
       <button
-        onClick={() =>
-          setCurrentX((prev) => prev - 350)
-        }
         className="
           absolute
           right-4
@@ -138,24 +134,46 @@ export default function TestimonialsSection() {
       </button>
 
       {/* SLIDER */}
-      <div className="relative overflow-hidden px-10">
+
+      <div
+        className="relative overflow-hidden px-10"
+        onMouseEnter={() =>
+          setIsPaused(true)
+        }
+        onMouseLeave={() =>
+          setIsPaused(false)
+        }
+      >
 
         {/* LEFT FADE */}
-        <div className="absolute left-0 top-0 z-20 h-full w-24 bg-gradient-to-r from-white to-transparent" />
+
+        <div className="absolute left-0 top-0 z-20 h-full w-24 bg-gradient-to-r from-white to-transparent pointer-events-none" />
 
         {/* RIGHT FADE */}
-        <div className="absolute right-0 top-0 z-20 h-full w-24 bg-gradient-to-l from-white to-transparent" />
+
+        <div className="absolute right-0 top-0 z-20 h-full w-24 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+
+        {/* CONTINUOUS AUTO SLIDER */}
 
         <motion.div
-          animate={{ x: currentX }}
-          transition={{
-            ease: 'linear',
-            duration: 0,
+          animate={{
+            x: isPaused
+              ? undefined
+              : ['0%', '-50%'],
           }}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          className="flex gap-6 min-w-max"
+          transition={{
+            repeat: Infinity,
+            duration: 35,
+            ease: 'linear',
+          }}
+          className="
+            flex
+            min-w-max
+            gap-6
+            py-4
+          "
         >
+
           {[...testimonials, ...testimonials].map(
             (t, index) => (
               <motion.div
@@ -166,19 +184,23 @@ export default function TestimonialsSection() {
                 }}
                 transition={{
                   type: 'spring',
-                  stiffness: 200,
-                  damping: 15,
+                  stiffness: 220,
+                  damping: 16,
                 }}
+                className="flex-shrink-0"
               >
+
                 <TestimonialCard
                   name={t.name}
                   role={t.role}
                   image={t.imageUrl}
                   text={t.text}
                 />
+
               </motion.div>
             )
           )}
+
         </motion.div>
       </div>
     </section>
