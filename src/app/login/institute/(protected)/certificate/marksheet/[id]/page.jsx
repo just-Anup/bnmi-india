@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import * as htmlToImage from "html-to-image";
-import { useRef } from "react";
 import QRCode from "qrcode";
+
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
-    const [qrCode, setQrCode] = useState("");
+  const [qrCode, setQrCode] = useState("");
 
   const printRef = useRef();
+
   useEffect(() => {
+
     const data = localStorage.getItem("marksheetStudent");
 
     if (data) {
@@ -23,55 +25,53 @@ export default function PrintMarksheet() {
       setStudent(parsed);
       fetchMarks(parsed.studentId, parsed);
     }
+
   }, []);
 
-
-
   const fixColors = () => {
-  const all = document.querySelectorAll("*");
 
-  all.forEach((el) => {
-    const style = window.getComputedStyle(el);
+    const all = document.querySelectorAll("*");
 
-    if (
-      style.color.includes("lab") ||
-      style.backgroundColor.includes("lab")
-    ) {
-      el.style.color = "#000";
-      el.style.backgroundColor = "#fff";
-    }
-  });
-};
+    all.forEach((el) => {
 
-useEffect(() => {
-  const generateQR = async () => {
-    try {
-      console.log("STUDENT:", student);
+      const style = window.getComputedStyle(el);
 
-      if (!student?.studentId) {
-        console.log("❌ studentId missing");
-        return;
+      if (
+        style.color.includes("lab") ||
+        style.backgroundColor.includes("lab")
+      ) {
+        el.style.color = "#000";
+        el.style.backgroundColor = "#fff";
       }
-
-      const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
-      console.log("QR URL:", verifyUrl);
-
-      const qr = await QRCode.toDataURL(verifyUrl);
-
-      console.log("QR GENERATED ✅");
-
-      setQrCode(qr);
-
-    } catch (err) {
-      console.log("QR ERROR:", err);
-    }
+    });
   };
 
-  if (student) generateQR();
-}, [student]);
- 
+  useEffect(() => {
+
+    const generateQR = async () => {
+
+      try {
+
+        if (!student?.studentId) return;
+
+        const verifyUrl =
+          `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
+
+        const qr = await QRCode.toDataURL(verifyUrl);
+
+        setQrCode(qr);
+
+      } catch (err) {
+        console.log("QR ERROR:", err);
+      }
+    };
+
+    if (student) generateQR();
+
+  }, [student]);
 
   const fetchMarks = async (studentId, studentData) => {
+
     try {
 
       if (studentData?.courseType === "multiple") {
@@ -84,7 +84,6 @@ useEffect(() => {
 
         const docs = res.documents || [];
 
-        // ✅ FIXED (safe sort)
         const sorted = [...docs].sort(
           (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
         );
@@ -100,7 +99,6 @@ useEffect(() => {
 
       } else {
 
-        // ✅ SINGLE + BEAUTY (UNCHANGED)
         const resultRes = await databases.listDocuments(
           DATABASE_ID,
           "student_subject_results",
@@ -110,60 +108,62 @@ useEffect(() => {
         let subjectList = [];
 
         if (resultRes.documents.length > 0) {
-          subjectList = resultRes.documents[0].subjects
-            ?.split(",")
-            .map((s) => s.trim()) || [];
+
+          subjectList =
+            resultRes.documents[0].subjects
+              ?.split(",")
+              .map((s) => s.trim()) || [];
         }
 
-        // 🔹 FIRST: try exam_subject_marks
-const marksRes = await databases.listDocuments(
-  DATABASE_ID,
-  "exam_subject_marks",
-  [Query.equal("studentId", studentId)]
-);
+        const marksRes = await databases.listDocuments(
+          DATABASE_ID,
+          "exam_subject_marks",
+          [Query.equal("studentId", studentId)]
+        );
 
-let marksDocs = marksRes.documents || [];
+        let marksDocs = marksRes.documents || [];
 
-// 🔥 FALLBACK: if empty → use student_subject_results
-if (marksDocs.length === 0) {
-  const fallbackRes = await databases.listDocuments(
-    DATABASE_ID,
-    "student_subject_results",
-    [Query.equal("studentId", studentId)]
-  );
+        if (marksDocs.length === 0) {
 
-  const fallbackDocs = fallbackRes.documents || [];
+          const fallbackRes = await databases.listDocuments(
+            DATABASE_ID,
+            "student_subject_results",
+            [Query.equal("studentId", studentId)]
+          );
 
-  const finalMarks = fallbackDocs.map((m) => ({
-    subject: m.subject,
-    objective: Number(m.objective || 0),
-    practical: Number(m.practical || 0),
-    total: Number(m.total || 0),
-  }));
+          const fallbackDocs = fallbackRes.documents || [];
 
-  setMarksArray(finalMarks);
+          const finalMarks = fallbackDocs.map((m) => ({
+            subject: m.subject,
+            objective: Number(m.objective || 0),
+            practical: Number(m.practical || 0),
+            total: Number(m.total || 0),
+          }));
 
-} else {
-  // ✅ NORMAL FLOW
-  const finalMarks = subjectList.map((sub, index) => {
-    const mark = marksDocs[index];
+          setMarksArray(finalMarks);
 
-    return {
-      subject: sub,
-      objective: Number(mark?.theory || 0),
-      practical: Number(mark?.practical || 0),
-      total:
-        Number(mark?.theory || 0) +
-        Number(mark?.practical || 0),
-    };
-  });
+        } else {
 
-  setMarksArray(finalMarks);
-}
+          const finalMarks = subjectList.map((sub, index) => {
 
+            const mark = marksDocs[index];
+
+            return {
+              subject: sub,
+              objective: Number(mark?.theory || 0),
+              practical: Number(mark?.practical || 0),
+              total:
+                Number(mark?.theory || 0) +
+                Number(mark?.practical || 0),
+            };
+          });
+
+          setMarksArray(finalMarks);
+        }
       }
 
     } catch (err) {
+
       console.log("MARK FETCH ERROR:", err);
 
       if (studentData?.marksArray) {
@@ -174,61 +174,68 @@ if (marksDocs.length === 0) {
 
   if (!student) return <div className="p-10">Loading...</div>;
 
-  const total = marksArray.reduce((sum, m) => sum + Number(m.total || 0), 0);
-
+  const total = marksArray.reduce(
+    (sum, m) => sum + Number(m.total || 0),
+    0
+  );
 
   const handleDownload = async () => {
-      try {
-        const node = printRef.current;
-  const rect = node.getBoundingClientRect();
-  
-        const dataUrl = await htmlToImage.toPng(node, {
-    quality: 1,
-    pixelRatio: 3,
-    cacheBust: true,
-  
-    // 🔥 THIS FIXES HALF IMAGE
-    width: rect.width,
-    height: rect.height,
-  
-    style: {
-      width: rect.width + "px",
-      height: rect.height + "px",
-      transform: "scale(1)",
-      transformOrigin: "top left",
-      overflow: "visible"
+
+    try {
+
+      const node = printRef.current;
+      const rect = node.getBoundingClientRect();
+
+      const dataUrl = await htmlToImage.toPng(node, {
+        quality: 1,
+        pixelRatio: 3,
+        cacheBust: true,
+
+        width: rect.width,
+        height: rect.height,
+
+        style: {
+          width: rect.width + "px",
+          height: rect.height + "px",
+          transform: "scale(1)",
+          transformOrigin: "top left",
+          overflow: "visible"
+        }
+      });
+
+      const link = document.createElement("a");
+
+      link.download = `${student.studentName}_marksheet.png`;
+      link.href = dataUrl;
+      link.click();
+
+    } catch (err) {
+      console.log("DOWNLOAD ERROR:", err);
     }
-  });
-  
-        const link = document.createElement("a");
-        link.download = `${student.studentName}_marksheet.png`;
-        link.href = dataUrl;
-        link.click();
-  
-      } catch (err) {
-        console.log("DOWNLOAD ERROR:", err);
-      }
-    };
-    
+  };
 
+  const toBase64 = async (url) => {
 
-    const toBase64 = async (url) => {
-  const res = await fetch(url);
-  const blob = await res.blob();
+    const res = await fetch(url);
+    const blob = await res.blob();
 
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
+    return new Promise((resolve) => {
 
+      const reader = new FileReader();
+
+      reader.onloadend = () => resolve(reader.result);
+
+      reader.readAsDataURL(blob);
+    });
+  };
 
   const getGrade = () => {
+
     if (!marksArray.length) return "";
 
     const maxMarks =
-      student?.courseType === "single" || student?.courseType === "beauty"
+      student?.courseType === "single" ||
+      student?.courseType === "beauty"
         ? 100
         : marksArray.length * 100;
 
@@ -245,170 +252,314 @@ if (marksDocs.length === 0) {
   const franchiseSign = student.franchiseSignature || null;
 
   return (
+
     <div className="p-10 bg-white">
 
- <button
+      {/* DOWNLOAD */}
+      <button
         onClick={handleDownload}
         className="bg-green-600 text-white px-6 py-2 mb-6"
       >
         Download Image
       </button>
 
-<button
-  onClick={() => window.print()}
-  className="bg-blue-600 text-white px-6 py-2 mb-6 ml-3"
->
-  Print
-</button>
+      {/* PRINT */}
+      <button
+        onClick={() => window.print()}
+        className="bg-blue-600 text-white px-6 py-2 mb-6 ml-3"
+      >
+        Print
+      </button>
 
-    <div ref={printRef}  style={{
-    width: "900px",
-    height: "1200px",
-    position: "relative",
-    overflow: "visible"
-  }}
->
+      {/* MARKSHEET */}
+      <div
+        ref={printRef}
+        style={{
+          width: "900px",
+          minHeight: "1200px",
+          height: "auto",
+          position: "relative",
+          overflow: "visible"
+        }}
+      >
 
-        <img src="/beautymark.png" className="absolute w-full h-full" />
-{student.logo && (
-  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
-    <img
-      src={student.logo}
-      className="w-full h-full object-cover rounded-full"
-    />
-  </div>
+        {/* BG */}
+        <img
+          src="/beautymark.png"
+          className="absolute w-full h-full"
+        />
 
-)}
+        {/* LOGO */}
+        {student.logo && (
+          <div
+            className="absolute top-[10px] left-[410px]
+            w-[135px] h-[135px] overflow-hidden bg-white
+            rounded-full border-4 border-white
+            flex items-center justify-center shadow-md"
+          >
+            <img
+              src={student.logo}
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        )}
 
+        {/* QR */}
+        {qrCode ? (
+          <img
+            src={qrCode}
+            alt="QR Code"
+            className="absolute top-[233px] right-[50px] w-[110px] bg-white p-1"
+          />
+        ) : (
+          <div className="absolute top-[240px] right-[50px] text-xs">
+            Generating QR...
+          </div>
+        )}
 
-{qrCode ? (
-  <img
-    src={qrCode}
-    alt="QR Code"
-    className="absolute top-[233px] right-[50px] w-[110px] bg-white p-1"
-  />
-) : (
-  <div className="absolute top-[240px] right-[50px] text-xs">
-    Generating QR...
-  </div>
-)}
         {/* LEFT SIDE */}
-        <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
-        <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
-        <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
+        <div className="absolute top-[325px] left-[330px]">
+          {student.studentName}
+        </div>
 
-        {/* ✅ FIXED HERE */}
-        <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
+        <div className="absolute top-[346px] left-[330px]">
+          {student.fatherName}
+        </div>
+
+        <div className="absolute top-[367px] left-[330px]">
+          {student.surname}
+        </div>
+
+        <div className="absolute top-[388px] left-[330px]">
+          {student.motherName}
+        </div>
+
+        <div className="absolute top-[410px] left-[330px]">
+          {student.course}
+        </div>
+
+        <div className="absolute top-[450px] left-[330px]">
+          {student.instituteName}
+        </div>
 
         {/* RIGHT SIDE */}
-      {/* RIGHT */}
-<div className="absolute top-[330px] left-[680px] text-[13px]">
-  {student.coursePeriod || student.duration || "1 Year"}
-</div>
-
-<div className="absolute top-[348px] left-[680px]">
-  {student.marksheetNo}
-</div>
-
-<div className="absolute top-[369px] left-[680px]">
-  {student.dob
-    ? new Date(student.dob).toLocaleDateString("en-GB").replace(/\//g, "-")
-    : ""}
-</div>
-
-<div className="absolute top-[392px] left-[680px] text-[13px]">
-  {student.coursePeriod || student.duration || "1 Year"}
-</div>
-
-        {/* MULTIPLE */}
-        {student?.courseType?.toLowerCase() === "multiple" ? (
-
-  // ✅ MULTIPLE
-  marksArray.map((m, index) => {
-    const topPosition = 570 + index * 30;
-
-    return (
-      <div key={index}>
-        <div style={{ position: "absolute", top: topPosition, left: 150 }}>
-          {index + 1}) {m.subject}
+        <div className="absolute top-[330px] left-[680px] text-[13px]">
+          {student.coursePeriod || student.duration || "1 Year"}
         </div>
 
-        <div style={{ position: "absolute", top: topPosition, left: 620 }}>
-          {m.objective}
+        <div className="absolute top-[348px] left-[680px]">
+          {student.marksheetNo}
         </div>
 
-        <div style={{ position: "absolute", top: topPosition, left: 690 }}>
-          {m.practical}
+        <div className="absolute top-[369px] left-[680px]">
+          {student.dob
+            ? new Date(student.dob)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-")
+            : ""}
         </div>
 
-        <div style={{ position: "absolute", top: topPosition, left: 760 }}>
-          {m.total}
+        <div className="absolute top-[392px] left-[680px] text-[13px]">
+          {student.coursePeriod || student.duration || "1 Year"}
         </div>
-      </div>
-    );
-  })
 
-) : (
+        {/* SUBJECT SECTION */}
+        <div
+          style={{
+            position: "absolute",
+            top: 560,
+            left: 145,
+            width: "640px",
+          }}
+        >
 
-  // ✅ SINGLE + BEAUTY (UNCHANGED)
-  marksArray.slice(0, 1).map((m, index) => (
-    <div key={index}>
-    <div style={{ top: 570, left: 150, position: "absolute", width: 420 }}>
-{marksArray.map((s, i) => (
-  <div
-    key={i}
-    style={{
-      display: "block",
-      marginBottom: "4px"
-    }}
-  >
-    {i + 1}. {s.subject}
-  </div>
-))}
-</div>
+          {student?.courseType?.toLowerCase() === "multiple" ? (
 
-      <div className="absolute top-[570px] left-[620px] font-bold">
-        {m.objective}
-      </div>
+            marksArray.map((m, index) => (
 
-      <div className="absolute top-[570px] left-[690px] font-bold">
-        {m.practical}
-      </div>
-    </div>
-  ))
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  minHeight: "40px",
+                  height: "auto",
+                  borderBottom: "1px solid black",
+                }}
+              >
 
-)}
+                {/* SUBJECT */}
+                <div
+                  style={{
+                    width: "470px",
+                    padding: "6px 10px",
+                    fontSize: "15px",
+                    lineHeight: "1.5",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "normal",
+                  }}
+                >
+                  {index + 1}) {m.subject}
+                </div>
+
+                {/* OBJECTIVE */}
+                <div
+                  style={{
+                    width: "70px",
+                    textAlign: "center",
+                    paddingTop: "6px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {m.objective}
+                </div>
+
+                {/* PRACTICAL */}
+                <div
+                  style={{
+                    width: "70px",
+                    textAlign: "center",
+                    paddingTop: "6px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {m.practical}
+                </div>
+
+                {/* TOTAL */}
+                <div
+                  style={{
+                    width: "70px",
+                    textAlign: "center",
+                    paddingTop: "6px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {m.total}
+                </div>
+
+              </div>
+            ))
+
+          ) : (
+
+            marksArray.slice(0, 1).map((m, index) => (
+
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  minHeight: "180px",
+                  height: "auto",
+                }}
+              >
+
+                {/* SUBJECT */}
+                <div
+                  style={{
+                    width: "470px",
+                    padding: "6px 10px",
+                    fontSize: "15px",
+                    lineHeight: "1.7",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "normal",
+                  }}
+                >
+
+                  {marksArray.map((s, i) => (
+
+                    <div
+                      key={i}
+                      style={{
+                        marginBottom: "8px",
+                      }}
+                    >
+                      {i + 1}. {s.subject}
+                    </div>
+
+                  ))}
+
+                </div>
+
+                {/* OBJECTIVE */}
+                <div
+                  style={{
+                    width: "70px",
+                    textAlign: "center",
+                    paddingTop: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {m.objective}
+                </div>
+
+                {/* PRACTICAL */}
+                <div
+                  style={{
+                    width: "70px",
+                    textAlign: "center",
+                    paddingTop: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {m.practical}
+                </div>
+
+              </div>
+            ))
+
+          )}
+
+        </div>
 
         {/* TOTAL */}
-        <div className="absolute bottom-[290px] left-[775px] font-bold">
+        <div
+          className="absolute font-bold"
+          style={{
+            top:
+              student?.courseType?.toLowerCase() === "multiple"
+                ? 570 + marksArray.length * 45
+                : 890,
+            left: 775
+          }}
+        >
           {total}
         </div>
 
         {/* GRADE */}
-        <div className="absolute top-[572px] left-[780px] font-bold">
+        <div
+          className="absolute font-bold"
+          style={{
+            top: 572,
+            left: 780
+          }}
+        >
           {getGrade()}
         </div>
 
         {/* SIGNATURE */}
         {franchiseSign && (
-       <img
-  src={franchiseSign + "&mode=admin"}
-  crossOrigin="anonymous"
-  className="absolute bottom-[90px] left-[130px] w-[100px]"
-/>
+          <img
+            src={franchiseSign + "&mode=admin"}
+            crossOrigin="anonymous"
+            className="absolute bottom-[90px] left-[130px] w-[100px]"
+          />
         )}
 
         {/* OWNER */}
         {student.ownerName && (
           <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
-            <div className="font-semibold">{student.ownerName}</div>
+            <div className="font-semibold">
+              {student.ownerName}
+            </div>
+
             <div className="text-xs text-gray-600">
               Controller Of Examination
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
