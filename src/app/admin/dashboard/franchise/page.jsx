@@ -1250,7 +1250,7 @@ const getExpiryDate = () => {
               </div>
 
               {/* Address */}
-              <div className="absolute top-[520px] w-full text-center text-sm px-10">
+              <div className="absolute top-[540px] w-full text-center text-sm px-10">
                 {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
