@@ -161,7 +161,7 @@ export default function AuroraHero() {
         {/* RIGHT VIDEO */}
         <div className="flex justify-end w-full">
           
-          <div className="w-full max-w-5xl relative right-[-120px]">
+          <div className="w-full max-w-5xl relative ">
             
             <video
   autoPlay

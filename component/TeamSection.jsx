@@ -202,15 +202,16 @@ export default function TeamSlider() {
                       alt={member.name}
                       draggable={false}
                       className="
-                        w-full
-                        h-[260px]
-                        md:h-[320px]
-                        object-cover
-                        rounded-[26px]
-                        transition-transform
-                        duration-500
-                        hover:scale-105
-                      "
+  w-full
+  h-[260px]
+  md:h-[320px]
+  object-cover
+  object-top
+  rounded-[26px]
+  transition-transform
+  duration-500
+  hover:scale-105
+"
                     />
 
                     <div className="absolute inset-0 rounded-[26px] bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
