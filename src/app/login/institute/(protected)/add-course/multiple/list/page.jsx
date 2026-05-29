@@ -174,21 +174,19 @@ export default function ListPage() {
 </td>
 
                   <td className="p-3 border border-gray-800 min-w-[300px] max-w-[450px] break-words">
-                    {course.subjects || "No Subjects"}
-                  </td>
-
-                <td className="p-3 border border-gray-800 min-w-[300px] max-w-[450px] break-words">
-
   {course.subjects
     ? course.subjects
-        .split(",")
+        .split("||")
         .map((subject, index) => (
           <div key={index} className="mb-1">
             {index + 1}. {subject.trim()}
           </div>
         ))
     : "No Subjects"}
+</td>
 
+       <td className="p-3 border border-gray-800 whitespace-nowrap">
+  ₹{course.courseFees || 0}
 </td>
 
                   <td className="p-3 border border-gray-800 whitespace-nowrap">
