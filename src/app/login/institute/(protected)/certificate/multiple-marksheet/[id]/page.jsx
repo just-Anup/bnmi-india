@@ -251,6 +251,9 @@ const getCoursePeriod = (durationText) => {
 
 if (!student) return <div className="p-10">Loading...</div>;
 
+const rowHeight = 25;
+const tableHeight = marksArray.length * rowHeight;
+
   return (
     <div className="p-10 bg-white">
 
@@ -261,14 +264,16 @@ if (!student) return <div className="p-10">Loading...</div>;
         Download Image
       </button>
 
-    <div ref={printRef}  style={{
+  <div
+  ref={printRef}
+  style={{
     width: "900px",
-    height: "1200px",
+    minHeight: "1200px",
+    height: "auto",
     position: "relative",
     overflow: "visible"
   }}
 >
-
         {/* TEMPLATE */}
         <img src="/multiplemark.png" className="absolute w-full h-full" />
 
@@ -286,31 +291,31 @@ if (!student) return <div className="p-10">Loading...</div>;
         {/* ===============================
             LEFT SIDE
         =============================== */}
-        <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
-        <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
+        <div className="absolute top-[310px] left-[330px]">{student.studentName}</div>
+        <div className="absolute top-[330px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px] font-bold">{student.course}</div>
-        <div className="absolute top-[450px] left-[330px] font-bold">{student.instituteName}</div>
+        <div className="absolute top-[374px] left-[330px]">{student.motherName}</div>
+        <div className="absolute top-[395px] left-[330px] font-bold">{student.course}</div>
+        <div className="absolute top-[438px] left-[330px] font-bold">{student.instituteName}</div>
 
         {/* ===============================
             RIGHT SIDE (FIXED)
         =============================== */}
     
 {/* RIGHT */}
-<div className="absolute top-[330px] left-[680px] text-[13px]">
+<div className="absolute top-[315px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
-<div className="absolute top-[348px] left-[680px]">
+<div className="absolute top-[334px] left-[680px]">
   {student.marksheetNo}
 </div>
 
-<div className="absolute top-[369px] left-[680px]">
+<div className="absolute top-[355px] left-[680px]">
   {student.dob}
 </div>
 
-<div className="absolute top-[392px] left-[680px] text-[13px]">
+<div className="absolute top-[378px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
@@ -321,40 +326,39 @@ if (!student) return <div className="p-10">Loading...</div>;
     className="absolute bottom-[120px] right-[170px] w-[80px] bg-white p-1"
   />
 )}
-        {/* ===============================
-            SUBJECT TABLE (NO OVERFLOW FIXED)
-        =============================== */}
-   {/* ===============================
+      {/* ===============================
     SUBJECT TABLE
 =============================== */}
 
-{marksArray.map((m, index) => {
-
-  const baseTop = 560;
-
-  const topPosition =
-    baseTop +
-    marksArray
-      .slice(0, index)
-      .reduce((acc, item) => {
-        const lines = Math.ceil(item.subject.length / 40);
-        return acc + lines * 10 + 15;
-      }, 0);
-
-  return (
-    <div key={index}>
-
+<div
+  style={{
+    position: "absolute",
+    top: 540,
+    left: 150,
+    width: "650px",
+    display: "flex",
+    flexDirection: "column",
+   gap: "7px",
+  }}
+>
+  {marksArray.map((m, index) => (
+    <div
+      key={index}
+      style={{
+        display: "grid",
+      gridTemplateColumns: "280px 60px 60px 60px 60px 70px 70px",
+        alignItems: "start",
+      minHeight: "20px",
+      }}
+    >
       {/* SUBJECT */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 150,
-          width: "320px",
-          wordWrap: "break-word",
+        fontSize: "14px",
+lineHeight: "16px",
+          wordBreak: "break-word",
           whiteSpace: "normal",
-          lineHeight: "18px",
-          fontSize: "14px"
+          paddingRight: "10px",
         }}
       >
         {index + 1}) {m.subject}
@@ -363,12 +367,8 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* OBJECTIVE OUT OF */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 450,
-          width: "40px",
           textAlign: "center",
-          fontWeight: "bold"
+          fontWeight: "bold",
         }}
       >
         50
@@ -377,11 +377,7 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* OBJECTIVE SCORE */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 510,
-          width: "40px",
-          textAlign: "center"
+          textAlign: "center",
         }}
       >
         {m.objective}
@@ -390,12 +386,8 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* PRACTICAL OUT OF */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 570,
-          width: "40px",
           textAlign: "center",
-          fontWeight: "bold"
+          fontWeight: "bold",
         }}
       >
         50
@@ -404,11 +396,7 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* PRACTICAL SCORE */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 630,
-          width: "40px",
-          textAlign: "center"
+          textAlign: "center",
         }}
       >
         {m.practical}
@@ -417,12 +405,8 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* TOTAL OUT OF */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 690,
-          width: "40px",
           textAlign: "center",
-          fontWeight: "bold"
+          fontWeight: "bold",
         }}
       >
         100
@@ -431,24 +415,25 @@ if (!student) return <div className="p-10">Loading...</div>;
       {/* TOTAL SCORE */}
       <div
         style={{
-          position: "absolute",
-          top: topPosition - 10,
-          left: 765,
-          width: "40px",
           textAlign: "center",
-          fontWeight: "bold"
+          fontWeight: "bold",
         }}
       >
         {Number(m.objective) + Number(m.practical)}
       </div>
-
     </div>
-  );
-})}
+  ))}
+</div>
         {/* ===============================
             TOTAL
         =============================== */}
-        <div className="absolute bottom-[290px] left-[775px] font-bold">
+     <div
+  className="absolute font-bold"
+  style={{
+    top: 655 + tableHeight + 40,
+    left: 775
+  }}
+>
           {total}
         </div>
 
