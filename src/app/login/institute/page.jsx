@@ -98,124 +98,214 @@ export default function InstituteLogin() {
 
 };
 
-  return (
+return (
+  <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#312e81] flex items-center justify-center px-4">
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-200 px-4">
+    {/* Background Glow Effects */}
+    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/30 rounded-full blur-[150px]"></div>
 
-      <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row">
+    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-[150px]"></div>
 
-        {/* ================= LEFT SIDE ================= */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#2b4ea2] to-[#5fa0ff] items-center justify-center relative p-10">
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-400/20 rounded-full blur-[120px]"></div>
 
-          {/* circles */}
-          <div className="absolute top-10 right-10 w-40 h-40 bg-white/10 rounded-full"></div>
+    {/* Main Card */}
+    <div className="relative z-10 w-full max-w-6xl rounded-[40px] overflow-hidden border border-white/20 backdrop-blur-2xl bg-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] flex flex-col md:flex-row">
 
-          <div className="absolute bottom-10 left-10 w-52 h-52 bg-white/10 rounded-full"></div>
+      {/* ================= LEFT SIDE ================= */}
+      <div className="hidden md:flex w-1/2 relative items-center justify-center p-12">
 
-          {/* logo */}
-          <div className="z-10 text-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-400/10"></div>
 
-            <img
-              src="/logo.png"
-              alt="logo"
-              className="w-64 mx-auto"
+        <div className="absolute top-10 right-10 w-40 h-40 rounded-full bg-white/10 backdrop-blur-xl"></div>
+
+        <div className="absolute bottom-10 left-10 w-52 h-52 rounded-full bg-white/10 backdrop-blur-xl"></div>
+
+        <div className="relative z-10 text-center">
+
+          <img
+            src="/logo.png"
+            alt="logo"
+            className="w-72 mx-auto drop-shadow-[0_10px_30px_rgba(255,255,255,0.3)]"
+          />
+
+          <h2 className="text-white text-3xl font-bold mt-8">
+            BNMI India
+          </h2>
+
+          <p className="text-blue-100 mt-4 text-lg max-w-md">
+            Transforming Education Through Innovation &
+            Technology
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* ================= RIGHT SIDE ================= */}
+      <div className="w-full md:w-1/2 p-8 md:p-14 bg-white/5 backdrop-blur-xl">
+
+        <div className="mb-10">
+
+          <h1 className="text-4xl font-bold text-white mb-3">
+            Welcome Back 👋
+          </h1>
+
+          <p className="text-gray-300">
+            Sign in to access your institute dashboard
+          </p>
+
+        </div>
+
+        <form onSubmit={login} className="space-y-6">
+
+          {/* EMAIL */}
+          <div>
+
+            <label className="text-gray-200 text-sm mb-2 block">
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              placeholder="youremail@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="
+                w-full
+                bg-white/10
+                border border-white/20
+                backdrop-blur-xl
+                rounded-2xl
+                px-5
+                py-4
+                text-white
+                placeholder-gray-400
+                focus:outline-none
+                focus:border-cyan-400
+                focus:ring-2
+                focus:ring-cyan-400/30
+                transition-all
+              "
             />
 
           </div>
 
-        </div>
+          {/* PASSWORD */}
+          <div className="relative">
 
-        {/* ================= RIGHT SIDE ================= */}
-        <div className="w-full md:w-1/2 p-8 sm:p-12">
+            <label className="text-gray-200 text-sm mb-2 block">
+              Password
+            </label>
 
-          <h2 className="text-3xl font-bold mb-2 text-gray-800">
-            Welcome Back
-          </h2>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="
+                w-full
+                bg-white/10
+                border border-white/20
+                backdrop-blur-xl
+                rounded-2xl
+                px-5
+                py-4
+                pr-14
+                text-white
+                placeholder-gray-400
+                focus:outline-none
+                focus:border-cyan-400
+                focus:ring-2
+                focus:ring-cyan-400/30
+                transition-all
+              "
+            />
 
-          <p className="text-gray-500 mb-8">
-            Please login to your account to continue
-          </p>
-
-          <form onSubmit={login} className="space-y-6">
-
-            {/* EMAIL */}
-            <div>
-
-              <label className="text-sm text-gray-600 block mb-2">
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                placeholder="youremail@gmail.com"
-                className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-
-            </div>
-
-            {/* PASSWORD */}
-            <div className="relative">
-
-              <label className="text-sm text-gray-600 block mb-2">
-                Password
-              </label>
-
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[42px] text-gray-500"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-
-            </div>
-
-            {/* BUTTON */}
             <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 rounded-xl font-semibold text-white transition ${
-                loading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:opacity-90'
-              }`}
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-5 top-[48px] text-white/70 hover:text-white"
             >
-              {loading ? 'Logging in...' : 'SIGN IN'}
-            </button>
-
-          </form>
-
-          {/* DIVIDER */}
-          <div className="my-8 border-t border-dashed"></div>
-
-          {/* PWA SECTION */}
-          <div className="text-center">
-
-            <p className="font-semibold text-gray-700 mb-2">
-              📱 Install as Progressive Web App (Mobile App) for Students
-            </p>
-
-            <p className="text-sm text-gray-500 mb-4">
-              Access your courses anytime, anywhere with our mobile app experience
-            </p>
-
-            <button className="w-full border border-blue-500 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-50 transition">
-              📲 App is under progress (Coming soon)
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
             </button>
 
           </div>
+
+          {/* LOGIN BUTTON */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              w-full
+              py-4
+              rounded-2xl
+              font-semibold
+              text-white
+              bg-gradient-to-r
+              from-cyan-500
+              via-blue-500
+              to-indigo-600
+              hover:scale-[1.02]
+              hover:shadow-[0_10px_40px_rgba(59,130,246,0.5)]
+              transition-all
+              duration-300
+            "
+          >
+            {loading ? "Logging in..." : "SIGN IN"}
+          </button>
+
+        </form>
+
+        {/* Divider */}
+        <div className="my-10 flex items-center">
+          <div className="flex-1 border-t border-white/20"></div>
+          <span className="px-4 text-white/60 text-sm">
+            MOBILE APP
+          </span>
+          <div className="flex-1 border-t border-white/20"></div>
+        </div>
+
+        {/* PWA CARD */}
+        <div className="
+          border border-white/20
+          bg-white/10
+          backdrop-blur-xl
+          rounded-3xl
+          p-6
+          text-center
+        ">
+
+          <div className="text-5xl mb-3">
+            📱
+          </div>
+
+          <h3 className="text-white font-bold text-lg mb-2">
+            Student Mobile App
+          </h3>
+
+          <p className="text-gray-300 text-sm mb-5">
+            Access courses, certificates, attendance and results
+            directly from your smartphone.
+          </p>
+
+          <button className="
+            w-full
+            bg-white/10
+            border border-white/20
+            text-white
+            py-3
+            rounded-2xl
+            hover:bg-white/20
+            transition-all
+          ">
+            Coming Soon
+          </button>
 
         </div>
 
@@ -223,5 +313,6 @@ export default function InstituteLogin() {
 
     </div>
 
-  )
+  </div>
+)
 }
