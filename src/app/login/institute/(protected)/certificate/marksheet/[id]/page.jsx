@@ -309,7 +309,7 @@ export default function PrintMarksheet() {
           <img
             src={qrCode}
             alt="QR Code"
-            className="absolute top-[233px] right-[50px] w-[110px] bg-white p-1"
+            className="absolute bottom-[123px] right-[200px] w-[80px] bg-white p-1"
           />
         ) : (
           <div className="absolute top-[240px] right-[50px] text-xs">
