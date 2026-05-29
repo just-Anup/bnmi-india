@@ -115,7 +115,7 @@ export default function SubjectPage() {
 
       alert('Course Added Successfully')
 
-      router.push('/login/institute/list-course/multiple')
+      router.push('/login/institute/add-course/multiple/list')
     } catch (error) {
       console.log(error)
       alert(error.message)
