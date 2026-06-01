@@ -585,7 +585,7 @@ export default function PrintCertificate() {
       >
 
         {/* TEMPLATE */}
-        <img src="/beautycerti.png" className="absolute w-full h-full" />
+        <img src="/certi.jpg.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {student.logo && (
@@ -618,7 +618,7 @@ export default function PrintCertificate() {
         {/* NAME */}
         <div className="absolute top-[650px] left-[10px] w-full text-center">
 
-          <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
+          <div className="text-2xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
             {/* STUDENT NAME */}
             <span>

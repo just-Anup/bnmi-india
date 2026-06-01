@@ -285,7 +285,7 @@ export default function PrintMarksheet() {
 
         {/* BG */}
         <img
-          src="/beautymark.png"
+          src="/beautymark.jpeg"
           className="absolute w-full h-full"
         />
 
@@ -338,20 +338,20 @@ export default function PrintMarksheet() {
           {student.course}
         </div>
 
-        <div className="absolute top-[450px] left-[330px]">
+        <div className="absolute top-[449px] left-[330px] font-bold text-lg">
           {student.instituteName}
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="absolute top-[330px] left-[680px] text-[13px]">
+        {/* <div className="absolute top-[330px] left-[680px] text-[13px]">
           {student.coursePeriod || student.duration || "1 Year"}
-        </div>
+        </div> */}
 
-        <div className="absolute top-[348px] left-[680px]">
+        <div className="absolute top-[348px] left-[680px] text-[15px]">
           {student.marksheetNo}
         </div>
 
-        <div className="absolute top-[369px] left-[680px]">
+        <div className="absolute top-[369px] left-[680px] text-[15px]">
           {student.dob
             ? new Date(student.dob)
                 .toLocaleDateString("en-GB")
@@ -543,7 +543,7 @@ export default function PrintMarksheet() {
           <img
             src={franchiseSign + "&mode=admin"}
             crossOrigin="anonymous"
-            className="absolute bottom-[90px] left-[130px] w-[100px]"
+            className="absolute bottom-[94px] left-[125px] w-[100px]"
           />
         )}
 
