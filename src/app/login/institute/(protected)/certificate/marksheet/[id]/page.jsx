@@ -348,7 +348,7 @@ export default function PrintMarksheet() {
         </div> */}
 
         <div className="absolute top-[348px] left-[680px] text-[15px]">
-          {student.marksheetNo}
+          {student.marksheetNo},
         </div>
 
         <div className="absolute top-[369px] left-[680px] text-[15px]">
