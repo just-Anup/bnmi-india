@@ -105,7 +105,7 @@ export default function SubjectPage() {
           courseCode: courseCode,
           courseName: courseName,
           duration: duration,
-          subjects: selectedSubjects.join(', '),
+          subjects: selectedSubjects.join('||'),
           courseFees: 0,
           minimumFees: 0,
           examFees: 0,

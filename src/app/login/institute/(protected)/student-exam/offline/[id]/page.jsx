@@ -117,13 +117,12 @@ if (res.subjects) {
     ];
 
   }
-
-  // ✅ MULTIPLE
-// ✅ MULTIPLE
+  
 else if (res.courseType === "multiple") {
 
   if (res.subjects.includes("||")) {
 
+    // New format
     subjectList = res.subjects
       .split("||")
       .map(s => s.trim())
@@ -131,9 +130,14 @@ else if (res.courseType === "multiple") {
 
   } else {
 
-    subjectList = [res.subjects.trim()];
+    // Old format
+    subjectList = res.subjects
+      .split(/,\s*(?![^()]*\))/)
+      .map(s => s.trim())
+      .filter(Boolean);
 
   }
+
 }
 
   // ✅ FALLBACK
