@@ -93,16 +93,22 @@ export default function ReAdmission() {
       ]);
 
     const courses = [
+  ...singleRes.documents,
+  ...multipleRes.documents,
+  ...beautyRes.documents,
+  ...semesterRes.documents
+];
 
-      ...singleRes.documents,
+// remove duplicate course names
+const uniqueCourses = courses.filter(
+  (course, index, self) =>
+    index ===
+    self.findIndex(
+      c => c.courseName === course.courseName
+    )
+);
 
-      ...multipleRes.documents,
-
-      ...beautyRes.documents,
-
-      ...semesterRes.documents
-
-    ];
+setAllCourses(uniqueCourses);
 
     setAllCourses(courses);
 
@@ -115,23 +121,45 @@ export default function ReAdmission() {
 };
 
 
-  const handleStudentSelect = async (id) => {
+const handleStudentSelect = async (id) => {
 
-    const student = await databases.getDocument(
-      DATABASE_ID,
-      COLLECTION_ID,
-      id
-    );
+  const student = await databases.getDocument(
+    DATABASE_ID,
+    COLLECTION_ID,
+    id
+  );
 
-    setSelectedStudent(student);
+  setSelectedStudent(student);
 
-    setForm({
-      ...form,
-      course: student.course || "",
-      batch: student.batch || ""
-    });
+  setForm(prev => ({
+    ...prev,
+    batch: student.batch || ""
+  }));
 
-  };
+  const user = await account.get();
+
+  // find all courses already taken by this student
+  const oldAdmissions = await databases.listDocuments(
+    DATABASE_ID,
+    COLLECTION_ID,
+    [
+      Query.equal("studentName", student.studentName),
+      Query.equal("mobile", student.mobile),
+      Query.equal("createdById", user.$id)
+    ]
+  );
+
+  const takenCourses = oldAdmissions.documents.map(
+    item => item.course
+  );
+
+  setAllCourses(prev =>
+    prev.filter(
+      course =>
+        !takenCourses.includes(course.courseName)
+    )
+  );
+};
 
 
   const handleChange = (e) => {
