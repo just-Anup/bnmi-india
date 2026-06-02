@@ -608,13 +608,99 @@ const approveCertificate = async (id, cert) => {
 
 
       // ✅ AUTO GENERATE COURSE DURATION
-let finalDuration = "";
+let rawDuration = "";
 
-const rawDuration = String(
-  studentData.duration ||
-  studentData.courseDuration ||
-  "1 year"
-);
+try {
+
+  if (studentData.courseType === "beauty") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "beauty_courses_single",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+  else if (studentData.courseType === "single") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_single",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+  else if (studentData.courseType === "multiple") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_multiple",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+  else if (studentData.courseType === "semester") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_semester_courses",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+} catch (err) {
+
+  console.log("DURATION ERROR:", err);
+
+}
+
+if (!rawDuration) {
+  rawDuration = "1 year";
+}
 
 const today = new Date();
 
@@ -644,6 +730,15 @@ if (text.includes("month")) {
 
   start.setMonth(
     start.getMonth() - months
+  );
+}
+if (text.includes("day")) {
+
+  const days =
+    parseInt(text) || 1;
+
+  start.setDate(
+    start.getDate() - days
   );
 }
 
@@ -741,6 +836,95 @@ verifyUrl,
   const getPhoto = (photoId) => {
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
   };
+
+
+  const fixOldCertificates = async () => {
+
+  const certs = await databases.listDocuments(
+    DATABASE_ID,
+    "certificates",
+    [Query.limit(5000)]
+  );
+
+  for (const cert of certs.documents) {
+
+    if (!cert.studentId) continue;
+
+    const student = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      cert.studentId
+    );
+
+    let duration = "";
+
+    if (student.courseType === "beauty") {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "beauty_courses_single",
+        [
+          Query.equal("courseName", student.courseName),
+          Query.equal(
+            "franchiseEmail",
+            student.franchiseEmail
+          )
+        ]
+      );
+
+      duration =
+        res.documents[0]?.duration || "";
+    }
+
+    else if (student.courseType === "single") {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_single",
+        [
+          Query.equal("courseName", student.courseName),
+          Query.equal(
+            "franchiseEmail",
+            student.franchiseEmail
+          )
+        ]
+      );
+
+      duration =
+        res.documents[0]?.duration || "";
+    }
+
+    else if (student.courseType === "multiple") {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_multiple",
+        [
+          Query.equal("courseName", student.courseName),
+          Query.equal(
+            "franchiseEmail",
+            student.franchiseEmail
+          )
+        ]
+      );
+
+      duration =
+        res.documents[0]?.duration || "";
+    }
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "certificates",
+      cert.$id,
+      {
+        duration
+      }
+    );
+  }
+
+  alert("All certificates updated");
+};
+
 
   if (loading) return <p className="p-10">Loading...</p>;
 
@@ -857,6 +1041,12 @@ verifyUrl,
                     color="purple"
                     onClick={() => printMarksheet(c)}
                   />
+                  <button
+  onClick={fixOldCertificates}
+  className="bg-red-600 text-white px-4 py-2"
+>
+  Fix Old Duration
+</button>
                 </>
               )}
 
