@@ -444,7 +444,7 @@ lineHeight: "16px",
     <div
   style={{
     position: "absolute",
-    top: 580 + tableHeight + 40,
+    top: 650 + tableHeight + 40,
     left: 150,
     width: "650px",
     display: "grid",
