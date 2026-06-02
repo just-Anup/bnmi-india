@@ -129,13 +129,6 @@ else if (res.courseType === "multiple") {
       .map(s => s.trim())
       .filter(Boolean);
 
-  } else if (res.subjects.includes(",")) {
-
-    subjectList = res.subjects
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-
   } else {
 
     subjectList = [res.subjects.trim()];
