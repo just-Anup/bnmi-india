@@ -16,6 +16,16 @@ export default function InstituteLogin() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+   const [rotation, setRotation] = useState(0);
+
+   useEffect(() => {
+  const interval = setInterval(() => {
+    setRotation(prev => prev + 0.5);
+  }, 30);
+
+  return () => clearInterval(interval);
+}, []);
+
 
   /* ---------------- AUTO FILL FROM URL ---------------- */
   useEffect(() => {
@@ -81,6 +91,9 @@ export default function InstituteLogin() {
       return;
     }
 
+   
+
+
     /* ---------------- NORMAL USER LOGIN ---------------- */
     router.push("/login/institute/dashboard");
 
@@ -96,216 +109,224 @@ export default function InstituteLogin() {
 
   }
 
-};
+};return (
+  <div className="min-h-screen bg-[#132445] flex items-center justify-center overflow-hidden relative">
 
-return (
-  <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#312e81] flex items-center justify-center px-4">
+    {/* Background Glow */}
+    <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 blur-[180px] rounded-full" />
 
-    {/* Background Glow Effects */}
-    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/30 rounded-full blur-[150px]"></div>
+    <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 blur-[180px] rounded-full" />
 
-    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-[150px]"></div>
+    <div className="grid lg:grid-cols-2 w-full max-w-7xl px-6 lg:px-12">
+<div className="hidden lg:flex flex-col justify-center pl-16">
 
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-400/20 rounded-full blur-[120px]"></div>
+  <h1
+    className="
+      text-[100px]
+      font-black
+      text-cyan-400
+      leading-none
+      drop-shadow-[0_0_35px_#22d3ee]
+    "
+  >
+    BNMI
+  </h1>
 
-    {/* Main Card */}
-    <div className="relative z-10 w-full max-w-6xl rounded-[40px] overflow-hidden border border-white/20 backdrop-blur-2xl bg-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] flex flex-col md:flex-row">
+  <h2 className="text-[55px] font-bold text-blue-600">
+    EDUCATION PORTAL
+  </h2>
 
-      {/* ================= LEFT SIDE ================= */}
-      <div className="hidden md:flex w-1/2 relative items-center justify-center p-12">
+  <div className="mt-20">
 
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-400/10"></div>
+    <div className="flex gap-5">
 
-        <div className="absolute top-10 right-10 w-40 h-40 rounded-full bg-white/10 backdrop-blur-xl"></div>
+      <div className="w-[4px] bg-cyan-400"></div>
 
-        <div className="absolute bottom-10 left-10 w-52 h-52 rounded-full bg-white/10 backdrop-blur-xl"></div>
+      <div>
 
-        <div className="relative z-10 text-center">
+        <p className="text-cyan-300 text-3xl font-bold">
+          LEARN
+        </p>
 
-          <img
-            src="/logo.png"
-            alt="logo"
-            className="w-72 mx-auto drop-shadow-[0_10px_30px_rgba(255,255,255,0.3)]"
-          />
+        <p className="text-blue-500 text-3xl font-bold">
+          GROW
+        </p>
 
-          <h2 className="text-white text-3xl font-bold mt-8">
-            BNMI India
-          </h2>
-
-          <p className="text-blue-100 mt-4 text-lg max-w-md">
-            Transforming Education Through Innovation &
-            Technology
-          </p>
-
-        </div>
+        <p className="text-blue-500 text-3xl font-bold">
+          SUCCEED
+        </p>
 
       </div>
 
-      {/* ================= RIGHT SIDE ================= */}
-      <div className="w-full md:w-1/2 p-8 md:p-14 bg-white/5 backdrop-blur-xl">
+    </div>
 
-        <div className="mb-10">
+    <div className="mt-10 max-w-md">
 
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Welcome Back 👋
-          </h1>
+      <p className="text-gray-300 text-lg leading-relaxed">
+        Empowering students through quality education,
+        professional certification, skill development,
+        and career-focused learning programs.
+      </p>
 
-          <p className="text-gray-300">
-            Sign in to access your institute dashboard
-          </p>
+    </div>
 
-        </div>
+  </div>
 
-        <form onSubmit={login} className="space-y-6">
+</div>
 
-          {/* EMAIL */}
-          <div>
+      {/* RIGHT SIDE */}
+      <div className="flex justify-center items-center">
 
-            <label className="text-gray-200 text-sm mb-2 block">
-              Email Address
-            </label>
+        <div className="relative w-[750px] h-[750px] flex items-center justify-center">
 
-            <input
-              type="email"
-              placeholder="youremail@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="
-                w-full
-                bg-white/10
-                border border-white/20
-                backdrop-blur-xl
-                rounded-2xl
-                px-5
-                py-4
-                text-white
-                placeholder-gray-400
-                focus:outline-none
-                focus:border-cyan-400
-                focus:ring-2
-                focus:ring-cyan-400/30
-                transition-all
-              "
-            />
-
-          </div>
-
-          {/* PASSWORD */}
-          <div className="relative">
-
-            <label className="text-gray-200 text-sm mb-2 block">
-              Password
-            </label>
-
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="
-                w-full
-                bg-white/10
-                border border-white/20
-                backdrop-blur-xl
-                rounded-2xl
-                px-5
-                py-4
-                pr-14
-                text-white
-                placeholder-gray-400
-                focus:outline-none
-                focus:border-cyan-400
-                focus:ring-2
-                focus:ring-cyan-400/30
-                transition-all
-              "
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-5 top-[48px] text-white/70 hover:text-white"
-            >
-              {showPassword ? (
-                <EyeOff size={20} />
-              ) : (
-                <Eye size={20} />
-              )}
-            </button>
-
-          </div>
-
-          {/* LOGIN BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="
-              w-full
-              py-4
-              rounded-2xl
-              font-semibold
-              text-white
-              bg-gradient-to-r
-              from-cyan-500
-              via-blue-500
-              to-indigo-600
-              hover:scale-[1.02]
-              hover:shadow-[0_10px_40px_rgba(59,130,246,0.5)]
-              transition-all
-              duration-300
-            "
+          {/* OUTER RING */}
+          <div
+        className="absolute w-[760px] h-[760px]"
+            style={{
+              transform: `rotate(${rotation}deg)`
+            }}
           >
-            {loading ? "Logging in..." : "SIGN IN"}
-          </button>
+            {[...Array(60)].map((_, i) => {
+              const angle = (360 / 60) * i
 
-        </form>
-
-        {/* Divider */}
-        <div className="my-10 flex items-center">
-          <div className="flex-1 border-t border-white/20"></div>
-          <span className="px-4 text-white/60 text-sm">
-            MOBILE APP
-          </span>
-          <div className="flex-1 border-t border-white/20"></div>
-        </div>
-
-        {/* PWA CARD */}
-        <div className="
-          border border-white/20
-          bg-white/10
-          backdrop-blur-xl
-          rounded-3xl
-          p-6
-          text-center
-        ">
-
-          <div className="text-5xl mb-3">
-            📱
+              return (
+                <div
+                  key={i}
+                  className="absolute top-1/2 left-1/2 w-[10px] h-[55px] rounded-full bg-gradient-to-b from-cyan-300 to-blue-700"
+                  style={{
+                    transform: `
+                      translate(-50%, -50%)
+                      rotate(${angle}deg)
+                      translateY(-340px)
+                    `,
+                  }}
+                />
+              )
+            })}
           </div>
 
-          <h3 className="text-white font-bold text-lg mb-2">
-            Student Mobile App
-          </h3>
+         
+          {/* LOGIN BOX */}
+<div className="z-10 w-[380px] text-center">
 
-          <p className="text-gray-300 text-sm mb-5">
-            Access courses, certificates, attendance and results
-            directly from your smartphone.
-          </p>
+           
 
-          <button className="
-            w-full
-            bg-white/10
-            border border-white/20
-            text-white
-            py-3
-            rounded-2xl
-            hover:bg-white/20
-            transition-all
-          ">
-            Coming Soon
-          </button>
+              <h2 className="text-center text-cyan-400 text-4xl font-bold mb-8">
+                Login
+              </h2>
+
+              <form onSubmit={login}>
+
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="
+                    w-full
+                    bg-transparent
+                    border
+                    border-cyan-700/50
+                    rounded-full
+                    px-5
+                    py-4
+                    text-white
+                    mb-5
+                    outline-none
+                    focus:border-cyan-400
+                  "
+                />
+
+                <div className="relative">
+
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="
+                      w-full
+                      bg-transparent
+                      border
+                      border-cyan-700/50
+                      rounded-full
+                      px-5
+                      py-4
+                      pr-14
+                      text-white
+                      outline-none
+                      focus:border-cyan-400
+                    "
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
+                    className="absolute right-5 top-4 text-gray-300"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="
+                    w-full
+                    mt-6
+                    py-4
+                    rounded-full
+                    bg-cyan-400
+                    text-black
+                    font-bold
+                    transition-all
+                    hover:scale-[1.02]
+                    hover:shadow-[0_0_25px_#22d3ee]
+                  "
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                      Logging In...
+                    </span>
+                  ) : (
+                    "Login"
+                  )}
+                </button>
+
+              </form>
+
+              {/* APP COMING SOON */}
+          <div className="mt-12 text-center">
+
+  <div className="flex items-center justify-center gap-5">
+
+    <div className="w-16 h-[1px] bg-cyan-500"></div>
+
+    <span className="text-cyan-300 tracking-[6px] text-sm">
+      APP COMING SOON
+    </span>
+
+    <div className="w-16 h-[1px] bg-cyan-500"></div>
+
+  </div>
+
+  <div className="mt-4 text-cyan-400 text-5xl">
+    🚀
+  </div>
+
+</div>
+
+      
+
+          </div>
 
         </div>
 

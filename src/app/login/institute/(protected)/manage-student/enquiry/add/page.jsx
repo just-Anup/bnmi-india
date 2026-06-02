@@ -58,8 +58,8 @@ export default function AddEnquiry() {
       queries = [Query.equal("franchiseEmail", user.email)];
     }
 
-    if (type === "typing") {
-      collection = "franchise_typing_courses";
+    if (type === "beauty") {
+      collection = "beauty_courses_subjects";
       queries = [Query.equal("franchiseEmail", user.email)];
     }
 
