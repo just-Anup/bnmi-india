@@ -340,11 +340,8 @@ const data = {
 
     "",
 
-  coursePeriod:
-    cert.duration ||
-    studentData.duration ||
-    studentData.courseDuration ||
-    ""
+coursePeriod:
+  cert.coursePeriod || "",
 };
     // ===============================
     // ✅ SAVE + OPEN
@@ -468,6 +465,8 @@ if (studentData.courseType === "semester") {
       grade: cert.grade,
       course: studentData.courseName || "",
       duration: studentData.duration || "",
+      coursePeriod:
+  cert.coursePeriod || "",
       signatureId: studentData.signatureId || "",
       franchiseSignature: franchiseData?.signature || "",
       fatherName: studentData.fatherName || "",
@@ -751,9 +750,11 @@ const formatDate = (date) =>
     month: "short",
     year: "numeric",
   });
-finalDuration =
+const coursePeriod =
   `${formatDate(start)} To ${formatDate(end)}`.trim();
 
+const finalDuration =
+  rawDuration;
 
 
     // ✅ UPDATE DB
@@ -781,6 +782,7 @@ verifyUrl,
           studentData.courseName || "",
 
           duration: finalDuration,
+coursePeriod: coursePeriod,
 
  
 
