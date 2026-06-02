@@ -293,7 +293,7 @@ const tableHeight = marksArray.length * rowHeight;
         =============================== */}
         <div className="absolute top-[310px] left-[330px]">{student.studentName}</div>
         <div className="absolute top-[330px] left-[330px]">{student.fatherName}</div>
-        <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
+        <div className="absolute top-[352px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[374px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[395px] left-[330px] font-bold">{student.course}</div>
         <div className="absolute top-[438px] left-[330px] font-bold">{student.instituteName}</div>
@@ -430,7 +430,7 @@ lineHeight: "16px",
      <div
   className="absolute font-bold"
   style={{
-    top: 655 + tableHeight + 40,
+    top: 800 + tableHeight + 40,
     left: 775
   }}
 >

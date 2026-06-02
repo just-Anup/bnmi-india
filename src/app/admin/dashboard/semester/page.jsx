@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { databases, account, ID } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -18,6 +19,60 @@ export default function AddSemesterCoursePage() {
   const [courseName, setCourseName] = useState("");
   const [duration, setDuration] = useState("");
   const [totalSemesters, setTotalSemesters] = useState(1);
+  const [courses, setCourses] = useState([]);
+  const [editId, setEditId] = useState(null);
+const [isEditing, setIsEditing] = useState(false);
+
+const [viewSubjects, setViewSubjects] = useState([]);
+const [showSubjectsModal, setShowSubjectsModal] = useState(false);
+
+
+  const [award, setAward] = useState("");
+const [customAward, setCustomAward] = useState("");
+
+const awardList = [
+  "CERTIFICATE",
+  "DIPLOMA",
+  "ADVANCE CERTIFICATE",
+  "ADVANCE DIPLOMA",
+  "MASTER DIPLOMA",
+  "CERTIFICATE IN POST GRADUATE DIPLOMA",
+  "PROFESSIONAL DIPLOMA",
+  "ALL INDIA CERTIFICATE",
+  "MASTER CERTIFICATE",
+  "CERTIFICATE BASIC DIPLOMA",
+  "ADVANCE",
+  "CERTIFICATE IN PROFESSIONAL DIPLOMA",
+  "POST GRADUATE",
+  "POST GRADUATE DIPLOMA",
+  "BASIC",
+  "CERTIFICATE COURSE",
+  "CERTIFICATION",
+  "PRE-VOCATIONAL COURSE",
+  "PERSONAL"
+];
+
+const fetchCourses = async () => {
+  try {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "semester_courses_master"
+    );
+
+    setCourses(res.documents);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+useEffect(() => {
+  fetchCourses();
+}, []);
+
+
 
   // SEMESTERS
   const [semesters, setSemesters] = useState([
@@ -68,12 +123,11 @@ export default function AddSemesterCoursePage() {
 
     const updated = [...semesters];
 
-    updated[semesterIndex].subjects.push({
-      subjectName: "",
-      objectiveMarks: "",
-      practicalMarks: "",
-    });
-
+updated[semesterIndex].subjects.push({
+  subjectName: "",
+  objectiveMarks: 50,
+  practicalMarks: 50,
+});
     setSemesters(updated);
   };
 
@@ -111,11 +165,12 @@ export default function AddSemesterCoursePage() {
       setLoading(true);
 
       // VALIDATION
-      if (
-        !courseCode ||
-        !courseName ||
-        !duration
-      ) {
+     if (
+  !courseCode ||
+  !courseName ||
+  !duration ||
+  !finalAward
+) {
         alert("Fill all course details");
         return;
       }
@@ -166,21 +221,78 @@ if (franchiseRes.documents.length > 0) {
   }
 }
 
+const finalAward =
+  award === "OTHER"
+    ? customAward
+    : award;
+
       // SAVE COURSE
-      await databases.createDocument(
-        DATABASE_ID,
-        "semester_courses_master",
-        ID.unique(),
-        {
-          courseCode,
-          courseName,
-          duration,
-          totalSemesters,
-          examFees,
-          createdById: user.$id,
-          createdAt: new Date().toISOString(),
-        }
-      );
+if (isEditing) {
+
+  await databases.updateDocument(
+    DATABASE_ID,
+    "semester_courses_master",
+    editId,
+    {
+      courseCode,
+      courseName:
+        `${finalAward} IN ${courseName}`,
+      award: finalAward,
+      duration,
+      totalSemesters,
+      examFees,
+    }
+  );
+
+} else {
+
+  await databases.createDocument(
+    DATABASE_ID,
+    "semester_courses_master",
+    ID.unique(),
+    {
+      courseCode,
+      courseName:
+        `${finalAward} IN ${courseName}`,
+      award: finalAward,
+      duration,
+      totalSemesters,
+      examFees,
+      createdById: user.$id,
+      createdAt:
+        new Date().toISOString(),
+    }
+  );
+
+}
+
+
+if (isEditing) {
+
+  const oldSubjects =
+    await databases.listDocuments(
+      DATABASE_ID,
+      "semester_subjects_master",
+      [
+        Query.equal(
+          "courseCode",
+          courseCode
+        )
+      ]
+    );
+
+  for (const sub of oldSubjects.documents) {
+
+    await databases.deleteDocument(
+      DATABASE_ID,
+      "semester_subjects_master",
+      sub.$id
+    );
+
+  }
+
+}
+
 
       // SAVE SUBJECTS
       for (const sem of semesters) {
@@ -231,6 +343,7 @@ if (franchiseRes.documents.length > 0) {
       }
 
       alert("Semester Course Added");
+      fetchCourses();
 
       router.push(
         "/login/institute/add-course/semester-course"
@@ -247,6 +360,118 @@ if (franchiseRes.documents.length > 0) {
       setLoading(false);
     }
   };
+
+  const handleViewSubjects = async (courseCode) => {
+
+  try {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "semester_subjects_master",
+      [
+        Query.equal("courseCode", courseCode),
+        Query.orderAsc("semesterNumber")
+      ]
+    );
+
+    setViewSubjects(res.documents);
+    setShowSubjectsModal(true);
+
+  } catch (err) {
+
+    console.log(err);
+    alert("Failed to load subjects");
+
+  }
+
+};
+
+const handleEdit = async (course) => {
+
+  try {
+
+    setIsEditing(true);
+    setEditId(course.$id);
+
+    setCourseCode(course.courseCode);
+
+    let cleanName = course.courseName;
+
+    if (course.award) {
+      cleanName = cleanName.replace(
+        `${course.award} IN `,
+        ""
+      );
+    }
+
+    setCourseName(cleanName);
+
+    setAward(course.award || "");
+    setDuration(course.duration);
+
+    const subjectRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "semester_subjects_master",
+        [
+          Query.equal(
+            "courseCode",
+            course.courseCode
+          )
+        ]
+      );
+
+    const semesterMap = {};
+
+    subjectRes.documents.forEach((sub) => {
+
+      const semNo =
+        sub.semesterNumber;
+
+      if (!semesterMap[semNo]) {
+
+        semesterMap[semNo] = {
+          semesterNumber: semNo,
+          subjects: [],
+        };
+
+      }
+
+      semesterMap[semNo].subjects.push({
+        subjectName: sub.subjectName,
+        objectiveMarks:
+          sub.objectiveMarks,
+        practicalMarks:
+          sub.practicalMarks,
+      });
+
+    });
+
+    const loadedSemesters =
+      Object.values(semesterMap).sort(
+        (a, b) =>
+          a.semesterNumber -
+          b.semesterNumber
+      );
+
+    setSemesters(loadedSemesters);
+
+    setTotalSemesters(
+      loadedSemesters.length
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
 
   return (
 
@@ -291,39 +516,63 @@ if (franchiseRes.documents.length > 0) {
 
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            <input
-              type="text"
-              placeholder="Course Code"
-              value={courseCode}
-              onChange={(e) =>
-                setCourseCode(e.target.value)
-              }
-              className="input"
-            />
+  <input
+    type="text"
+    placeholder="Course Code"
+    value={courseCode}
+    onChange={(e) =>
+      setCourseCode(e.target.value)
+    }
+    className="input"
+  />
 
-            <input
-              type="text"
-              placeholder="Course Name"
-              value={courseName}
-              onChange={(e) =>
-                setCourseName(e.target.value)
-              }
-              className="input"
-            />
+  <select
+    value={award}
+    onChange={(e) => setAward(e.target.value)}
+    className="input"
+     style={{
+    color: "white",
+    backgroundColor: "#1f1f23",
+  }}
+  >
+    <option value="">-- Select Award --</option>
 
-            <input
-              type="text"
-              placeholder="Duration"
-              value={duration}
-              onChange={(e) =>
-                setDuration(e.target.value)
-              }
-              className="input"
-            />
+    {awardList.map((a, i) => (
+      <option key={i} value={a}>
+        {a}
+      </option>
+    ))}
 
-          </div>
+    <option value="OTHER">Other</option>
+  </select>
+
+  <input
+    type="text"
+    placeholder="Course Name"
+    value={courseName}
+    onChange={(e) =>
+      setCourseName(e.target.value)
+    }
+    className="input"
+  />
+
+</div>
+
+<div className="mt-5">
+
+  <input
+    type="text"
+    placeholder="Duration (Example: 6 Months)"
+    value={duration}
+    onChange={(e) =>
+      setDuration(e.target.value)
+    }
+    className="input"
+  />
+
+</div>
 
         </div>
 
@@ -509,6 +758,180 @@ if (franchiseRes.documents.length > 0) {
         </button>
 
       </div>
+
+      <div className="glass-card mt-10">
+
+  <h2 className="text-2xl font-bold mb-5">
+    All Semester Courses
+  </h2>
+
+  <div className="overflow-x-auto">
+
+    <table className="w-full">
+
+      <thead>
+
+        <tr className="border-b border-white/10">
+
+          <th className="p-3 text-left">
+            Code
+          </th>
+
+          <th className="p-3 text-left">
+            Course Name
+          </th>
+
+          <th className="p-3 text-left">
+            Award
+          </th>
+
+          <th className="p-3 text-left">
+            Duration
+          </th>
+
+         <th className="p-3 text-left">
+  Semesters
+</th>
+
+<th className="p-3 text-left">
+  Action
+</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {courses.map((course) => (
+
+          <tr
+            key={course.$id}
+            className="border-b border-white/5"
+          >
+
+            <td className="p-3">
+              {course.courseCode}
+            </td>
+
+            <td className="p-3">
+              {course.courseName}
+            </td>
+
+            <td className="p-3">
+              {course.award}
+            </td>
+
+            <td className="p-3">
+              {course.duration}
+            </td>
+
+<td className="p-3">
+  {course.totalSemesters}
+</td>
+          <td className="p-3">
+
+  <div className="flex gap-2">
+
+    <button
+      onClick={() =>
+        handleViewSubjects(
+          course.courseCode
+
+        )
+      }
+      className="bg-blue-600 px-3 py-1 rounded"
+    >
+      View
+    </button>
+
+    <button
+      onClick={() =>
+        handleEdit(course)
+      }
+      className="bg-yellow-500 px-3 py-1 rounded"
+    >
+      Edit
+    </button>
+
+  </div>
+
+</td>
+
+          </tr>
+
+        ))}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+{showSubjectsModal && (
+
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+
+    <div className="bg-[#111] p-6 rounded-xl max-w-3xl w-full max-h-[80vh] overflow-auto">
+
+      <div className="flex justify-between mb-5">
+
+        <h2 className="text-2xl font-bold">
+          Subjects
+        </h2>
+
+        <button
+          onClick={() =>
+            setShowSubjectsModal(false)
+          }
+        >
+          ✕
+        </button>
+
+      </div>
+
+      {viewSubjects.map((sub) => (
+
+        <div
+          key={sub.$id}
+          className="border-b border-white/10 py-3"
+        >
+
+          <p>
+            <strong>
+              Semester:
+            </strong>{" "}
+            {sub.semesterNumber}
+          </p>
+
+          <p>
+            <strong>
+              Subject:
+            </strong>{" "}
+            {sub.subjectName}
+          </p>
+
+          <p>
+            Objective:
+            {sub.objectiveMarks}
+          </p>
+
+          <p>
+            Practical:
+            {sub.practicalMarks}
+          </p>
+
+        </div>
+
+      ))}
+
+    </div>
+
+  </div>
+
+)}
 
       <style jsx>{`
 

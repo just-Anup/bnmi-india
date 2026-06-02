@@ -50,6 +50,9 @@ export default function SelectSemesterPage() {
   const [selectedSemesters,
     setSelectedSemesters] =
     useState([]);
+    const [selectedSubjects,
+  setSelectedSubjects] =
+  useState([]);
 
   const [groupedSubjects,
     setGroupedSubjects] =
@@ -156,6 +159,57 @@ export default function SelectSemesterPage() {
       );
     };
 
+    const toggleSubject = (
+  subject
+) => {
+
+  setSelectedSubjects(
+    (prev) => {
+
+      const exists =
+        prev.find(
+          (s) =>
+            s.subjectId ===
+            subject.$id
+        );
+
+      if (exists) {
+
+        return prev.filter(
+          (s) =>
+            s.subjectId !==
+            subject.$id
+        );
+
+      }
+
+      if (
+        prev.length >= 10
+      ) {
+
+        alert(
+          "Maximum 10 subjects allowed"
+        );
+
+        return prev;
+      }
+
+      return [
+        ...prev,
+        {
+          subjectId:
+            subject.$id,
+          subjectName:
+            subject.subjectName,
+          semesterNumber:
+            subject.semesterNumber,
+        },
+      ];
+    }
+  );
+};
+
+
   // SAVE COURSE
   const saveCourse =
     async () => {
@@ -164,15 +218,27 @@ export default function SelectSemesterPage() {
 
         setLoading(true);
 
-        if (
-          selectedSemesters.length === 0
-        ) {
-          alert(
-            "Select at least one semester"
-          );
+   if (
+  selectedSemesters.length === 0
+) {
 
-          return;
-        }
+  alert(
+    "Select at least one semester"
+  );
+
+  return;
+}
+
+if (
+  selectedSubjects.length === 0
+) {
+
+  alert(
+    "Select at least one subject"
+  );
+
+  return;
+}
 
         if (
           !courseFees ||
@@ -225,6 +291,8 @@ export default function SelectSemesterPage() {
             courseCode,
             courseName,
             duration,
+            totalSelectedSubjects:
+  selectedSubjects.length,
 
             totalSemesters:
               Number(
@@ -255,7 +323,42 @@ export default function SelectSemesterPage() {
             status: "Active",
           }
         );
+for (
+  const subject of
+  selectedSubjects
+) {
 
+  await databases.createDocument(
+    DATABASE_ID,
+    "franchise_semester_course_subjects",
+    ID.unique(),
+    {
+      courseId,
+      courseCode,
+
+      subjectId:
+        subject.subjectId,
+
+      subjectName:
+        subject.subjectName,
+
+      semesterNumber:
+        Number(
+          subject.semesterNumber
+        ),
+
+      franchiseEmail:
+        user.email,
+
+      createdById:
+        user.$id,
+
+      createdAt:
+        new Date().toISOString(),
+    }
+  );
+
+}
         alert(
           "Semester Course Added"
         );
@@ -433,10 +536,20 @@ export default function SelectSemesterPage() {
                   ].map((subject) => (
 
                     <div
-                      key={subject.$id}
-                      className="subject-card"
-                    >
-
+  key={subject.$id}
+  onClick={() =>
+    toggleSubject(subject)
+  }
+  className={`subject-card cursor-pointer ${
+    selectedSubjects.find(
+      (s) =>
+        s.subjectId ===
+        subject.$id
+    )
+      ? "active-card"
+      : ""
+  }`}
+>
                       <div className="font-semibold text-white mb-3">
 
                         {
@@ -529,6 +642,22 @@ export default function SelectSemesterPage() {
 
         </div>
 
+<div className="glass-card mt-8">
+
+  <h2 className="text-xl font-bold">
+
+    Selected Subjects
+
+  </h2>
+
+  <p className="text-orange-400 mt-2">
+
+    {selectedSubjects.length}
+    / 10 Selected
+
+  </p>
+
+</div>
         {/* SAVE */}
         <button
           onClick={saveCourse}

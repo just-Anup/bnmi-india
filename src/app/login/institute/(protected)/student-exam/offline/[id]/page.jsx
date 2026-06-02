@@ -119,24 +119,29 @@ if (res.subjects) {
   }
 
   // ✅ MULTIPLE
-  else if (res.courseType === "multiple") {
+// ✅ MULTIPLE
+else if (res.courseType === "multiple") {
 
-    // 🔥 SUPPORT BOTH || AND NORMAL SUBJECTS
-    if (res.subjects.includes("||")) {
+  if (res.subjects.includes("||")) {
 
-      subjectList = res.subjects
-        .split("||")
-        .map(s => s.trim())
-        .filter(Boolean);
+    subjectList = res.subjects
+      .split("||")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-    } else {
+  } else if (res.subjects.includes(",")) {
 
-      // ✅ KEEP WHOLE SUBJECT AS ONE
-      subjectList = [res.subjects];
+    subjectList = res.subjects
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-    }
+  } else {
+
+    subjectList = [res.subjects.trim()];
 
   }
+}
 
   // ✅ FALLBACK
   else {

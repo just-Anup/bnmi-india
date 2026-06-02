@@ -608,10 +608,10 @@ useEffect(() => {
 
        {/* COURSE */}
         <div
-          className="absolute top-[827px] left-[270px] font-semibold w-[500px] leading-tight"
+          className="absolute top-[827px] left-[220px] font-bold w-[500px] leading-tight text-[18px]  "
         >
           <div className="flex gap-2">
-            <span className="whitespace-nowrap">Course Name:</span>
+      
             <span>{courseLines[0]}</span>
           </div>
 
