@@ -54,7 +54,14 @@ const statesAndCities = {
   Jharkhand: ['Ranchi', 'Jamshedpur'],
   Uttarakhand: ['Dehradun', 'Haridwar'],
   'jammu & kashmir': ['Srinagar', 'Jammu'],
-  
+  'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior'],
+  Goa: ['Panaji'],
+  'Andhra Pradesh': [
+    'Vijayawada',
+    'Visakhapatnam',
+    'Guntur',
+  ],
+  Telangana: ['Hyderabad', 'Secunderabad', 'Warangal'],
 }
 
 /* ---------------- SAFE ATC GENERATOR ---------------- */
