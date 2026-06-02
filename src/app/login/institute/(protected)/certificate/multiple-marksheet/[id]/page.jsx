@@ -500,6 +500,9 @@ lineHeight: "16px",
 <div className="absolute bottom-[260px] left-[250px] font-bold">
   Grade: {getGrade()}
 </div>
+<div className="absolute bottom-[260px] left-[600px] font-bold">
+  Total:  {total}/{totalOutOf}
+</div>
         {/* ===============================
             SIGNATURE
         =============================== */}

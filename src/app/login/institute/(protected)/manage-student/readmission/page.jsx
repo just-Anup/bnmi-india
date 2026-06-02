@@ -14,6 +14,7 @@ export default function ReAdmission() {
 
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [allCourses, setAllCourses] = useState([]);
 
   const [installments, setInstallments] = useState([
     { name: "", amount: "", date: "" }
@@ -35,9 +36,10 @@ export default function ReAdmission() {
     admissionDate: ""
   });
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
+ useEffect(() => {
+  fetchStudents();
+  fetchAllCourses();
+}, []);
 
 
   const fetchStudents = async () => {
@@ -53,6 +55,64 @@ export default function ReAdmission() {
     setStudents(res.documents);
 
   };
+
+
+  const fetchAllCourses = async () => {
+
+  try {
+
+    const user = await account.get();
+
+    const [singleRes, multipleRes, beautyRes, semesterRes] =
+      await Promise.all([
+
+        databases.listDocuments(
+          DATABASE_ID,
+          "courses_single",
+          [Query.equal("franchiseEmail", user.email)]
+        ),
+
+        databases.listDocuments(
+          DATABASE_ID,
+          "courses_multiple",
+          [Query.equal("franchiseEmail", user.email)]
+        ),
+
+        databases.listDocuments(
+          DATABASE_ID,
+          "beauty_courses_single",
+          [Query.equal("franchiseEmail", user.email)]
+        ),
+
+        databases.listDocuments(
+          DATABASE_ID,
+          "franchise_semester_courses",
+          [Query.equal("franchiseEmail", user.email)]
+        )
+
+      ]);
+
+    const courses = [
+
+      ...singleRes.documents,
+
+      ...multipleRes.documents,
+
+      ...beautyRes.documents,
+
+      ...semesterRes.documents
+
+    ];
+
+    setAllCourses(courses);
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+};
 
 
   const handleStudentSelect = async (id) => {
@@ -103,6 +163,33 @@ export default function ReAdmission() {
     ]);
 
   };
+  
+const handleCourseSelect = (e) => {
+
+  const selected = allCourses.find(
+    c => c.$id === e.target.value
+  );
+
+  if (!selected) return;
+
+  const total =
+    Number(selected.courseFees || 0) +
+    Number(selected.examFees || 0);
+
+  setForm(prev => ({
+    ...prev,
+
+    course: selected.courseName,
+
+    courseFees: selected.courseFees || 0,
+
+    examFees: selected.examFees || 0,
+
+    totalFees: total,
+
+    balance: total
+  }));
+};
 
 
   const handleSubmit = async (e) => {
@@ -123,11 +210,23 @@ export default function ReAdmission() {
         email: selectedStudent.email,
         photoId: selectedStudent.photoId,
         signatureId: selectedStudent.signatureId,
+        motherName: selectedStudent.motherName || "",
+gender: selectedStudent.gender || "",
+dob: selectedStudent.dob || "",
+address: selectedStudent.address || "",
+city: selectedStudent.city || "",
+state: selectedStudent.state || "",
+qualification: selectedStudent.qualification || "",
+aadhaarNo: selectedStudent.aadhaarNo || "",
+
+readmission: true,
+oldAdmissionId: selectedStudent.$id,
 
         course: form.course,
         examType: form.examType,
         batch: form.batch,
 
+        
         courseFees: Number(form.courseFees) || 0,
      discountRate: Number(form.discountRate) || 0,
         discountAmount: Number(form.discountAmount) || 0,
@@ -188,12 +287,24 @@ export default function ReAdmission() {
 
         <div>
           <label>Course of Interest *</label>
-          <input
-            name="course"
-            value={form.course}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
+    <select
+  onChange={handleCourseSelect}
+  className="border p-2 w-full"
+  required
+>
+  <option value="">Select Course</option>
+
+  {allCourses.map((course) => (
+
+    <option
+      key={course.$id}
+      value={course.$id}
+    >
+      {course.courseName}
+    </option>
+
+  ))}
+</select>
         </div>
 
 
@@ -220,7 +331,12 @@ export default function ReAdmission() {
 
         <div>
           <label>Course Fees</label>
-          <input name="courseFees" onChange={handleChange} className="border p-2 w-full" />
+          <input
+  name="courseFees"
+  value={form.courseFees}
+  onChange={handleChange}
+  className="border p-2 w-full"
+/>
         </div>
 
         <div>
@@ -235,7 +351,12 @@ export default function ReAdmission() {
 
         <div>
           <label>Total Fees</label>
-          <input name="totalFees" onChange={handleChange} className="border p-2 w-full" />
+          <input
+  name="totalFees"
+  value={form.totalFees}
+  onChange={handleChange}
+  className="border p-2 w-full"
+/>
         </div>
 
         <div>
@@ -245,7 +366,12 @@ export default function ReAdmission() {
 
         <div>
           <label>Balance</label>
-          <input name="balance" onChange={handleChange} className="border p-2 w-full" />
+         <input
+  name="balance"
+  value={form.balance}
+  onChange={handleChange}
+  className="border p-2 w-full"
+/>
         </div>
 
         <div>
@@ -310,7 +436,12 @@ export default function ReAdmission() {
 
         <div>
           <label>Exam Fees</label>
-          <input name="examFees" onChange={handleChange} className="border p-2 w-full" />
+          <input
+  name="examFees"
+  value={form.examFees}
+  onChange={handleChange}
+  className="border p-2 w-full"
+/>
         </div>
 
         <div>
