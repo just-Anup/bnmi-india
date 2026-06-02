@@ -254,6 +254,20 @@ if (!student) return <div className="p-10">Loading...</div>;
 const rowHeight = 25;
 const tableHeight = marksArray.length * rowHeight;
 
+const objectiveTotal = marksArray.reduce(
+  (sum, m) => sum + Number(m.objective || 0),
+  0
+);
+
+const practicalTotal = marksArray.reduce(
+  (sum, m) => sum + Number(m.practical || 0),
+  0
+);
+
+const objectiveOutOf = marksArray.length * 50;
+const practicalOutOf = marksArray.length * 50;
+const totalOutOf = marksArray.length * 100;
+
   return (
     <div className="p-10 bg-white">
 
@@ -427,7 +441,45 @@ lineHeight: "16px",
         {/* ===============================
             TOTAL
         =============================== */}
-     <div
+    <div
+  style={{
+    position: "absolute",
+    top: 580 + tableHeight + 40,
+    left: 150,
+    width: "650px",
+    display: "grid",
+    gridTemplateColumns:
+      "280px 60px 60px 60px 60px 70px 70px",
+    fontWeight: "bold",
+    fontSize: "18px",
+  }}
+>
+  <div></div>
+
+  <div style={{ textAlign: "center" }}>
+    {objectiveOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {objectiveTotal}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {practicalOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {practicalTotal}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {totalOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {total}
+  </div>
+</div> <div
   className="absolute font-bold"
   style={{
     top: 800 + tableHeight + 40,
