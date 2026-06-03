@@ -289,7 +289,7 @@ const totalOutOf = marksArray.length * 100;
   }}
 >
         {/* TEMPLATE */}
-        <img src="/multiplemark.png" className="absolute w-full h-full" />
+        <img src="/multiplemarksheet.jpg" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {student?.logo && (
@@ -444,7 +444,7 @@ lineHeight: "16px",
     <div
   style={{
     position: "absolute",
-    top: 650 + tableHeight + 40,
+    top: 580 + tableHeight + 40,
     left: 150,
     width: "650px",
     display: "grid",

@@ -147,6 +147,9 @@ useEffect(() => {
           studentData.courseDuration ||
           "",
 
+          coursePeriod:
+  cert.coursePeriod || "",
+
         marks:
           cert.marks || "",
 
@@ -588,15 +591,21 @@ const franchiseSign =
 
         
         {/* COURSE */}
-        <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
+        <div className="absolute top-[826px] left-[0px] font-bold w-full text-center text-xl">
   {student.course}
 </div>
 
        {/* COURSE DURATION */}
 <div
-  className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
+  className="absolute top-[854px] left-[0px] font-semibold w-full text-center text-[15px]"
 >
-  Course Duration: {student.duration || "N/A"}
+  Course Period: {student.duration || "N/A"}
+</div>
+
+<div
+  className="absolute top-[874px] left-[0px] font-semibold w-full text-center text-[15px]"
+>
+   Course Duration: {student.coursePeriod || "N/A"}
 </div>
 
         {/* GRADE */}

@@ -174,6 +174,11 @@ export default function PrintCertificate() {
           duration:
             cert.duration || "",
 
+            
+          coursePeriod:
+  cert.coursePeriod || "",
+
+
           marks:
             cert.marks || "",
 
@@ -650,11 +655,17 @@ export default function PrintCertificate() {
         </div>
 
         {/* COURSE DURATION */}
-        <div
-          className="absolute top-[864px] left-[0px] w-full text-center font-semibold text-xl whitespace-nowrap"
-        >
-          Course Duration: {student.duration || "N/A"}
-        </div>
+     <div
+  className="absolute top-[854px] left-[0px] font-semibold w-full text-center text-[15px]"
+>
+  Course Period: {student.duration || "N/A"}
+</div>
+
+<div
+  className="absolute top-[874px] left-[0px] font-semibold w-full text-center text-[15px]"
+>
+   Course Duration: {student.coursePeriod || "N/A"}
+</div>
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">

@@ -161,6 +161,9 @@ motherName:
           studentData.courseDuration ||
           "",
 
+          coursePeriod:
+  cert.coursePeriod || "",
+
         grade:
           cert.grade || "",
 
@@ -555,7 +558,7 @@ useEffect(() => {
       >
 
         {/* TEMPLATE */}
-        <img src="/beautycerti.png" className="absolute w-full h-full" />
+        <img src="/certi.jpg.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
       {student.logo && (
@@ -608,7 +611,7 @@ useEffect(() => {
 
        {/* COURSE */}
         <div
-          className="absolute top-[827px] left-[220px] font-bold w-[500px] leading-tight text-[18px]  "
+          className="absolute top-[827px] left-[220px] font-bold w-[600px] leading-tight text-[18px]  "
         >
           <div className="flex gap-2">
       
@@ -616,7 +619,7 @@ useEffect(() => {
           </div>
 
           {courseLines.slice(1).map((line, index) => (
-            <div key={index} className="ml-[120px]">
+            <div key={index} className="ml-[200px]">
               {line}
             </div>
           ))}
@@ -627,11 +630,21 @@ useEffect(() => {
 <div
   className="absolute left-[270px] font-semibold"
   style={{
-    top: 827 + (courseLines.length * 20) + 20
+    top: 807 + (courseLines.length * 20) + 20
   }}
 >
-  Course Duration: {student.duration || "N/A"}
+   Course Period: {student.duration || "N/A"}
 </div>
+
+        {/* COURSE PERIOD */}
+        <div
+          className="absolute left-[270px] font-semibold"
+          style={{
+            top: 808 + (courseLines.length * 20) + 40
+          }}
+        >
+          Course Duration: {student.coursePeriod || "N/A"}
+        </div>
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">

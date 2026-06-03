@@ -610,12 +610,78 @@ const approveCertificate = async (id, cert) => {
       // ✅ AUTO GENERATE COURSE DURATION
 let finalDuration = "";
 
-const rawDuration = String(
-  studentData.duration ||
-  studentData.courseDuration ||
-  "1 year"
-);
+let rawDuration = "1 Year";
 
+try {
+
+  // BEAUTY
+  if (studentData.courseType === "beauty") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "beauty_courses_single",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+  // SINGLE
+  else if (studentData.courseType === "single") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_single",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+  // MULTIPLE
+  else if (studentData.courseType === "multiple") {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_multiple",
+      [
+        Query.equal("courseName", studentData.courseName),
+        Query.equal(
+          "franchiseEmail",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      rawDuration = res.documents[0].duration;
+    }
+
+  }
+
+} catch (err) {
+
+  console.log("DURATION ERROR:", err);
+
+}
 const today = new Date();
 
 const end = new Date(today);
@@ -685,7 +751,8 @@ verifyUrl,
         course:
           studentData.courseName || "",
 
-          duration: finalDuration,
+          duration: rawDuration,
+coursePeriod: finalDuration,
 
  
 
