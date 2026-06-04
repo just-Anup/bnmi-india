@@ -52,10 +52,10 @@ export default function CertificatePage() {
             r.grade !== "F" &&
             r.createdById === user.$id
         )
-        .map(r => ({
-          ...r,
-          alreadyApplied: appliedStudents.includes(r.studentId)
-        }));
+       .map(r => ({
+  ...r,
+  alreadyApplied: r.certificateApplied === true
+}));
 
       setResults(passedStudents);
 
@@ -71,20 +71,18 @@ export default function CertificatePage() {
 
   };
 
-  const toggleSelect = (id) => {
+ const toggleSelect = (id) => {
 
-    if (selected.includes(id)) {
+  const student = results.find(r => r.$id === id);
 
-      setSelected(selected.filter(s => s !== id));
+  if (student?.alreadyApplied) return;
 
-    } else {
-
-      setSelected([...selected, id]);
-
-    }
-
-  };
-
+  if (selected.includes(id)) {
+    setSelected(selected.filter(s => s !== id));
+  } else {
+    setSelected([...selected, id]);
+  }
+};
   const applyCertificate = async () => {
 
     if (selected.length === 0) {
@@ -135,11 +133,39 @@ export default function CertificatePage() {
           }
         );
 
+        try {
+  const updated = await databases.updateDocument(
+    DATABASE_ID,
+    RESULT_COLLECTION,
+    student.$id,
+    {
+      certificateApplied: true,
+    }
+  );
+
+  console.log("UPDATED SUCCESS:", updated);
+} catch (error) {
+  console.log("UPDATE ERROR:", error);
+}
+console.log("UPDATED RESULT:", updatedResult);
       }
+
+
 
       alert("Certificate request sent to admin");
 
       setSelected([]);
+
+      setResults(prev =>
+  prev.map(item =>
+    selected.includes(item.$id)
+      ? { ...item, alreadyApplied: true }
+      : item
+  )
+);
+
+setSelected([]); 
+
 
       // ✅ RELOAD FOR DISABLE CHECKBOX
       loadResults();
@@ -265,26 +291,20 @@ export default function CertificatePage() {
                     >
 
                       {/* CHECKBOX */}
-                      <td className="p-4">
-
-                        {r.alreadyApplied ? (
-
-                          <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
-                            Applied
-                          </span>
-
-                        ) : (
-
-                          <input
-                            type="checkbox"
-                            checked={selected.includes(r.$id)}
-                            onChange={() => toggleSelect(r.$id)}
-                            className="w-5 h-5 accent-blue-600 cursor-pointer"
-                          />
-
-                        )}
-
-                      </td>
+                     <td className="p-4">
+  {r.alreadyApplied ? (
+    <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+      Applied
+    </span>
+  ) : (
+    <input
+      type="checkbox"
+      checked={selected.includes(r.$id)}
+      onChange={() => toggleSelect(r.$id)}
+      className="w-5 h-5 accent-blue-600 cursor-pointer"
+    />
+  )}
+</td>
 
                       <td className="p-4 font-medium">
                         {index + 1}

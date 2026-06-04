@@ -74,23 +74,36 @@ export default function InstituteLogin() {
     }
 
     /* ---------------- FRANCHISE CHECK ---------------- */
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved",
-      [Query.equal("email", email)]
-    );
+const res = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", email)]
+);
 
-    if (!res.documents.length) {
+if (!res.documents.length) {
 
-      alert("Your franchise is not approved yet");
+  alert("Your franchise is not approved yet");
 
-      await account.deleteSession("current");
+  await account.deleteSession("current");
 
-      setLoading(false);
+  setLoading(false);
 
-      return;
-    }
+  return;
+}
 
+const franchise = res.documents[0];
+
+// ✅ Check Active / Deactive Status
+if (franchise.isActive === false) {
+
+  alert("Your franchise account has been deactivated by Admin");
+
+  await account.deleteSession("current");
+
+  setLoading(false);
+
+  return;
+}
    
 
 
@@ -117,7 +130,7 @@ export default function InstituteLogin() {
 
     <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 blur-[180px] rounded-full" />
 
-    <div className="grid lg:grid-cols-2 w-full max-w-7xl px-6 lg:px-12">
+   <div className="grid lg:grid-cols-2 w-full max-w-7xl px-4 md:px-6 lg:px-12">
 <div className="hidden lg:flex flex-col justify-center pl-16">
 
   <h1
@@ -177,11 +190,35 @@ export default function InstituteLogin() {
       {/* RIGHT SIDE */}
       <div className="flex justify-center items-center">
 
-        <div className="relative w-[750px] h-[750px] flex items-center justify-center">
+     <div className="
+  relative
+  w-[380px]
+  h-[380px]
+  sm:w-[500px]
+  sm:h-[500px]
+  md:w-[650px]
+  md:h-[650px]
+  lg:w-[750px]
+  lg:h-[750px]
+  flex
+  items-center
+  justify-center
+">
 
           {/* OUTER RING */}
           <div
-        className="absolute w-[760px] h-[760px]"
+       
+  className="
+    absolute
+    w-[380px]
+    h-[380px]
+    sm:w-[500px]
+    sm:h-[500px]
+    md:w-[650px]
+    md:h-[650px]
+    lg:w-[760px]
+    lg:h-[760px]
+  "
             style={{
               transform: `rotate(${rotation}deg)`
             }}
@@ -197,7 +234,15 @@ export default function InstituteLogin() {
                     transform: `
                       translate(-50%, -50%)
                       rotate(${angle}deg)
-                      translateY(-340px)
+                     translateY(
+  window.innerWidth < 640
+    ? -165
+    : window.innerWidth < 768
+    ? -220
+    : window.innerWidth < 1024
+    ? -290
+    : -340
+)
                     `,
                   }}
                 />
@@ -207,11 +252,16 @@ export default function InstituteLogin() {
 
          
           {/* LOGIN BOX */}
-<div className="z-10 w-[380px] text-center">
+<div className="z-10
+  w-full
+  max-w-[340px]
+  sm:max-w-[380px]
+  text-center
+  px-4">
 
            
 
-              <h2 className="text-center text-cyan-400 text-4xl font-bold mb-8">
+             <h2 className="text-center text-cyan-400 text-3xl sm:text-4xl font-bold mb-8">
                 Login
               </h2>
 

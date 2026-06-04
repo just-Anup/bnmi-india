@@ -1,199 +1,195 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { databases } from "@/lib/appwrite";
-import { ID, Query } from "appwrite";
-
-import { account } from "@/lib/appwrite";
-
-const user = await account.get();
+import { databases, account } from "@/lib/appwrite";
+import { Query, ID } from "appwrite";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
-
 const RESULT_COLLECTION = "exam_results";
 const CERT_COLLECTION = "certificates";
-
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function CertificatePage() {
 
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState([]);
-  const [appliedIds, setAppliedIds] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadResults();
   }, []);
 
-  // LOAD RESULTS
   const loadResults = async () => {
 
     try {
 
-      // RESULTS
+      setLoading(true);
+
+      const user = await account.get();
+
+      // ✅ LOAD RESULTS
       const res = await databases.listDocuments(
         DATABASE_ID,
-        RESULT_COLLECTION
+        RESULT_COLLECTION,
+        [Query.orderDesc("$createdAt")]
       );
 
-      const passedStudents = res.documents.filter(
-        (r) => r.grade !== "F"
-      );
-
-      // EXISTING CERTIFICATES
+      // ✅ LOAD CERTIFICATES
       const certRes = await databases.listDocuments(
         DATABASE_ID,
         CERT_COLLECTION
       );
 
-      // APPLIED IDS
-      const alreadyApplied = certRes.documents.map(
-        (c) => `${c.studentId}-${c.semesterNumber}`
+      // ✅ CREATE APPLIED ARRAY
+      const appliedStudents = certRes.documents.map(
+        cert => cert.studentId
       );
 
-      // FINAL DATA
-      const finalResults = passedStudents.map((r) => ({
-        ...r,
-        alreadyApplied: alreadyApplied.includes(
-          `${r.studentId}-${Number(r.semesterNumber)}`
+      // ✅ FILTER RESULTS
+      const passedStudents = res.documents
+        .filter(
+          r =>
+            r.grade !== "F" &&
+            r.createdById === user.$id
         )
-      }));
+        .map(r => ({
+          ...r,
+          alreadyApplied: appliedStudents.includes(r.studentId)
+        }));
 
-      setResults(finalResults);
+      setResults(passedStudents);
 
     } catch (err) {
 
       console.log(err);
 
-    }
-  };
+    } finally {
 
-  // TOGGLE SELECT
-  const toggleSelect = (id) => {
-
-    if (selected.includes(id)) {
-
-      setSelected(
-        selected.filter((s) => s !== id)
-      );
-
-    } else {
-
-      setSelected([...selected, id]);
+      setLoading(false);
 
     }
+
   };
 
-  // APPLY CERTIFICATE
+ const toggleSelect = (id) => {
+
+  const student = results.find(r => r.$id === id);
+
+  if (student?.alreadyApplied) return;
+
+  if (selected.includes(id)) {
+    setSelected(selected.filter(s => s !== id));
+  } else {
+    setSelected([...selected, id]);
+  }
+};
   const applyCertificate = async () => {
+
+    if (selected.length === 0) {
+      alert("Please select at least one student");
+      return;
+    }
 
     try {
 
-      const selectedResults = selected.map((id) =>
-        results.find((r) => r.$id === id)
-      );
+      for (const id of selected) {
 
-      for (const item of selectedResults) {
+        const student = results.find(r => r.$id === id);
 
-        const fullResult = await databases.getDocument(
+        if (!student) continue;
+
+        // ✅ PREVENT DUPLICATE
+        const existing = await databases.listDocuments(
           DATABASE_ID,
-          RESULT_COLLECTION,
-          item.$id
+          CERT_COLLECTION,
+          [
+            Query.equal("studentId", student.studentId)
+          ]
         );
 
-        const sem = Number(
-          fullResult.semesterNumber
-        );
-
-        if (!sem) {
-
-          alert("Semester missing in result");
-
+        if (existing.documents.length > 0) {
           continue;
         }
-
-        const existing =
-          await databases.listDocuments(
-            DATABASE_ID,
-            CERT_COLLECTION,
-            [
-              Query.equal(
-                "studentId",
-                fullResult.studentId
-              ),
-
-              Query.equal(
-                "semesterNumber",
-                sem
-              )
-            ]
-          );
-
-        if (existing.documents.length > 0)
-          continue;
 
         await databases.createDocument(
           DATABASE_ID,
           CERT_COLLECTION,
           ID.unique(),
           {
-            studentId: fullResult.studentId,
-            studentName: fullResult.studentName,
-            course: fullResult.course,
-            photoId: fullResult.photoId,
-            marks: fullResult.totalMarks,
-            grade: fullResult.grade,
-            semesterNumber: sem,
-            marksArray: fullResult.marksArray,
-            courseType: fullResult.courseType,
-            certificateNo:
-              "BNMI-" + Date.now(),
+            studentId: student.studentId,
+            studentName: student.studentName,
+            course: student.course,
+            instituteName: student.instituteName,
+            franchiseId: student.franchiseId,
+            photoId: student.photoId,
+            marks: student.totalMarks,
+            grade: student.grade,
+            examMode: student.examMode || "OFFLINE",
+            examDate: student.examDate || "",
+            certificateNo: "BNMI-" + Date.now(),
             status: "pending",
-            createdAt:
-              new Date().toISOString()
+            createdById: student.createdById,
+            createdAt: new Date().toISOString()
           }
         );
-      }
 
-      setAppliedIds((prev) => [
-        ...prev,
-        ...selected
-      ]);
+      }
 
       alert("Certificate request sent to admin");
 
       setSelected([]);
 
+      setResults(prev =>
+  prev.map(item =>
+    selected.includes(item.$id)
+      ? { ...item, alreadyApplied: true }
+      : item
+  )
+);
+
+setSelected([]);
+
+
+      // ✅ RELOAD FOR DISABLE CHECKBOX
+      loadResults();
+
     } catch (err) {
 
-      console.log("Certificate Error:", err);
+      console.log(err);
+      alert("Error applying certificate");
 
-      alert(err.message);
     }
+
   };
 
-  // PHOTO URL
   const getPhoto = (photoId) => {
 
     if (!photoId) return null;
 
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+
   };
 
   return (
 
-    <div className="min-h-screen bg-gray-100 p-3 sm:p-5 lg:p-10">
+    <div className="p-8 md:p-10 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
 
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
 
-        <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
-          ALL EXAMS RESULTS
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            All Exam Results
+          </h1>
+
+          <p className="text-gray-500 mt-1">
+            Apply certificates for passed students
+          </p>
+        </div>
 
         <button
           onClick={applyCertificate}
-          className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-3 rounded-lg w-full sm:w-auto"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-all duration-300 text-white px-6 py-3 rounded-xl shadow-lg font-semibold"
         >
           Apply For Certificate
         </button>
@@ -201,199 +197,187 @@ export default function CertificatePage() {
       </div>
 
       {/* TABLE CARD */}
-      <div className="bg-white rounded-2xl shadow-lg p-3 sm:p-5 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
 
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[1200px] border-collapse text-xs sm:text-sm">
+          <table className="w-full">
 
-            <thead className="bg-yellow-200">
+            <thead className="bg-gradient-to-r from-yellow-400 to-yellow-300 text-gray-800">
 
               <tr>
-
-                <th className="border p-2 whitespace-nowrap"></th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  #
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Photo
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Student
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Course
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Exam Mode
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Objective Marks
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Practical Marks
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Percentage
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Grade
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Result
-                </th>
-
-                <th className="border p-2 whitespace-nowrap">
-                  Exam Date
-                </th>
-
+                <th className="p-4 text-left"></th>
+                <th className="p-4 text-left">#</th>
+                <th className="p-4 text-left">Photo</th>
+                <th className="p-4 text-left">Student</th>
+                <th className="p-4 text-left">Course</th>
+                <th className="p-4 text-left">Exam Mode</th>
+                <th className="p-4 text-left">Objective</th>
+                <th className="p-4 text-left">Practical</th>
+                <th className="p-4 text-left">Percentage</th>
+                <th className="p-4 text-left">Grade</th>
+                <th className="p-4 text-left">Result</th>
+                <th className="p-4 text-left">Exam Date</th>
               </tr>
 
             </thead>
 
             <tbody>
 
-              {results.map((r, index) => {
+              {loading ? (
 
-                const photoUrl = getPhoto(r.photoId);
-
-                let objective = 0;
-                let practical = 0;
-
-                try {
-
-                  const marks = JSON.parse(
-                    r.marksArray || "[]"
-                  );
-
-                  marks.forEach((m) => {
-
-                    objective += Number(
-                      m.objective || 0
-                    );
-
-                    practical += Number(
-                      m.practical || 0
-                    );
-                  });
-
-                } catch {}
-
-                return (
-
-                  <tr
-                    key={r.$id}
-                    className="hover:bg-gray-50"
+                <tr>
+                  <td
+                    colSpan="12"
+                    className="text-center p-10 text-gray-500"
                   >
+                    Loading...
+                  </td>
+                </tr>
 
-                    {/* CHECKBOX */}
-                    <td className="border p-2 text-center">
+              ) : results.length === 0 ? (
 
-                      {r.alreadyApplied ? (
+                <tr>
+                  <td
+                    colSpan="12"
+                    className="text-center p-10 text-gray-500"
+                  >
+                    No Passed Students Found
+                  </td>
+                </tr>
 
-                        <span className="text-red-600 font-semibold text-xs sm:text-sm whitespace-nowrap">
-                          Applied
-                        </span>
+              ) : (
 
-                      ) : (
+                results.map((r, index) => {
+
+                  const photoUrl = getPhoto(r.photoId);
+
+                  let objective = 0;
+                  let practical = 0;
+
+                  try {
+
+                    const marks = JSON.parse(r.marks);
+
+                    marks.forEach(m => {
+                      objective += Number(m.theory || 0);
+                      practical += Number(m.practical || 0);
+                    });
+
+                  } catch { }
+
+                  return (
+
+                    <tr
+                      key={r.$id}
+                      className="border-b hover:bg-blue-50 transition-all duration-200"
+                    >
+
+                      {/* CHECKBOX */}
+                      <td className="p-4">
+
+                        {r.alreadyApplied ? (
+
+                          <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+                            Applied
+                          </span>
+
+                        ) : (
 
                         <input
-                          type="checkbox"
-                          checked={selected.includes(r.$id)}
-                          onChange={() =>
-                            toggleSelect(r.$id)
-                          }
-                          className="w-4 h-4"
-                        />
+  type="checkbox"
+  checked={selected.includes(r.$id)}
+  disabled={r.alreadyApplied}
+  onChange={() => toggleSelect(r.$id)}
+  className={`w-5 h-5 accent-blue-600 ${
+    r.alreadyApplied
+      ? "cursor-not-allowed opacity-50"
+      : "cursor-pointer"
+  }`}
+/>
 
-                      )}
+                        )}
 
-                    </td>
+                      </td>
 
-                    {/* INDEX */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {index + 1}
-                    </td>
+                      <td className="p-4 font-medium">
+                        {index + 1}
+                      </td>
 
-                    {/* PHOTO */}
-                    <td className="border p-2">
+                      {/* PHOTO */}
+                      <td className="p-4">
 
-                      {photoUrl && (
+                        {photoUrl && (
+                          <img
+                            src={photoUrl}
+                            className="w-14 h-14 rounded-full object-cover border-2 border-blue-200 shadow"
+                          />
+                        )}
 
-                        <img
-                          src={photoUrl}
-                          alt="student"
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover mx-auto"
-                        />
+                      </td>
 
-                      )}
+                      {/* NAME */}
+                      <td className="p-4 font-semibold text-gray-700">
+                        {r.studentName}
+                      </td>
 
-                    </td>
+                      {/* COURSE */}
+                      <td className="p-4 text-gray-600">
+                        {r.course}
+                      </td>
 
-                    {/* STUDENT */}
-                    <td className="border p-2 min-w-[180px] break-words">
-                      {r.studentName}
-                    </td>
+                      {/* EXAM MODE */}
+                      <td className="p-4">
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                          OFFLINE
+                        </span>
+                      </td>
 
-                    {/* COURSE */}
-                    <td className="border p-2 min-w-[200px] break-words">
+                      {/* OBJECTIVE */}
+                      <td className="p-4 font-medium">
+                        {objective}
+                      </td>
 
-                      {r.courseType === "semester" &&
-                      r.course?.length > 20
-                        ? "Semester Course"
-                        : r.course}
+                      {/* PRACTICAL */}
+                      <td className="p-4 font-medium">
+                        {practical}
+                      </td>
 
-                    </td>
+                      {/* PERCENTAGE */}
+                      <td className="p-4 font-bold text-blue-700">
+                        {r.percentage}%
+                      </td>
 
-                    {/* MODE */}
-                    <td className="border p-2 whitespace-nowrap">
-                      OFFLINE
-                    </td>
+                      {/* GRADE */}
+                      <td className="p-4">
 
-                    {/* OBJECTIVE */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {objective}
-                    </td>
+                        <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold text-sm">
+                          {r.grade}
+                        </span>
 
-                    {/* PRACTICAL */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {practical}
-                    </td>
+                      </td>
 
-                    {/* PERCENTAGE */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {r.percentage}
-                    </td>
+                      {/* RESULT */}
+                      <td className="p-4">
 
-                    {/* GRADE */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {r.grade}
-                    </td>
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+                          Passed
+                        </span>
 
-                    {/* RESULT */}
-                    <td className="border p-2 text-green-600 font-semibold whitespace-nowrap">
-                      Passed
-                    </td>
+                      </td>
 
-                    {/* DATE */}
-                    <td className="border p-2 whitespace-nowrap">
-                      {r.examDate || "-"}
-                    </td>
+                      {/* DATE */}
+                      <td className="p-4 text-gray-600">
+                        {r.examDate || "-"}
+                      </td>
 
-                  </tr>
+                    </tr>
 
-                );
-              })}
+                  );
+
+                })
+
+              )}
 
             </tbody>
 
@@ -404,5 +388,7 @@ export default function CertificatePage() {
       </div>
 
     </div>
+
   );
+
 }

@@ -159,54 +159,47 @@ export default function SelectSemesterPage() {
       );
     };
 
-    const toggleSubject = (
-  subject
-) => {
 
-  setSelectedSubjects(
-    (prev) => {
+const toggleSubject = (subject) => {
 
-      const exists =
-        prev.find(
-          (s) =>
-            s.subjectId ===
-            subject.$id
-        );
+  setSelectedSubjects((prev) => {
 
-      if (exists) {
+    const exists = prev.find(
+      (s) => s.subjectId === subject.$id
+    );
 
-        return prev.filter(
-          (s) =>
-            s.subjectId !==
-            subject.$id
-        );
-
-      }
-
-      if (
-        prev.length >= 10
-      ) {
-
-        alert(
-          "Maximum 10 subjects allowed"
-        );
-
-        return prev;
-      }
-
-      return [
-        ...prev,
-        {
-          subjectId:
-            subject.$id,
-          subjectName:
-            subject.subjectName,
-          semesterNumber:
-            subject.semesterNumber,
-        },
-      ];
+    if (exists) {
+      return prev.filter(
+        (s) => s.subjectId !== subject.$id
+      );
     }
-  );
+
+    // Count selected subjects of SAME semester
+    const semesterCount = prev.filter(
+      (s) =>
+        Number(s.semesterNumber) ===
+        Number(subject.semesterNumber)
+    ).length;
+
+    if (semesterCount >= 10) {
+
+      alert(
+        `Maximum 10 subjects allowed in Semester ${subject.semesterNumber}`
+      );
+
+      return prev;
+    }
+
+    return [
+      ...prev,
+      {
+        subjectId: subject.$id,
+        subjectName: subject.subjectName,
+        semesterNumber:
+          subject.semesterNumber,
+      },
+    ];
+  });
 };
 
 
@@ -540,16 +533,26 @@ for (
   onClick={() =>
     toggleSubject(subject)
   }
-  className={`subject-card cursor-pointer ${
-    selectedSubjects.find(
-      (s) =>
-        s.subjectId ===
-        subject.$id
-    )
-      ? "active-card"
-      : ""
-  }`}
+className={`subject-card cursor-pointer ${
+  selectedSubjects.find(
+    (s) =>
+      s.subjectId ===
+      subject.$id
+  )
+    ? "selected-subject"
+    : ""
+}`}
 >
+
+  {selectedSubjects.find(
+  (s) =>
+    s.subjectId ===
+    subject.$id
+) && (
+  <div className="mb-2 text-green-400 font-bold">
+    ✓ Selected
+  </div>
+)}
                       <div className="font-semibold text-white mb-3">
 
                         {
@@ -644,18 +647,28 @@ for (
 
 <div className="glass-card mt-8">
 
-  <h2 className="text-xl font-bold">
+ <h2 className="text-xl font-bold">
+  Selected Subjects
+</h2>
 
-    Selected Subjects
+{Object.keys(groupedSubjects).map((sem) => {
 
-  </h2>
+  const count =
+    selectedSubjects.filter(
+      (s) =>
+        Number(s.semesterNumber) ===
+        Number(sem)
+    ).length;
 
-  <p className="text-orange-400 mt-2">
-
-    {selectedSubjects.length}
-    / 10 Selected
-
-  </p>
+  return (
+    <p
+      key={sem}
+      className="text-orange-400"
+    >
+      Semester {sem}: {count}/10
+    </p>
+  );
+})}
 
 </div>
         {/* SAVE */}
@@ -695,6 +708,21 @@ for (
 
           transition: 0.3s;
         }
+
+        .selected-subject {
+  background: linear-gradient(
+    135deg,
+    rgba(249,115,22,0.35),
+    rgba(236,72,153,0.35)
+  ) !important;
+
+  border: 2px solid #f97316 !important;
+
+  box-shadow:
+    0 0 25px rgba(249,115,22,0.4);
+
+  transform: translateY(-2px);
+}
 
         .active-card {
           border-color:

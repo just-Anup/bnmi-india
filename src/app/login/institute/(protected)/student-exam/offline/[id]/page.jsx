@@ -73,7 +73,7 @@ if (res.courseType === "semester") {
   // ✅ FETCH COURSE DETAILS (THIS IS THE KEY FIX)
   const courseRes = await databases.listDocuments(
     DATABASE_ID,
-    "semester_courses",
+    "franchise_semester_courses",
     [Query.equal("courseCode", courseCode)]
   );
 
@@ -163,46 +163,61 @@ else if (res.courseType === "multiple") {
   }
 };
 
-const loadSemesterSubjects = async (courseCode, semester) => {
+const loadSemesterSubjects = async (
+  courseCode,
+  semester
+) => {
 
   try {
 
     const semNumber = Number(semester);
 
-    console.log("FETCHING:", courseCode, semNumber);
-
     const res = await databases.listDocuments(
       DATABASE_ID,
-      "semester_subjects",
+      "franchise_semester_course_subjects",
       [
-        Query.equal("courseCode", courseCode),
-        Query.equal("semesterNumber", semNumber)
+        Query.equal(
+          "courseCode",
+          courseCode
+        ),
+
+        Query.equal(
+          "semesterNumber",
+          semNumber
+        ),
+
+        Query.equal(
+          "franchiseEmail",
+          student.franchiseEmail
+        )
       ]
     );
 
-    console.log("RESULT:", res.documents);
+    const subjectList =
+      res.documents.map(
+        (s) => s.subjectName
+      );
 
-    if (res.documents.length === 0) {
-      alert(`No subjects found for Semester ${semNumber}`);
-    }
-
-    const subjectList = [
-  ...new Set(res.documents.map(s => s.subjectName))
-];
-
-    const initialMarks = subjectList.map(sub => ({
-      subject: sub,
-      theory: "",
-      practical: "",
-      total: 0
-    }));
+    const initialMarks =
+      subjectList.map((sub) => ({
+        subject: sub,
+        theory: "",
+        practical: "",
+        total: 0
+      }));
 
     setSubjects(subjectList);
     setMarks(initialMarks);
 
   } catch (err) {
-    console.log("SEM ERROR:", err);
+
+    console.log(
+      "SEM SUBJECT ERROR:",
+      err
+    );
+
   }
+
 };
  const updateMarks = (index, field, value) => {
   let val = Number(value) || 0;

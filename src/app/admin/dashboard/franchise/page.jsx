@@ -788,7 +788,36 @@ const getExpiryDate = () => {
   return base;
 };
 
+const toggleStatus = async (req) => {
+  try {
+
+    const newStatus = !(req.isActive ?? true);
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      req.$id,
+      {
+        isActive: newStatus
+      }
+    );
+
+    alert(
+      newStatus
+        ? "Franchise Activated Successfully"
+        : "Franchise Deactivated Successfully"
+    );
+
+    fetchAll();
+
+  } catch (error) {
+    console.error(error);
+    alert("Status update failed");
+  }
+};
   if (loading) return <div className="p-10">Loading...</div>
+
+
 
   return (
     <>
@@ -928,6 +957,11 @@ const getExpiryDate = () => {
   onClick={() => req && openPrint(req)}
 />
                     <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
+                      <ActionBtn
+  label={req.isActive === false ? "Activate" : "Deactivate"}
+  color={req.isActive === false ? "green" : "red"}
+  onClick={() => toggleStatus(req)}
+/>
                   </div>
                 )}
 

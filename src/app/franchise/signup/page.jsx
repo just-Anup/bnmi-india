@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+
+import { Eye, EyeOff } from 'lucide-react'
 import { account, databases } from '@/lib/appwrite'
 import { ID } from 'appwrite'
 import { useRouter } from 'next/navigation'
@@ -108,6 +110,7 @@ export default function FranchiseSignup() {
 
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const [customCity, setCustomCity] =
     useState('')
@@ -300,18 +303,33 @@ export default function FranchiseSignup() {
           />
 
           {/* PASSWORD */}
-          <input
-            type="password"
-            placeholder="Password"
-            className="input"
-            onChange={(e) =>
-              setForm({
-                ...form,
-                password: e.target.value,
-              })
-            }
-            required
-          />
+ <div className="relative w-full">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    className="input w-full pr-12"
+    value={form.password}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        password: e.target.value,
+      })
+    }
+    required
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-300 z-10"
+  >
+    {showPassword ? (
+      <EyeOff size={20} />
+    ) : (
+      <Eye size={20} />
+    )}
+  </button>
+</div>
 
           {/* MOBILE */}
           <input

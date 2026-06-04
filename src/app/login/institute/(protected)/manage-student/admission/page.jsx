@@ -13,7 +13,7 @@ export default function AdmissionList() {
 
   const [students, setStudents] = useState([]);
   const router = useRouter();
-  const [courseMap, setCourseMap] = useState({});
+
 
   useEffect(() => {
 
@@ -37,7 +37,7 @@ export default function AdmissionList() {
 
     setStudents(res.documents);
 
-    loadSemesterCourseNames(res.documents);
+
 
   };
   const loadSemesterCourseNames = async (students) => {
@@ -150,8 +150,10 @@ export default function AdmissionList() {
                   {item.studentName}
                 </td>
 
+              
                 <td className="border p-2">
-                  {courseMap[item.courseName] || item.courseName}
+  {item.courseName}
+
                 </td>
 
                 <td className="border p-2">
