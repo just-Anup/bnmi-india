@@ -122,7 +122,11 @@ if (franchise.isActive === false) {
 
   }
 
-};return (
+};
+
+
+    
+return (
   <div className="min-h-screen bg-[#132445] flex items-center justify-center overflow-hidden relative">
 
     {/* Background Glow */}
@@ -190,14 +194,10 @@ if (franchise.isActive === false) {
       {/* RIGHT SIDE */}
       <div className="flex justify-center items-center">
 
-     <div className="
+ <div className="
   relative
-  w-[380px]
-  h-[380px]
-  sm:w-[500px]
-  sm:h-[500px]
-  md:w-[650px]
-  md:h-[650px]
+  w-full
+  max-w-[400px]
   lg:w-[750px]
   lg:h-[750px]
   flex
@@ -206,23 +206,14 @@ if (franchise.isActive === false) {
 ">
 
           {/* OUTER RING */}
-          <div
-       
-  className="
-    absolute
-    w-[380px]
-    h-[380px]
-    sm:w-[500px]
-    sm:h-[500px]
-    md:w-[650px]
-    md:h-[650px]
-    lg:w-[760px]
-    lg:h-[760px]
-  "
-            style={{
-              transform: `rotate(${rotation}deg)`
-            }}
-          >
+<div
+  className="hidden lg:block absolute"
+  style={{
+    width: "760px",
+    height: "760px",
+    transform: `rotate(${rotation}deg)`
+  }}
+>
             {[...Array(60)].map((_, i) => {
               const angle = (360 / 60) * i
 
@@ -230,21 +221,13 @@ if (franchise.isActive === false) {
                 <div
                   key={i}
                   className="absolute top-1/2 left-1/2 w-[10px] h-[55px] rounded-full bg-gradient-to-b from-cyan-300 to-blue-700"
-                  style={{
-                    transform: `
-                      translate(-50%, -50%)
-                      rotate(${angle}deg)
-                     translateY(
-  window.innerWidth < 640
-    ? -165
-    : window.innerWidth < 768
-    ? -220
-    : window.innerWidth < 1024
-    ? -290
-    : -340
-)
-                    `,
-                  }}
+style={{
+  transform: `
+    translate(-50%, -50%)
+    rotate(${angle}deg)
+   translateY(-340px)
+  `,
+}}
                 />
               )
             })}
@@ -252,13 +235,16 @@ if (franchise.isActive === false) {
 
          
           {/* LOGIN BOX */}
-<div className="z-10
-  w-full
-  max-w-[340px]
-  sm:max-w-[380px]
-  text-center
-  px-4">
-
+<div
+  className="
+    z-10
+    w-full
+    max-w-[340px]
+    sm:max-w-[380px]
+    text-center
+    px-4
+  "
+>
            
 
              <h2 className="text-center text-cyan-400 text-3xl sm:text-4xl font-bold mb-8">
