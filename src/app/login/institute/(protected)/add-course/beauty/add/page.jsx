@@ -19,25 +19,25 @@ export default function addBeautycourse() {
   const [search, setSearch] = useState('')
 
   // FETCH MASTER COURSES
-  const fetchCourses = async () => {
+const fetchCourses = async () => {
+  try {
+    console.log("DATABASE_ID:", DATABASE_ID)
+    console.log("COLLECTION_ID:", MASTER_COLLECTION)
 
-    try {
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      MASTER_COLLECTION
+    )
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        MASTER_COLLECTION,
-        [
-          Query.orderDesc('courseCode'),
-          Query.limit(300)
-        ]
-      )
+    console.log("FULL RESPONSE:", res)
+    console.log("DOCUMENTS:", res.documents)
 
-      setCourses(res.documents)
+    setCourses(res.documents)
 
-    } catch (error) {
-      console.log(error)
-    }
+  } catch (error) {
+    console.error("FETCH ERROR:", error)
   }
+}
 
   // FETCH PLAN
   useEffect(() => {
@@ -234,12 +234,16 @@ export default function addBeautycourse() {
         />
 
         {/* TABLE */}
+                  <div className="text-green-500 mb-4">
+  Courses Found: {courses.length}
+</div>
+
         <div className="overflow-x-auto rounded-lg border border-gray-800">
 
           <table className="w-full min-w-[900px] border-collapse text-xs sm:text-sm">
 
             <thead className="bg-orange-500 text-black">
-
+    
               <tr>
 
                 <th className="border border-gray-800 p-2"></th>
@@ -275,11 +279,11 @@ export default function addBeautycourse() {
             <tbody>
 
               {courses
-                .filter(course =>
-                  course.courseName
-                    .toLowerCase()
-                    .includes(search.toLowerCase())
-                )
+              .filter(course =>
+  (course.courseName || '')
+    .toLowerCase()
+    .includes(search.toLowerCase())
+)
                 .map(course => (
 
                   <tr

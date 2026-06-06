@@ -23,7 +23,7 @@ export default function RechargePage({ params }) {
   const [enable, setEnable] = useState(false)
 
   useEffect(() => {
-    setEnable(masterPassword === "6969")
+    setEnable(masterPassword === "69695")
   }, [masterPassword])
 
   useEffect(() => {
@@ -107,6 +107,7 @@ export default function RechargePage({ params }) {
           onChange={(e)=>setAmount(e.target.value)}
           className="border p-3"
         />
+
 
         <input value="FRANCHISE" disabled className="border p-3" />
 

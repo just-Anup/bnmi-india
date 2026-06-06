@@ -12,6 +12,7 @@ export default function WalletPage() {
   const [data, setData] = useState([])
   const [filteredData, setFilteredData] = useState([])
   const [search, setSearch] = useState("")
+  const [rechargeDate, setRechargeDate] = useState("")
 
   const router = useRouter()
 
@@ -57,23 +58,49 @@ export default function WalletPage() {
     fetchData()
   }, [])
 
-  // ✅ Search Filter
-  useEffect(() => {
+useEffect(() => {
 
-    if (!search) {
-      setFilteredData(data)
-    } else {
+  let filtered = [...data]
 
-      const filtered = data.filter((item) =>
-        item.instituteName
-          ?.toLowerCase()
-          .includes(search.toLowerCase())
-      )
+  // Search by franchise name
+  if (search) {
+    filtered = filtered.filter((item) =>
+      item.instituteName
+        ?.toLowerCase()
+        .includes(search.toLowerCase())
+    )
+  }
 
-      setFilteredData(filtered)
-    }
+  // Search by recharge date
+  if (rechargeDate) {
 
-  }, [search, data])
+    filtered = filtered.filter((item) => {
+
+      if (!item.lastRecharge) return false
+
+      try {
+
+        const dateValue =
+          typeof item.lastRecharge === "string"
+            ? item.lastRecharge
+            : String(item.lastRecharge)
+
+        const storedDate = dateValue.split("T")[0]
+
+        return storedDate === rechargeDate
+
+      } catch (error) {
+
+        return false
+
+      }
+
+    })
+  }
+
+  setFilteredData(filtered)
+
+}, [search, rechargeDate, data])
 
   return (
 
@@ -91,15 +118,36 @@ export default function WalletPage() {
             Manage franchise balances and transactions
           </p>
         </div>
+<div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
 
-        {/* ✅ Search Box */}
-        <input
-          type="text"
-          placeholder="Search Franchise Name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+  <input
+    type="text"
+    placeholder="Search Franchise Name..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
+  />
+
+  <input
+    type="date"
+    value={rechargeDate}
+    onChange={(e) => setRechargeDate(e.target.value)}
+    className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
+  />
+
+  {(search || rechargeDate) && (
+    <button
+      onClick={() => {
+        setSearch("")
+        setRechargeDate("")
+      }}
+      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+    >
+      Clear
+    </button>
+  )}
+
+</div>
 
       </div>
 
