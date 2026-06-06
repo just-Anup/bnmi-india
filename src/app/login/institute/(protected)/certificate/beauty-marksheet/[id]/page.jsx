@@ -199,8 +199,8 @@ const rect = node.getBoundingClientRect();
         <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
-        <div className="absolute top-[450px] left-[330px] ">
+        <div className="absolute top-[410px] left-[330px] font-semibold">{student.course}</div>
+        <div className="absolute top-[430px] left-[330px] font-semibold">
           {student.instituteName}
         </div>
 
