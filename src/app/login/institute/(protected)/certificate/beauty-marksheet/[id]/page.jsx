@@ -181,7 +181,7 @@ const rect = node.getBoundingClientRect();
     overflow: "visible"
   }}
 >
-        <img src="/beauty-marksheet.jpeg" className="absolute w-full h-full" />
+        <img src="/beauty-marksheet.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
       {student.logo && (
@@ -200,7 +200,7 @@ const rect = node.getBoundingClientRect();
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[410px] left-[330px] font-semibold">{student.course}</div>
-        <div className="absolute top-[430px] left-[330px] font-semibold">
+        <div className="absolute top-[435px] left-[330px] font-semibold">
           {student.instituteName}
         </div>
 
