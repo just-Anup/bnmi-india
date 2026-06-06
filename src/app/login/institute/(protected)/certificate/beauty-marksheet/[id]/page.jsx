@@ -181,7 +181,7 @@ const rect = node.getBoundingClientRect();
     overflow: "visible"
   }}
 >
-        <img src="/beautymarksheet.jpeg" className="absolute w-full h-full" />
+        <img src="/beauty-marksheet.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
       {student.logo && (
