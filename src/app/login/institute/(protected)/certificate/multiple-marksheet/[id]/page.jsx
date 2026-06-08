@@ -317,9 +317,9 @@ const totalOutOf = marksArray.length * 100;
         =============================== */}
     
 {/* RIGHT */}
-<div className="absolute top-[315px] left-[680px] text-[13px]">
+{/* <div className="absolute top-[315px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
-</div>
+</div> */}
 
 <div className="absolute top-[334px] left-[680px]">
   {student.marksheetNo}
