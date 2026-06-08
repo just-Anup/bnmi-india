@@ -628,7 +628,7 @@ useEffect(() => {
         {/* COURSE DURATION */}
        
 <div
-  className="absolute left-[270px] font-semibold"
+  className="absolute text-center w-full font-semibold"
   style={{
     top: 807 + (courseLines.length * 20) + 20
   }}
