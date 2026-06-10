@@ -403,8 +403,8 @@ useEffect(() => {
     const words = text.split(" ");
     const lines = [];
 
-    for (let i = 0; i < words.length; i += 7) {
-      lines.push(words.slice(i, i + 7).join(" "));
+    for (let i = 0; i < words.length; i += 8) {
+      lines.push(words.slice(i, i + 8).join(" "));
     }
 
     return lines;
@@ -611,7 +611,7 @@ useEffect(() => {
 
        {/* COURSE */}
         <div
-          className="absolute top-[827px] left-[220px] font-bold w-[600px] leading-tight text-[18px]  "
+          className="absolute top-[827px] left-[220px] font-bold w-[700px] leading-tight text-[18px]  "
         >
           <div className="flex gap-2">
       
@@ -619,7 +619,7 @@ useEffect(() => {
           </div>
 
           {courseLines.slice(1).map((line, index) => (
-            <div key={index} className="ml-[200px]">
+            <div key={index} className="ml-[300px]">
               {line}
             </div>
           ))}
