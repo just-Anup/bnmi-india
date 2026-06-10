@@ -329,7 +329,7 @@ const totalOutOf = marksArray.length * 100;
   {student.dob}
 </div>
 
-<div className="absolute top-[378px] left-[680px] text-[13px]">
+<div className="absolute top-[378px] left-[680px] ">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
@@ -369,7 +369,7 @@ const totalOutOf = marksArray.length * 100;
       <div
         style={{
         fontSize: "14px",
-lineHeight: "16px",
+lineHeight: "15px",
           wordBreak: "break-word",
           whiteSpace: "normal",
           paddingRight: "10px",

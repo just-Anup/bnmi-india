@@ -102,13 +102,12 @@ export default function Dashboard() {
       // FRANCHISE DATA
       // =========================
       const franchiseRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved"
-      );
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", user.email)]
+);
 
-      const currentFranchise = franchiseRes.documents.find(
-        (f) => f.email === user.email
-      );
+const currentFranchise = franchiseRes.documents[0];
 
       setFranchiseData(currentFranchise);
 
