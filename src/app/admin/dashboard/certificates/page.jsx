@@ -559,8 +559,33 @@ issueDate: cert.issueDate || "",
   ]
 );
 
-setCertificates(res.documents || []);
-      setCertificates(res.documents || []);
+const certificatesWithFranchise = await Promise.all(
+  res.documents.map(async (cert) => {
+    try {
+      const student = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
+
+      return {
+        ...cert,
+        franchiseName:
+          student.instituteName ||
+          student.franchiseName ||
+          student.centerName ||
+          ""
+      };
+    } catch (err) {
+      return {
+        ...cert,
+        franchiseName: ""
+      };
+    }
+  })
+);
+
+setCertificates(certificatesWithFranchise);
     } catch (err) {
       console.log(err);
     } finally {
@@ -768,6 +793,14 @@ coursePeriod: finalDuration,
         franchiseSignature:
           franchiseData?.signature || "",
 
+          franchiseName:
+  franchiseData?.instituteName ||
+  franchiseData?.franchiseName ||
+  franchiseData?.centerName ||
+  franchiseData?.name ||
+  "",
+
+
         logo:
           franchiseData?.logo || "",
 
@@ -852,15 +885,19 @@ coursePeriod: finalDuration,
                   src={photoUrl}
                   className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border"
                 />
+<div>
+  <h3 className="text-lg font-semibold text-gray-800">
+    {c.studentName}
+  </h3>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {c.studentName}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {c.course}
-                  </p>
-                </div>
+  <p className="text-sm text-gray-500">
+    {c.course}
+  </p>
+
+  <p className="text-sm text-blue-600 font-medium">
+    Franchise: {c.franchiseName || "N/A"}
+  </p>
+</div>
               </div>
 
               {/* INFO */}

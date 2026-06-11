@@ -37,118 +37,100 @@ export default function VerifyCertificate() {
 
     if (!id) return;
 
-    const fetchAll = async () => {
+const fetchAll = async () => {
+
+  try {
+
+    // =========================
+    // CERTIFICATE ONLY
+    // =========================
+    const certRes = await databases.listDocuments(
+      DATABASE_ID,
+      "certificates",
+      [Query.equal("studentId", id)]
+    );
+
+    if (!certRes.documents.length) {
+      setData(false);
+      return;
+    }
+
+    const certificate = certRes.documents[0];
+
+    // =========================
+    // FRANCHISE
+    // =========================
+    let franchise = null;
+
+    if (certificate.franchiseId) {
 
       try {
 
-        // =========================
-        // STUDENT
-        // =========================
-        const student = await databases.getDocument(
+        const res = await databases.getDocument(
           DATABASE_ID,
-          "student_admissions",
-          id
+          "franchise_approved",
+          certificate.franchiseId
         );
 
-        // =========================
-        // CERTIFICATE
-        // =========================
-        const certRes = await databases.listDocuments(
-          DATABASE_ID,
-          "certificates",
-          [Query.equal("studentId", id)]
-        );
-
-        const certificate = certRes.documents[0];
-
-student.certificateDocId = certificate?.$id;
-
-        // =========================
-        // FRANCHISE
-        // =========================
-        let franchise = null;
-
-        if (student.franchiseEmail) {
-
-          const res = await databases.listDocuments(
-            DATABASE_ID,
-            "franchise_approved",
-            [Query.equal("email", student.franchiseEmail)]
-          );
-
-          franchise = res.documents[0];
-        }
-
-        // =========================
-        // COURSE DURATION
-        // =========================
-        let courseDuration = "";
-
-        try {
-
-          const beautyRes = await databases.listDocuments(
-            DATABASE_ID,
-            "beauty_courses_single",
-            [
-              Query.equal("courseName", student.courseName),
-              Query.equal("franchiseEmail", student.franchiseEmail)
-            ]
-          );
-
-          if (beautyRes.documents.length > 0) {
-            courseDuration =
-              beautyRes.documents[0].duration || "";
-          }
-
-        } catch (err) {
-          console.log(err);
-        }
-
-        // =========================
-        // NORMAL COURSE
-        // =========================
-        if (!courseDuration) {
-
-          try {
-
-            const normalRes = await databases.listDocuments(
-              DATABASE_ID,
-              "courses_single",
-              [
-                Query.equal("courseId", student.courseId),
-                Query.equal("franchiseEmail", student.franchiseEmail)
-              ]
-            );
-
-            if (normalRes.documents.length > 0) {
-              courseDuration =
-                normalRes.documents[0].duration || "";
-            }
-
-          } catch (err) {
-            console.log(err);
-          }
-        }
-
-        setData({
-          student,
-          certificate,
-          franchise,
-          courseDuration
-        });
+        franchise = res;
 
       } catch (err) {
-
         console.log(err);
-        setData(false);
-
-      } finally {
-
-        setLoading(false);
-
       }
+
+    }
+
+    // =========================
+    // CREATE STUDENT OBJECT
+    // =========================
+    const student = {
+
+      studentName:
+        certificate.studentName || "",
+
+      fatherName:
+        certificate.fatherName || "",
+
+      motherName:
+        certificate.motherName || "",
+
+      courseName:
+        certificate.course || "",
+
+      instituteName:
+        certificate.instituteName || "",
+
+      photoId:
+        certificate.photoId || "",
+
+      duration:
+        certificate.duration || "",
+
+      courseDuration:
+        certificate.coursePeriod || ""
+
     };
 
+    setData({
+      student,
+      certificate,
+      franchise,
+      courseDuration:
+        certificate.coursePeriod || ""
+    });
+
+  } catch (err) {
+
+    console.log(err);
+    setData(false);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+};
     fetchAll();
 
   }, [id]);
@@ -296,10 +278,8 @@ const finalIssueDate =
 
   // ✅ DURATION FROM DB
 const finalDuration =
+  certificate?.coursePeriod ||
   certificate?.duration ||
-  student.duration ||
-  student.courseDuration ||
-  courseDuration ||
   "N/A";
 
   return (
