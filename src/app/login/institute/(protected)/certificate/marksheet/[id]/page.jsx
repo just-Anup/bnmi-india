@@ -528,7 +528,7 @@ export default function PrintMarksheet() {
         </div>
 
         {/* GRADE */}
-        <div
+        {/* <div
           className="absolute font-bold"
           style={{
             top: 572,
@@ -536,8 +536,21 @@ export default function PrintMarksheet() {
           }}
         >
           {getGrade()}
-        </div>
+        </div> */}
 
+
+    <div
+          className="absolute font-bold"
+          style={{
+            top:
+              student?.courseType?.toLowerCase() === "multiple"
+                ? 570 + marksArray.length * 45
+                :  572,
+            left: 780
+          }}
+        >
+          {total}
+        </div>
         {/* SIGNATURE */}
         {franchiseSign && (
           <img

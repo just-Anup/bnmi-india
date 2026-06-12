@@ -176,6 +176,7 @@ export default function SelectSemesterPage() {
 
         if (
           !courseFees ||
+          
           !minimumFees
         ) {
           alert(
