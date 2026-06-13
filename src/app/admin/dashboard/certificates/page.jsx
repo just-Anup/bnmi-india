@@ -288,10 +288,10 @@ const data = {
     franchiseData?.name ||
     "Controller",
 
-  franchiseSignature:
-    cert.franchiseSignature ||
-    franchiseData?.signature ||
-    "",
+franchiseSignature:
+  franchiseData?.signature ||
+  cert.franchiseSignature ||
+  "",
 
   photoId:
     studentData.photoId || "",

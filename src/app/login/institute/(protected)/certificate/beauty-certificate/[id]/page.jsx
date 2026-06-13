@@ -190,10 +190,10 @@ useEffect(() => {
           franchiseData?.name ||
           "Controller",
 
-       franchiseSignature:
-  cert.franchiseSignature ||
+ franchiseSignature:
   franchiseData?.signature ||
   franchiseData?.franchiseSignature ||
+  cert.franchiseSignature ||
   "",
 
         photoId:

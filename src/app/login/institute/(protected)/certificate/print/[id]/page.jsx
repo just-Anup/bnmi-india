@@ -218,10 +218,12 @@ export default function PrintCertificate() {
             franchiseData?.name ||
             "Controller",
 
-          franchiseSignature:
-            cert.franchiseSignature ||
-            franchiseData?.signature ||
-            "",
+         franchiseSignature:
+  franchiseData?.signature ||
+  franchiseData?.franchiseSignature ||
+  cert.franchiseSignature ||
+  "",
+
 
           photoId:
             studentData.photoId || "",

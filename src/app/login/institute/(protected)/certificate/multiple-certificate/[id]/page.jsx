@@ -204,11 +204,12 @@ motherName:
           franchiseData?.name ||
           "Controller",
 
-        franchiseSignature:
-          cert.franchiseSignature ||
-          franchiseData?.signature ||
-          franchiseData?.franchiseSignature ||
-          "",
+         franchiseSignature:
+  franchiseData?.signature ||
+  franchiseData?.franchiseSignature ||
+  cert.franchiseSignature ||
+  "",
+
 
         photoId:
           studentData.photoId || "",
