@@ -26,7 +26,10 @@ const fetchCourses = async () => {
 
     const res = await databases.listDocuments(
       DATABASE_ID,
-      MASTER_COLLECTION
+      MASTER_COLLECTION,
+      [
+        Query.limit(100) // Increase limit to 100
+      ]
     )
 
     console.log("FULL RESPONSE:", res)
