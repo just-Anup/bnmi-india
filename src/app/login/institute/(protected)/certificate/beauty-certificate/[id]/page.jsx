@@ -536,7 +536,7 @@ const franchiseSign =
       >
 
         {/* TEMPLATE */}
-        <img src="/beautycerti.png" className="absolute w-full h-full" />
+        <img src="/certi.jpg.jpeg" className="absolute w-full h-full" />
 
        
         {/* LOGO */}
