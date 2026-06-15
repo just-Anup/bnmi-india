@@ -232,7 +232,7 @@ const rect = node.getBoundingClientRect();
     width: "465px",
     position: "absolute",
     fontSize: "15px",
-    lineHeight: "1.7",
+    lineHeight: "1.5",
     wordBreak: "break-word",
     overflowWrap: "break-word",
     whiteSpace: "normal",
@@ -265,11 +265,14 @@ const rect = node.getBoundingClientRect();
         <div className="absolute bottom-[290px] left-[755px] font-bold">
           {total}.00%
         </div>
+         <div className="absolute top-[572px] left-[780px] font-bold">
+          {total}
+        </div>
 
         {/* GRADE */}
-        <div className="absolute top-[572px] left-[780px] font-bold">
+        {/* <div className="absolute top-[572px] left-[780px] font-bold">
           {student.grade}
-        </div>
+        </div> */}
 
         {/* ✅ QR */}
         {qrCode && (
