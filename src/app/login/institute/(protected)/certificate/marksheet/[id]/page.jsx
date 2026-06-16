@@ -285,7 +285,7 @@ export default function PrintMarksheet() {
 
         {/* BG */}
         <img
-          src="/beautymark.jpeg"
+          src="/singlemarksheet.png"
           className="absolute w-full h-full"
         />
 
