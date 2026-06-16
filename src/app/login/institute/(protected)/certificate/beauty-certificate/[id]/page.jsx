@@ -580,7 +580,7 @@ const franchiseSign =
     {/* MOTHER NAME */}
     {String(student.showMotherInCertificate).toLowerCase() === "true" && (
       <span className="text-3xl font-semibold">
-        M/O {student.motherName || ""}
+        D/O {student.motherName || ""}
       </span>
     )}
 

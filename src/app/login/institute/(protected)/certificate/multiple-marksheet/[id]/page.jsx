@@ -308,7 +308,7 @@ const totalOutOf = marksArray.length * 100;
         <div className="absolute top-[310px] left-[330px]">{student.studentName}</div>
         <div className="absolute top-[330px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[352px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[374px] left-[330px]">{student.motherName}</div>
+        <div className="absolute top-[374px] left-[330px] text-[14px]">{student.motherName}</div>
         <div className="absolute top-[395px] left-[330px] font-bold">{student.course}</div>
         <div className="absolute top-[438px] left-[330px] font-bold">{student.instituteName}</div>
 

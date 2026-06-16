@@ -289,9 +289,7 @@ const data = {
     "Controller",
 
 franchiseSignature:
-  franchiseData?.signature ||
-  cert.franchiseSignature ||
-  "",
+  franchiseData?.signature || "",
 
   photoId:
     studentData.photoId || "",
@@ -469,7 +467,7 @@ if (studentData.courseType === "semester") {
       course: studentData.courseName || "",
       duration: studentData.duration || "",
       signatureId: studentData.signatureId || "",
-      franchiseSignature: franchiseData?.signature || "",
+      
       fatherName: studentData.fatherName || "",
 motherName: studentData.motherName || "",
 
@@ -555,7 +553,8 @@ issueDate: cert.issueDate || "",
   DATABASE_ID,
   CERT_COLLECTION,
   [
-    Query.orderDesc("$createdAt")
+    Query.orderDesc("$createdAt"),
+     Query.limit(500)
   ]
 );
 

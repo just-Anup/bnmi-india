@@ -285,44 +285,42 @@ export default function PrintCertificate() {
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-  const handleChange = async (field, value) => {
+  const handleChange = (field, value) => {
+  setStudent((prev) => ({
+    ...prev,
+    [field]: value,
+  }));
+};
 
-    // ✅ UPDATE UI FIRST
-    setStudent((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    
 
-    try {
+  const saveCertificate = async () => {
+  try {
+    await databases.updateDocument(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      "certificates",
+      id,
+      {
+        studentName: student.studentName,
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+        course: student.course,
+        duration: student.duration,
+        coursePeriod: student.coursePeriod,
+        grade: student.grade,
+        marks: student.marks,
+        instituteName: student.instituteName,
+        city: student.city,
+        issueDate: student.issueDate,
+      }
+    );
 
-      // ✅ UPDATE CERTIFICATE DB
-      await databases.updateDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "certificates",
-        id,
-        {
-          [field]: value,
-        }
-      );
-
-      console.log(
-        `UPDATED: ${field}`,
-        value
-      );
-
-    } catch (err) {
-
-      console.log(
-        "DB UPDATE ERROR:",
-        err
-      );
-
-      alert(
-        `Failed to update ${field}`
-      );
-    }
-  };
-
+    alert("Certificate updated successfully");
+  } catch (err) {
+    console.log(err);
+    alert("Update failed");
+  }
+};
 
   // ✅ PHOTO
   const photoUrl = student.photoId
@@ -467,6 +465,13 @@ export default function PrintCertificate() {
             {editMode ? "Close Edit" : "Edit Certificate"}
           </button>
 
+          <button
+  onClick={saveCertificate}
+  className="bg-green-600 text-white px-5 py-2 rounded"
+>
+  Save Changes
+</button>
+
         </div>
 
       )}
@@ -525,6 +530,16 @@ export default function PrintCertificate() {
             placeholder="Course Duration"
             className="border p-3 rounded"
           />
+
+          <input
+  type="text"
+  value={student.coursePeriod || ""}
+  onChange={(e) =>
+    handleChange("coursePeriod", e.target.value)
+  }
+  placeholder="Course Period"
+  className="border p-3 rounded"
+/>
 
           <input
             type="text"
