@@ -251,13 +251,47 @@ useEffect(() => {
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
-    const handleChange = (field, value) => {
+const handleChange = (field, value) => {
   setStudent((prev) => ({
     ...prev,
     [field]: value,
   }));
 };
 
+
+const saveCertificate = async () => {
+  try {
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "certificates",
+      id,
+      {
+        studentName: student.studentName,
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+        course: student.course,
+        duration: student.duration,
+        coursePeriod: student.coursePeriod,
+        grade: student.grade,
+        marks: student.marks,
+        instituteName: student.instituteName,
+        city: student.city,
+        issueDate: student.issueDate,
+      }
+    );
+
+    alert("Certificate Updated Successfully");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      "Update Failed : " + err.message
+    );
+  }
+};
   // ✅ PHOTO
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
@@ -405,12 +439,21 @@ const franchiseSign =
 
 <div className="mb-6 flex gap-4">
 
+
+
   <button
     onClick={() => setEditMode(!editMode)}
     className="bg-blue-600 text-white px-5 py-2 rounded"
   >
     {editMode ? "Close Edit" : "Edit Certificate"}
   </button>
+
+  <button
+  onClick={saveCertificate}
+  className="bg-green-600 text-white px-5 py-2 rounded"
+>
+  Save Changes
+</button>
 
 </div>
 
@@ -470,6 +513,16 @@ const franchiseSign =
       placeholder="Course Duration"
       className="border p-3 rounded"
     />
+
+    <input
+  type="text"
+  value={student.coursePeriod || ""}
+  onChange={(e) =>
+    handleChange("coursePeriod", e.target.value)
+  }
+  placeholder="Course Period"
+  className="border p-3 rounded"
+/>
 
     <input
       type="text"
