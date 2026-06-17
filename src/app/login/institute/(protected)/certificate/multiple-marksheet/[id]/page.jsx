@@ -251,8 +251,6 @@ const getCoursePeriod = (durationText) => {
 
 if (!student) return <div className="p-10">Loading...</div>;
 
-const rowHeight = 25;
-const tableHeight = marksArray.length * rowHeight;
 
 const objectiveTotal = marksArray.reduce(
   (sum, m) => sum + Number(m.objective || 0),
@@ -289,7 +287,7 @@ const totalOutOf = marksArray.length * 100;
   }}
 >
         {/* TEMPLATE */}
-        <img src="/multiplemark.png" className="absolute w-full h-full" />
+        <img src="/multiplemarksheet.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {student?.logo && (
@@ -308,7 +306,7 @@ const totalOutOf = marksArray.length * 100;
         <div className="absolute top-[310px] left-[330px]">{student.studentName}</div>
         <div className="absolute top-[330px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[352px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[374px] left-[330px] text-[14px]">{student.motherName}</div>
+        <div className="absolute top-[374px] left-[330px]">{student.motherName}</div>
         <div className="absolute top-[395px] left-[330px] font-bold">{student.course}</div>
         <div className="absolute top-[438px] left-[330px] font-bold">{student.instituteName}</div>
 
@@ -337,7 +335,7 @@ const totalOutOf = marksArray.length * 100;
 {qrCode && (
   <img
     src={qrCode}
-    className="absolute bottom-[120px] right-[170px] w-[80px] bg-white p-1"
+    className="absolute  top-[240px] right-[80px] w-[90px] bg-white p-1"
   />
 )}
       {/* ===============================
@@ -441,10 +439,10 @@ lineHeight: "15px",
         {/* ===============================
             TOTAL
         =============================== */}
-    <div
+  <div
   style={{
     position: "absolute",
-    top: 580 + tableHeight + 40,
+    top: 867, // Adjust to match your TOTAL box
     left: 150,
     width: "650px",
     display: "grid",
@@ -479,15 +477,7 @@ lineHeight: "15px",
   <div style={{ textAlign: "center" }}>
     {total}
   </div>
-</div> <div
-  className="absolute font-bold"
-  style={{
-    top: 800 + tableHeight + 40,
-    left: 775
-  }}
->
-          {total}
-        </div>
+</div> 
 
 
 
