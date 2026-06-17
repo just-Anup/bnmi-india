@@ -559,7 +559,7 @@ useEffect(() => {
       >
 
         {/* TEMPLATE */}
-        <img src="/singlemark.png" className="absolute w-full h-full" />
+        <img src="/certificate.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
       {student.logo && (
