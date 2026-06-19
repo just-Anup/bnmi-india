@@ -681,7 +681,7 @@ const fixUser = async (req) => {
 
   return data.filter((item) => {
 
-    if (!item) return false;
+    if (!item) return false
 
     const searchText = search.toLowerCase();
 

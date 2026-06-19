@@ -53,6 +53,17 @@ export default function AddCourseHome() {
                         href="/login/institute/add-course/semester-course"
                     />
 
+                    <NavBtn
+                        label="Internship Certificate"
+                        href="/login/institute/add-course/internship/add"
+                    />
+
+                    <NavBtn
+                        label="Internship Certificate list view"
+                        href="/login/institute/add-course/internship/list"
+                    />
+
+
                 </div>
 
             </div>
