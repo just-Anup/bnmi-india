@@ -562,17 +562,20 @@ const generatePassword = () => {
 const password = generatePassword();
 
     // ✅ FINAL DATA
-   const finalData = {
+  const finalData = {
   ...form,
-  courseCode:
-  form.courseCode,
-  courseName: form.courseDisplayName, // ✅ SAVE NAME
-  courseId: form.courseName,          // ✅ SAVE ID
-  
-  selectedSubjectIds:
-  form.selectedSubjectIds,
+
+  courseFees: Number(form.courseFees || 0),
+  discount: Number(form.discount || 0),
+  totalFees: Number(form.totalFees || 0),
   feesReceived: Number(form.feesReceived || 0),
   balance: Number(form.balance || 0),
+  examFees: Number(form.examFees || 0),
+
+  courseCode: form.courseCode,
+  courseName: form.courseDisplayName,
+  courseId: form.courseName,
+  selectedSubjectIds: form.selectedSubjectIds,
   admissionDate: form.admissionDate
     ? form.admissionDate
     : new Date().toISOString().split("T")[0]
@@ -1223,8 +1226,11 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <input
             type="number"
             value={form.discount}
-          onChange={(e) =>
-  setForm({ ...form, discount: e.target.value })
+         onChange={(e) =>
+  setForm({
+    ...form,
+    discount: Number(e.target.value) || 0
+  })
 }
             className="border p-2 w-full"
           />
