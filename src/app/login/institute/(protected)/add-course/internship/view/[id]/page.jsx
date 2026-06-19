@@ -205,7 +205,13 @@ export default function InternshipCertificate() {
   {certificate.signature && (
     <img
       src={certificate.signature}
-      className="absolute bottom-[85px] left-[110px] w-[140px]"
+      className="absolute bottom-[130px] left-[140px] w-[140px]"
+    />
+  )}
+  {certificate.signature && (
+    <img
+      src={certificate.signature}
+      className="absolute bottom-[130px] right-[230px] w-[140px]"
     />
   )}
 
