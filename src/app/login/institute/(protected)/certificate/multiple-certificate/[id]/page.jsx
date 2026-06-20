@@ -412,6 +412,19 @@ useEffect(() => {
   };
   const courseLines = formatCourseName(student.course);
 
+  const getGrade = (percent) => {
+  const p = Number(percent);
+
+  if (p >= 85) return "A+";
+  if (p >= 70) return "A";
+  if (p >= 55) return "B";
+  if (p >= 40) return "C";
+
+  return "F";
+};
+
+const grade = getGrade(percentage);
+
   return (
 
     <div className="p-10">
@@ -649,8 +662,8 @@ useEffect(() => {
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
-          {student.grade}
-        </div>
+  {grade}
+</div>
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">

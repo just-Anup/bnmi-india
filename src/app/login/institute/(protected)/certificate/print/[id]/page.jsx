@@ -440,7 +440,18 @@ export default function PrintCertificate() {
 
   const printPage = () => window.print();
 
+const getGrade = (marks) => {
+  const m = Number(marks);
 
+  if (m >= 85) return "A+";
+  if (m >= 70) return "A";
+  if (m >= 55) return "B";
+  if (m >= 40) return "C";
+
+  return "F";
+};
+
+const grade = getGrade(student.marks);
 
   return (
 
@@ -685,10 +696,9 @@ export default function PrintCertificate() {
 </div>
 
         {/* GRADE */}
-        <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
-          {student.grade}
-        </div>
-
+     <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
+  {grade}
+</div>
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
           {student.marks}.00%
