@@ -49,39 +49,51 @@ export default function InternshipCertificate() {
   }, [id])
 
   const handleDownload = async () => {
+  try {
 
-    try {
+    const node = printRef.current
 
-      const node =
-        printRef.current
+    const dataUrl = await htmlToImage.toPng(
+      node,
+      {
+        quality: 1,
+        pixelRatio: 3,
+        cacheBust: true,
 
-      const dataUrl =
-        await htmlToImage.toPng(
-          node,
-          {
-            quality: 1,
-            pixelRatio: 3,
-            cacheBust: true
-          }
-        )
+        width: node.scrollWidth,
+        height: node.scrollHeight,
 
-      const link =
-        document.createElement('a')
+        canvasWidth:
+          node.scrollWidth * 3,
 
-      link.download =
-        `${certificate.studentName}_internship_certificate.png`
+        canvasHeight:
+          node.scrollHeight * 3,
 
-      link.href =
-        dataUrl
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          overflow: 'visible'
+        }
+      }
+    )
 
-      link.click()
+    const link =
+      document.createElement('a')
 
-    } catch (error) {
+    link.download =
+      `${certificate.studentName}_internship_certificate.png`
 
-      console.log(error)
+    link.href =
+      dataUrl
 
-    }
+    link.click()
+
+  } catch (error) {
+
+    console.log(error)
+
   }
+}
 
   if (!certificate)
     return (
@@ -101,20 +113,25 @@ export default function InternshipCertificate() {
         Download Certificate
       </button>
 
-   <div
+<div
   ref={printRef}
   style={{
     width: "1000px",
+    minHeight: "1414px",
     position: "relative",
-    margin: "auto"
+    margin: "auto",
+    overflow: "visible"
   }}
 >
-
   {/* TEMPLATE */}
-  <img
-    src="/internship.jpeg"
-    className="w-full"
-  />
+ <img
+  src="/internship.jpeg"
+  style={{
+    width: "1000px",
+    height: "1414px",
+    display: "block"
+  }}
+/>
 
   {/* LOGO */}
   {certificate.logo && (
