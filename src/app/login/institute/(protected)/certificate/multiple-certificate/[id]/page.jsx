@@ -398,19 +398,8 @@ useEffect(() => {
 
   const printPage = () => window.print();
 
-  const formatCourseName = (text) => {
-    if (!text) return "";
 
-    const words = text.split(" ");
-    const lines = [];
 
-    for (let i = 0; i < words.length; i += 8) {
-      lines.push(words.slice(i, i + 8).join(" "));
-    }
-
-    return lines;
-  };
-  const courseLines = formatCourseName(student.course);
 
   const getGrade = (percent) => {
   const p = Number(percent);
@@ -624,42 +613,35 @@ const grade = getGrade(percentage);
 
 
        {/* COURSE */}
-        <div
-          className="absolute top-[827px] left-[300px] font-bold w-[700px] leading-tight text-[18px]  "
-        >
-          <div className="flex gap-2">
-      
-            <span>{courseLines[0]}</span>
-          </div>
-
-          {courseLines.slice(1).map((line, index) => (
-            <div key={index} className="ml-[300px]">
-              {line}
-            </div>
-          ))}
-        </div>
-
-        {/* COURSE DURATION */}
-       
+    {/* COURSE */}
 <div
-  className="absolute text-center w-full font-semibold"
-  style={{
-    top: 807 + (courseLines.length * 20) + 20
-  }}
+  className="absolute top-[827px] left-0 w-full px-16"
 >
-   Course Period: {student.duration || "N/A"}
+  <div
+    className="text-center font-bold text-[18px] leading-tight"
+    style={{
+      wordBreak: "break-word",
+      overflowWrap: "break-word",
+      whiteSpace: "normal",
+    }}
+  >
+    {student.course || "N/A"}
+  </div>
 </div>
 
-        {/* COURSE PERIOD */}
-        <div
-          className="absolute left-[270px] font-semibold"
-          style={{
-            top: 808 + (courseLines.length * 20) + 40
-          }}
-        >
-          Course Duration: {student.coursePeriod || "N/A"}
-        </div>
+{/* COURSE PERIOD */}
+<div
+  className="absolute top-[848px] left-0 w-full text-center font-semibold"
+>
+  Course Period: {student.duration || "N/A"}
+</div>
 
+{/* COURSE DURATION */}
+<div
+  className="absolute top-[870px] left-0 w-full text-center font-semibold"
+>
+  Course Duration: {student.coursePeriod || "N/A"}
+</div>
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
   {grade}
