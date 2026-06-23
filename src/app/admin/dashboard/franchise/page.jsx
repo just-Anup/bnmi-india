@@ -689,7 +689,8 @@ const fixUser = async (req) => {
       (item.name || "").toLowerCase().includes(searchText) ||
       (item.email || "").toLowerCase().includes(searchText) ||
       (item.instituteName || "").toLowerCase().includes(searchText) ||
-      (item.amcCode || "").toLowerCase().includes(searchText)
+      (item.amcCode || "").toLowerCase().includes(searchText) ||
+      (item.mobile || "").toLowerCase().includes(searchText)
     );
 
   });

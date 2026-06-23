@@ -625,7 +625,7 @@ const grade = getGrade(percentage);
 
        {/* COURSE */}
         <div
-          className="absolute top-[827px] left-[220px] font-bold w-[700px] leading-tight text-[18px]  "
+          className="absolute top-[827px] left-[300px] font-bold w-[700px] leading-tight text-[18px]  "
         >
           <div className="flex gap-2">
       

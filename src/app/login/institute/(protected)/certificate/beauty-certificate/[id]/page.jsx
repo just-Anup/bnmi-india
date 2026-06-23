@@ -665,7 +665,7 @@ const franchiseSign =
     {/* FATHER NAME */}
     {String(student.showFatherInCertificate).toLowerCase() === "true" && (
       <span className="text-3xl font-semibold">
-        {student.relationType || "S/O"} {student.fatherName || ""}
+         D/O {student.fatherName || ""}
       </span>
     )}
 
