@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { databases } from '@/lib/appwrite'
 import { Query } from 'appwrite'
+import * as htmlToImage from "html-to-image"
 
 const DATABASE_ID =
   process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
@@ -20,7 +21,44 @@ export default function ParticipationCertificate() {
 
   const [loading, setLoading] =
     useState(true)
+const downloadCertificate = async () => {
 
+  try {
+
+    const node =
+      document.getElementById(
+        "certificate"
+      )
+
+    const dataUrl =
+      await htmlToImage.toPng(
+        node,
+        {
+          quality: 1
+        }
+      )
+
+    const link =
+      document.createElement("a")
+
+    link.download =
+      `${certificate.certificateNo}.png`
+
+    link.href = dataUrl
+
+    link.click()
+
+  } catch (error) {
+
+    console.log(error)
+
+    alert(
+      "Failed to download certificate"
+    )
+
+  }
+
+}
   useEffect(() => {
 
     fetchCertificate()
@@ -91,31 +129,40 @@ export default function ParticipationCertificate() {
   return (
 
     <div className="min-h-screen bg-gray-100 p-5">
+<div className="mb-5 flex gap-3">
 
-      <div className="mb-5 flex gap-3">
+  <button
+    onClick={() =>
+      window.print()
+    }
+    className="bg-green-600 text-white px-5 py-2 rounded"
+  >
+    Print
+  </button>
 
-        <button
-          onClick={() =>
-            window.print()
-          }
-          className="bg-green-600 text-white px-5 py-2 rounded"
-        >
-          Print
-        </button>
+  <button
+    onClick={downloadCertificate}
+    className="bg-blue-600 text-white px-5 py-2 rounded"
+  >
+    Download
+  </button>
 
-      </div>
+</div>
 
-      <div
-        className="relative mx-auto"
-        style={{
-          width: '1470px',
-          height: '1070px',
-          backgroundImage:
-            "url('/certificate-bg.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
+     <div
+  id="certificate"
+  className="relative mx-auto scale-75 origin-top"
+  style={{
+    width: '1470px',
+    height: '1070px'
+  }}
+>
+
+        <img
+          src="/beauty-certificate.jpeg"
+          alt=""
+          className="absolute inset-0 w-full h-full"
+        />
 
         {/* =========================
             STUDENT NAME
@@ -124,7 +171,7 @@ export default function ParticipationCertificate() {
         <div
           className="absolute"
           style={{
-            top: '420px',
+            top: '530px',
             left: '350px',
             width: '750px'
           }}
@@ -141,7 +188,7 @@ export default function ParticipationCertificate() {
         <div
           className="absolute"
           style={{
-            top: '620px',
+            top: '630px',
             left: '300px',
             width: '850px'
           }}
@@ -177,10 +224,10 @@ export default function ParticipationCertificate() {
           alt=""
           className="absolute object-cover border"
           style={{
-            top: '130px',
-            right: '120px',
-            width: '160px',
-            height: '200px'
+              top: '350px',
+            right: '70px',
+            width: '250px',
+            height: '300px'
           }}
         />
 
@@ -193,10 +240,10 @@ export default function ParticipationCertificate() {
           alt=""
           className="absolute object-contain"
           style={{
-            bottom: '270px',
-            right: '140px',
-            width: '180px',
-            height: '70px'
+            bottom: '310px',
+            right: '127px',
+            width: '150px',
+            height: '50px'
           }}
         />
 
@@ -209,10 +256,32 @@ export default function ParticipationCertificate() {
           alt=""
           className="absolute object-contain"
           style={{
-            bottom: '270px',
-            left: '120px',
-            width: '180px',
-            height: '70px'
+             bottom: '310px',
+            left: '127px',
+            width: '150px',
+            height: '50px'
+          }}
+        />
+        <img
+          src={certificate.ownerSignature}
+          alt=""
+          className="absolute object-contain"
+          style={{
+             bottom: '100px',
+            left: '200px',
+            width: '150px',
+            height: '50px'
+          }}
+        />
+        <img
+          src={certificate.ownerSignature}
+          alt=""
+          className="absolute object-contain"
+          style={{
+             bottom: '100px',
+            right: '270px',
+            width: '150px',
+            height: '50px'
           }}
         />
 
@@ -221,17 +290,16 @@ export default function ParticipationCertificate() {
         ========================== */}
 
         <img
-          src={certificate.ownerPhoto}
-          alt=""
-          className="absolute object-cover border"
-          style={{
-            bottom: '120px',
-            left: '80px',
-            width: '120px',
-            height: '120px'
-          }}
-        />
-
+  src={certificate.ownerPhoto}
+  alt=""
+  className="absolute object-cover border"
+  style={{
+    top: '350px',
+            left: '70px',
+            width: '250px',
+            height: '300px'
+  }}
+/>
         {/* =========================
             DATE OF COMPLETION
         ========================== */}
@@ -239,7 +307,7 @@ export default function ParticipationCertificate() {
         <div
           className="absolute text-center"
           style={{
-            bottom: '170px',
+            bottom: '180px',
             left: '380px',
             width: '180px'
           }}
@@ -254,7 +322,7 @@ export default function ParticipationCertificate() {
         <div
           className="absolute text-center"
           style={{
-            bottom: '170px',
+            bottom: '180px',
             left: '640px',
             width: '180px'
           }}
@@ -269,8 +337,8 @@ export default function ParticipationCertificate() {
         <div
           className="absolute text-center"
           style={{
-            bottom: '170px',
-            right: '330px',
+            bottom: '180px',
+            right: '375px',
             width: '220px'
           }}
         >

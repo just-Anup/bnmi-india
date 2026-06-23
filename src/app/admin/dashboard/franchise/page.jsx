@@ -691,6 +691,7 @@ const fixUser = async (req) => {
       (item.instituteName || "").toLowerCase().includes(searchText) ||
       (item.amcCode || "").toLowerCase().includes(searchText) ||
       (item.mobile || "").toLowerCase().includes(searchText)
+    
     );
 
   });
@@ -1268,7 +1269,7 @@ const toggleStatus = async (req) => {
               {/* ----------- DYNAMIC TEXT ----------- */}
 
               {/* Institute Name (RED CENTER) */}
-             {/* Institute Name (RED CENTER) */}
+          
 <div className="absolute top-[470px] left-0 w-full flex justify-center px-20">
   <h1 className="text-red-600 text-2xl font-bold text-center break-words leading-tight max-w-[650px]">
     {selectedFranchise?.instituteName}
@@ -1286,7 +1287,7 @@ const toggleStatus = async (req) => {
               </div>
 
               {/* Address */}
-              <div className="absolute top-[540px] w-full text-center text-sm px-10">
+              <div className="absolute top-[520px] w-full text-center text-sm px-20">
                 {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
