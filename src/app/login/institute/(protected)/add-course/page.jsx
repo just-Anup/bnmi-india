@@ -62,6 +62,14 @@ export default function AddCourseHome() {
                         label="Internship Certificate list view"
                         href="/login/institute/add-course/internship/list"
                     />
+                    <NavBtn
+                        label="Instant Certificate Beauty"
+                        href="/login/institute/add-course/beauty_certificate/add"
+                    />
+                    <NavBtn
+                        label="Instant Certificate Beauty list view"
+                        href="/login/institute/add-course/beauty_certificate/list"
+                    />
 
 
                 </div>

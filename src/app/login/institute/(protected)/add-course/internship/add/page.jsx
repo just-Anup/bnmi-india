@@ -88,6 +88,25 @@ export default function AddInternship() {
       const franchise =
         franchiseRes.documents[0]
 
+        const CERTIFICATE_FEE = 450
+
+const currentWallet =
+  Number(franchise.wallet || 0)
+
+if (currentWallet < CERTIFICATE_FEE) {
+
+  alert(
+    `Insufficient Wallet Balance.
+
+Required: ₹450
+Available: ₹${currentWallet}`
+  )
+
+  setLoading(false)
+
+  return
+}
+
       // PHOTO UPLOAD
 
       const upload =
@@ -116,6 +135,7 @@ export default function AddInternship() {
         COLLECTION_ID,
         ID.unique(),
         {
+          
           studentName,
           studentPhoto: photoUrl,
 
@@ -147,6 +167,40 @@ export default function AddInternship() {
           verifyUrl
         }
       )
+
+     
+  await databases.updateDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  franchise.$id,
+  {
+    wallet:
+      currentWallet - CERTIFICATE_FEE
+  }
+)
+
+// SAVE TRANSACTION
+
+await databases.createDocument(
+  DATABASE_ID,
+  "wallet_transactions",
+  ID.unique(),
+  {
+    franchiseId: franchise.$id,
+    franchiseEmail: user.email,
+    type: "Debit",
+    amount: 450,
+    reason: "Internship Certificate",
+    courseName: internshipTitle,
+    studentName: studentName,
+    certificateNo: certificateNo,
+    remainingBalance: String(
+      currentWallet - CERTIFICATE_FEE
+    ),
+    date: new Date()
+      .toLocaleDateString("en-GB")
+  }
+)
 
       alert(
         "Internship Certificate Generated Successfully"

@@ -249,6 +249,42 @@ useEffect(() => {
 
 }, []);
 
+const getGrade = (marks) => {
+  const m = Number(marks);
+
+  if (m >= 85) {
+    return {
+      performance: "Excellent",
+      grade: "A+"
+    };
+  }
+
+  if (m >= 70) {
+    return {
+      performance: "Very Good",
+      grade: "A"
+    };
+  }
+
+  if (m >= 55) {
+    return {
+      performance: "Good",
+      grade: "B"
+    };
+  }
+
+  if (m >= 40) {
+    return {
+      performance: "Average",
+      grade: "C"
+    };
+  }
+
+  return {
+    performance: "Fail",
+    grade: "F"
+  };
+};
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
   const gradeData = getGrade(student.marks);
@@ -425,43 +461,6 @@ const franchiseSign =
 
   const printPage = () => window.print();
 
-
-  const getGrade = (marks) => {
-  const m = Number(marks);
-
-  if (m >= 85) {
-    return {
-      performance: "Excellent",
-      grade: "A+"
-    };
-  }
-
-  if (m >= 70) {
-    return {
-      performance: "Very Good",
-      grade: "A"
-    };
-  }
-
-  if (m >= 55) {
-    return {
-      performance: "Good",
-      grade: "B"
-    };
-  }
-
-  if (m >= 40) {
-    return {
-      performance: "Average",
-      grade: "C"
-    };
-  }
-
-  return {
-    performance: "Fail",
-    grade: "F"
-  };
-};
 
   return (
 
