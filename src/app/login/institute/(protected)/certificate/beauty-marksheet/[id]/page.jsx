@@ -6,27 +6,93 @@ import { Query } from "appwrite";
 import QRCode from "qrcode";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import { useParams } from "next/navigation";
+
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
+
+    const { id } = useParams();
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
 
   const printRef = useRef();
-  // ✅ LOAD STUDENT
-  useEffect(() => {
-    
-    const data = localStorage.getItem("marksheetStudent");
+  
+useEffect(() => {
 
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStudent(parsed);
-      fetchMarks(parsed.studentId);
+  if (!id) return;
+
+  const loadData = async () => {
+
+    try {
+
+      // Certificate
+      const cert = await databases.getDocument(
+        DATABASE_ID,
+        "certificates",
+        id
+      );
+
+      // Student
+      const studentData = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
+
+      const finalData = {
+        ...studentData,
+        ...cert,
+
+        studentName:
+          cert.studentName ||
+          studentData.studentName ||
+          "",
+
+        fatherName:
+          cert.fatherName ||
+          studentData.fatherName ||
+          "",
+
+        motherName:
+          cert.motherName ||
+          studentData.motherName ||
+          "",
+
+        course:
+          cert.course ||
+          studentData.courseName ||
+          "",
+
+        instituteName:
+          cert.instituteName ||
+          studentData.instituteName ||
+          "",
+
+        marksheetNo:
+          cert.certificateNo || "",
+
+        issueDate:
+          cert.issueDate || ""
+      };
+
+      setStudent(finalData);
+
+      fetchMarks(cert.studentId);
+
+    } catch (err) {
+      console.log(err);
     }
-  }, []);
+
+  };
+
+  loadData();
+
+}, [id]);
+
 
   useEffect(() => {
   const loadImages = async () => {
