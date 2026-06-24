@@ -224,6 +224,33 @@ studentSignatureId:
         instituteName:
           franchise.instituteName || "",
 
+          ownerName:
+  franchise.name || "",
+
+designation:
+  franchise.designation || "",
+
+mobile:
+  franchise.mobile || "",
+
+address:
+  franchise.address || "",
+
+state:
+  franchise.state || "",
+
+city:
+  franchise.city || "",
+
+pincode:
+  franchise.pincode || "",
+
+logo:
+  franchise.logo || "",
+
+email:
+  franchise.email || "",
+
         franchiseEmail:
           user.email,
 
