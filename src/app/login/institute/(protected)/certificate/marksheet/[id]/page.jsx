@@ -338,7 +338,7 @@ export default function PrintMarksheet() {
           {student.course}
         </div>
 
-        <div className="absolute top-[449px] left-[330px] font-bold text-lg">
+        <div className="absolute top-[432px] left-[330px] font-bold text-lg">
           {student.instituteName}
         </div>
 

@@ -678,7 +678,7 @@ const grade = getGrade(student.marks);
 
 
         {/* COURSE */}
-        <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
+        <div className="absolute top-[827px] left-[0px] font-bold w-full text-center text-xl">
           {student.course}
         </div>
 

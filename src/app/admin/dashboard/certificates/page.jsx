@@ -220,6 +220,15 @@ const printMarksheet = async (cert) => {
 const verifyUrl =
   `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
+  // ✅ AUTO GRADE FROM MARKS
+const marks = Number(cert.marks);
+
+let finalGrade = "F";
+
+if (marks >= 85) finalGrade = "A+";
+else if (marks >= 70) finalGrade = "A";
+else if (marks >= 55) finalGrade = "B";
+else if (marks >= 40) finalGrade = "C";
 
 
 const data = {
@@ -762,6 +771,7 @@ finalDuration =
        certificateNo,
 issueDate,
 verifyUrl,
+grade: finalGrade,
 
         studentName:
           studentData.studentName || "",
