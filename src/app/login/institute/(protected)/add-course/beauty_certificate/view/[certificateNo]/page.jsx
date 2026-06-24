@@ -335,7 +335,7 @@ const downloadCertificate = async () => {
           className="absolute"
           style={{
             bottom: '80px',
-            right: '80px',
+            right: '130px',
             width: '120px',
             height: '120px'
           }}
