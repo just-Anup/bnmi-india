@@ -21,6 +21,25 @@ export default function ParticipationCertificate() {
 
   const [loading, setLoading] =
     useState(true)
+const toBase64 = async (url) => {
+
+  const res = await fetch(url);
+
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+
+    const reader = new FileReader();
+
+    reader.onloadend = () =>
+      resolve(reader.result);
+
+    reader.readAsDataURL(blob);
+
+  });
+
+};
+
 const downloadCertificate = async () => {
 
   try {
@@ -28,37 +47,88 @@ const downloadCertificate = async () => {
     const node =
       document.getElementById(
         "certificate"
-      )
+      );
+
+    const images =
+      node.querySelectorAll("img");
+
+    for (let img of images) {
+
+      const src = img.src;
+
+      if (!src.startsWith("data:")) {
+
+        try {
+
+          const base64 =
+            await toBase64(src);
+
+          img.src = base64;
+
+        } catch (err) {
+
+          console.log(
+            "IMAGE ERROR:",
+            err
+          );
+
+        }
+
+      }
+
+    }
 
     const dataUrl =
       await htmlToImage.toPng(
         node,
         {
-          quality: 1
+          quality: 1,
+          pixelRatio: 3,
+          cacheBust: true,
+
+          width:
+            node.scrollWidth,
+
+          height:
+            node.scrollHeight,
+
+          style: {
+            transform:
+              "scale(1)",
+            transformOrigin:
+              "top left",
+            overflow:
+              "visible"
+          }
         }
-      )
+      );
 
     const link =
-      document.createElement("a")
+      document.createElement(
+        "a"
+      );
 
     link.download =
-      `${certificate.certificateNo}.png`
+      `${certificate.certificateNo}.png`;
 
-    link.href = dataUrl
+    link.href = dataUrl;
 
-    link.click()
+    link.click();
 
-  } catch (error) {
+  } catch (err) {
 
-    console.log(error)
+    console.log(
+      "DOWNLOAD ERROR:",
+      err
+    );
 
     alert(
       "Failed to download certificate"
-    )
+    );
 
   }
 
-}
+};
   useEffect(() => {
 
     fetchCertificate()
@@ -127,222 +197,190 @@ const downloadCertificate = async () => {
   }
 
   return (
-
     <div className="min-h-screen bg-gray-100 p-5">
-<div className="mb-5 flex gap-3">
-
-  <button
-    onClick={() =>
-      window.print()
-    }
-    className="bg-green-600 text-white px-5 py-2 rounded"
-  >
-    Print
-  </button>
-
-  <button
-    onClick={downloadCertificate}
-    className="bg-blue-600 text-white px-5 py-2 rounded"
-  >
-    Download
-  </button>
-
-</div>
-
-     <div
-  id="certificate"
-  className="relative mx-auto scale-75 origin-top"
-  style={{
-    width: '1470px',
-    height: '1070px'
-  }}
->
-
-        <img
-          src="/beauty-certificate.jpeg"
-          alt=""
-          className="absolute inset-0 w-full h-full"
-        />
-
-        {/* =========================
-            STUDENT NAME
-        ========================== */}
-
-        <div
-          className="absolute"
-          style={{
-            top: '530px',
-            left: '350px',
-            width: '750px'
-          }}
+      <div className="mb-5 flex gap-3">
+        <button
+          onClick={() => window.print()}
+          className="bg-green-600 text-white px-5 py-2 rounded"
         >
-          <h1 className="text-5xl text-center font-bold">
-            {certificate.studentName}
-          </h1>
-        </div>
+          Print
+        </button>
 
-        {/* =========================
-            COURSE NAME
-        ========================== */}
-
-        <div
-          className="absolute"
-          style={{
-            top: '635px',
-            left: '300px',
-            width: '850px'
-          }}
+        <button
+          onClick={downloadCertificate}
+          className="bg-blue-600 text-white px-5 py-2 rounded"
         >
-          <h2 className="text-2xl text-center font-bold">
-            {certificate.courseName}
-          </h2>
-        </div>
-
-        {/* =========================
-            INSTITUTE NAME
-        ========================== */}
-
-        <div
-          className="absolute"
-          style={{
-            top: '697px',
-            left: '300px',
-            width: '850px'
-          }}
-        >
-          <h2 className="text-4xl text-center font-bold">
-            {certificate.instituteName}
-          </h2>
-        </div>
-
-        {/* =========================
-            STUDENT PHOTO
-        ========================== */}
-
-        <img
-          src={certificate.studentPhoto}
-          alt=""
-          className="absolute object-cover border"
-          style={{
-              top: '350px',
-            right: '70px',
-            width: '250px',
-            height: '300px'
-          }}
-        />
-
-        {/* =========================
-            STUDENT SIGNATURE
-        ========================== */}
-
-        <img
-          src={certificate.studentSignature}
-          alt=""
-          className="absolute object-contain"
-          style={{
-            bottom: '310px',
-            right: '127px',
-            width: '150px',
-            height: '50px'
-          }}
-        />
-
-        {/* =========================
-            OWNER SIGNATURE
-        ========================== */}
-
-        <img
-          src={certificate.ownerSignature}
-          alt=""
-          className="absolute object-contain"
-          style={{
-             bottom: '310px',
-            left: '127px',
-            width: '150px',
-            height: '50px'
-          }}
-        />
-      
-   
-
-        {/* =========================
-            OWNER PHOTO
-        ========================== */}
-
-        <img
-  src={certificate.ownerPhoto}
-  alt=""
-  className="absolute object-cover border"
-  style={{
-    top: '350px',
-            left: '70px',
-            width: '250px',
-            height: '300px'
-  }}
-/>
-        {/* =========================
-            DATE OF COMPLETION
-        ========================== */}
-
-        <div
-          className="absolute text-center"
-          style={{
-            bottom: '180px',
-            left: '380px',
-            width: '180px'
-          }}
-        >
-          {certificate.dateOfCompletion}
-        </div>
-
-        {/* =========================
-            COURSE DURATION
-        ========================== */}
-
-        <div
-          className="absolute text-center"
-          style={{
-            bottom: '180px',
-            left: '640px',
-            width: '180px'
-          }}
-        >
-          {certificate.courseDuration}
-        </div>
-
-        {/* =========================
-            CERTIFICATE NUMBER
-        ========================== */}
-
-        <div
-          className="absolute text-center"
-          style={{
-            bottom: '180px',
-            right: '375px',
-            width: '220px'
-          }}
-        >
-          {certificate.certificateNo}
-        </div>
-
-        {/* =========================
-            QR CODE
-        ========================== */}
-
-        <img
-          src={certificate.qrCode}
-          alt=""
-          className="absolute"
-          style={{
-            bottom: '80px',
-            right: '130px',
-            width: '120px',
-            height: '120px'
-          }}
-        />
-
+          Download
+        </button>
       </div>
 
+      <div className="overflow-auto">
+        <div
+          className="scale-75 origin-top"
+          style={{
+            width: "1100px",
+            margin: "0 auto"
+          }}
+        >
+          <div
+            id="certificate"
+            className="relative mx-auto"
+            style={{
+              width: "1470px",
+              height: "1070px"
+            }}
+          >
+            <img
+              src="/beauty-certificate.jpeg"
+              alt=""
+              className="absolute inset-0 w-full h-full"
+            />
+
+            {/* STUDENT NAME */}
+            <div
+              className="absolute"
+              style={{
+                top: '530px',
+                left: '350px',
+                width: '750px'
+              }}
+            >
+              <h1 className="text-5xl text-center font-bold">
+                {certificate.studentName}
+              </h1>
+            </div>
+
+            {/* COURSE NAME */}
+            <div
+              className="absolute"
+              style={{
+                top: '635px',
+                left: '300px',
+                width: '850px'
+              }}
+            >
+              <h2 className="text-2xl text-center font-bold">
+                {certificate.courseName}
+              </h2>
+            </div>
+
+            {/* INSTITUTE NAME */}
+            <div
+              className="absolute"
+              style={{
+                top: '697px',
+                left: '300px',
+                width: '850px'
+              }}
+            >
+              <h2 className="text-4xl text-center font-bold">
+                {certificate.instituteName}
+              </h2>
+            </div>
+
+            {/* STUDENT PHOTO */}
+            <img
+              src={certificate.studentPhoto}
+              alt=""
+              className="absolute object-cover border"
+              style={{
+                top: '350px',
+                right: '70px',
+                width: '250px',
+                height: '300px'
+              }}
+            />
+
+            {/* STUDENT SIGNATURE */}
+            <img
+              src={certificate.studentSignature}
+              alt=""
+              className="absolute object-contain"
+              style={{
+                bottom: '310px',
+                right: '127px',
+                width: '150px',
+                height: '50px'
+              }}
+            />
+
+            {/* OWNER SIGNATURE */}
+            <img
+              src={certificate.ownerSignature}
+              alt=""
+              className="absolute object-contain"
+              style={{
+                bottom: '310px',
+                left: '127px',
+                width: '150px',
+                height: '50px'
+              }}
+            />
+
+            {/* OWNER PHOTO */}
+            <img
+              src={certificate.ownerPhoto}
+              alt=""
+              className="absolute object-cover border"
+              style={{
+                top: '350px',
+                left: '70px',
+                width: '250px',
+                height: '300px'
+              }}
+            />
+
+            {/* DATE OF COMPLETION */}
+            <div
+              className="absolute text-center"
+              style={{
+                bottom: '180px',
+                left: '380px',
+                width: '180px'
+              }}
+            >
+              {certificate.dateOfCompletion}
+            </div>
+
+            {/* COURSE DURATION */}
+            <div
+              className="absolute text-center"
+              style={{
+                bottom: '180px',
+                left: '640px',
+                width: '180px'
+              }}
+            >
+              {certificate.courseDuration}
+            </div>
+
+            {/* CERTIFICATE NUMBER */}
+            <div
+              className="absolute text-center"
+              style={{
+                bottom: '180px',
+                right: '375px',
+                width: '220px'
+              }}
+            >
+              {certificate.certificateNo}
+            </div>
+
+            {/* QR CODE */}
+            <img
+              src={certificate.qrCode}
+              alt=""
+              className="absolute"
+              style={{
+                bottom: '80px',
+                right: '130px',
+                width: '120px',
+                height: '120px'
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
