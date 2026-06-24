@@ -20,6 +20,7 @@ export default function ResultPage() {
   const [marks, setMarks] = useState([]);
   const [selectedSem, setSelectedSem] = useState(1);
   const [totalSem, setTotalSem] = useState(1);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) loadStudent();
@@ -272,6 +273,10 @@ const loadSemesterSubjects = async (
 
   const saveResult = async () => {
 
+    if (saving) return;
+
+setSaving(true);
+
     if (!student) {
       alert("Student not loaded");
       return;
@@ -390,6 +395,7 @@ if (student.courseType === "multiple") {
     } catch (err) {
       console.error("SAVE ERROR:", err);
       alert(err?.message || "Error saving result");
+      setSaving(false);
     }
   };
 
@@ -543,12 +549,17 @@ if (student.courseType === "multiple") {
 
         </div>
 
-        <button
-          onClick={saveResult}
-          className="bg-orange-500 px-6 py-3 mt-6 rounded"
-        >
-          Save Result
-        </button>
+      <button
+  onClick={saveResult}
+  disabled={saving}
+  className={`px-6 py-3 mt-6 rounded ${
+    saving
+      ? "bg-gray-500 cursor-not-allowed"
+      : "bg-orange-500 hover:bg-orange-600"
+  }`}
+>
+  {saving ? "Saving...please wait" : "Save Result"}
+</button>
 
       </div>
 
