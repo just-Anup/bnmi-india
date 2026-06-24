@@ -188,12 +188,12 @@ const downloadCertificate = async () => {
         <div
           className="absolute"
           style={{
-            top: '630px',
+            top: '635px',
             left: '300px',
             width: '850px'
           }}
         >
-          <h2 className="text-3xl text-center">
+          <h2 className="text-2xl text-center font-bold">
             {certificate.courseName}
           </h2>
         </div>
@@ -205,12 +205,12 @@ const downloadCertificate = async () => {
         <div
           className="absolute"
           style={{
-            top: '700px',
+            top: '697px',
             left: '300px',
             width: '850px'
           }}
         >
-          <h2 className="text-2xl text-center">
+          <h2 className="text-4xl text-center font-bold">
             {certificate.instituteName}
           </h2>
         </div>
