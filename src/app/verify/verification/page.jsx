@@ -57,79 +57,113 @@ const [showModal, setShowModal] = useState(false)
   }
 
   // 🟢 STUDENT VERIFY (ONLY THIS UPDATED)
-  const handleStudentVerify = async () => {
+const handleStudentVerify = async () => {
 
-    if (!certificateNo) {
-      return alert("Enter Certificate Number")
+  if (!certificateNo.trim()) {
+    return alert("Enter Certificate Number")
+  }
+
+  setLoading(true)
+
+  try {
+
+    // 🔍 SEARCH CERTIFICATE COLLECTION
+    const certRes = await databases.listDocuments(
+      DATABASE_ID,
+      "certificates",
+      [
+        Query.equal("certificateNo", certificateNo.trim()),
+        Query.equal("status", "approved")
+      ]
+    )
+
+    if (!certRes.documents.length) {
+      alert("Invalid Certificate Number ❌")
+      setStudent(null)
+      setLoading(false)
+      return
     }
 
-    setLoading(true)
+    const certData = certRes.documents[0]
 
+    // 🔍 FETCH STUDENT USING studentId
+    const studentData = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      certData.studentId
+    )
+
+    setStudent({
+      ...studentData,
+      certificateNo: certData.certificateNo,
+      issueDate: certData.issueDate,
+      grade: certData.grade,
+      marks: certData.marks,
+      duration: certData.duration,
+      coursePeriod: certData.coursePeriod
+    })
+
+    setShowModal(true)
+
+    // 🔵 FETCH EXAM RESULT
     try {
 
-      const res = await databases.listDocuments(
+      const examRes = await databases.listDocuments(
         DATABASE_ID,
-        "student_admissions",
+        "exam_results",
         [
-          Query.equal("certificateNo", certificateNo)
+          Query.equal("studentName", studentData.studentName),
+          Query.equal("course", studentData.courseName)
         ]
       )
 
-      if (!res.documents.length) {
-        alert("Invalid Certificate Number ❌")
-        setStudent(null)
+      if (examRes.documents.length) {
+        setExam(examRes.documents[0])
       } else {
-        setStudent(res.documents[0]) // ✅ show student
-        setShowModal(true)
-        const studentData = res.documents[0]
-
-// 🔵 FETCH EXAM RESULT
-try {
-  const examRes = await databases.listDocuments(
-    DATABASE_ID,
-    "exam_results",
-    [
-      Query.equal("studentName", studentData.studentName),
-Query.equal("course", studentData.courseName)
-    ]
-  )
-
-  if (examRes.documents.length) {
-    setExam(examRes.documents[0])
-  }
-
-} catch (err) {
-  console.log("Exam fetch error:", err)
-}
-
-// 🟣 FETCH FRANCHISE
-try {
-  const franRes = await databases.listDocuments(
-    DATABASE_ID,
-    "franchise_approved",
-    [
-    Query.equal("instituteName", studentData.instituteName)
-    ]
-  )
-
-  if (franRes.documents.length) {
-    setFranchiseData(franRes.documents[0])
-  }
-
-} catch (err) {
-  console.log("Franchise fetch error:", err)
-}
-        setFranchise(null)
+        setExam(null)
       }
 
     } catch (err) {
-      console.log(err)
-      alert("Verification failed")
+      console.log("Exam fetch error:", err)
     }
 
-    setLoading(false)
-  }
+    // 🟣 FETCH FRANCHISE
+    try {
 
+      const franRes = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal(
+            "instituteName",
+            studentData.instituteName
+          )
+        ]
+      )
+
+      if (franRes.documents.length) {
+        setFranchiseData(franRes.documents[0])
+      } else {
+        setFranchiseData(null)
+      }
+
+    } catch (err) {
+      console.log("Franchise fetch error:", err)
+    }
+
+    setFranchise(null)
+
+  } catch (err) {
+
+    console.log("VERIFY ERROR:", err)
+    alert("Verification failed")
+
+  } finally {
+
+    setLoading(false)
+
+  }
+}
   return (
 
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center p-6">
