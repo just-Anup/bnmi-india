@@ -262,28 +262,8 @@ const downloadCertificate = async () => {
             height: '50px'
           }}
         />
-        <img
-          src={certificate.ownerSignature}
-          alt=""
-          className="absolute object-contain"
-          style={{
-             bottom: '100px',
-            left: '200px',
-            width: '150px',
-            height: '50px'
-          }}
-        />
-        <img
-          src={certificate.ownerSignature}
-          alt=""
-          className="absolute object-contain"
-          style={{
-             bottom: '100px',
-            right: '270px',
-            width: '150px',
-            height: '50px'
-          }}
-        />
+      
+   
 
         {/* =========================
             OWNER PHOTO
