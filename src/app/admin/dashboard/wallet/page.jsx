@@ -210,12 +210,19 @@ useEffect(() => {
                   {/* Actions */}
                   <td className="p-4 text-center space-x-2">
 
-                    <button
-                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}`)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
-                    >
-                      Recharge
-                    </button>
+            <button
+  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=add`)}
+  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+>
+  Recharge
+</button>
+
+<button
+  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=deduct`)}
+  className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+>
+  Deduct
+</button>
 
                     <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition">
                       History

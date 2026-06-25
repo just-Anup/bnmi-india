@@ -3,6 +3,9 @@
 import { useEffect, useState, use } from "react"
 import { databases } from "@/lib/appwrite"
 import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+
+
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
@@ -21,6 +24,10 @@ export default function RechargePage({ params }) {
   const [remarks, setRemarks] = useState("")
   const [masterPassword, setMasterPassword] = useState("")
   const [enable, setEnable] = useState(false)
+
+  const searchParams = useSearchParams()
+
+const type = searchParams.get("type") || "add"
 
   useEffect(() => {
     setEnable(masterPassword === "69695")
@@ -53,7 +60,22 @@ export default function RechargePage({ params }) {
 
     try {
 
-      const newBalance = Number(user.wallet || 0) + Number(amount)
+      let newBalance
+
+if (type === "deduct") {
+
+  newBalance = Number(user.wallet || 0) - Number(amount)
+
+  if (newBalance < 0) {
+    alert("Insufficient wallet balance")
+    return
+  }
+
+} else {
+
+  newBalance = Number(user.wallet || 0) + Number(amount)
+
+}
 
       await databases.updateDocument(
         DATABASE_ID,
@@ -72,7 +94,7 @@ export default function RechargePage({ params }) {
         {
           franchiseId: id,
           amount: Number(amount),
-          type: "add",
+          type,
           paymentMode,
           rechargeBy,
           leadBy,
@@ -95,9 +117,11 @@ export default function RechargePage({ params }) {
   return (
     <div className="p-10">
 
-      <h1 className="text-xl font-bold mb-6">
-        Franchise Recharge
-      </h1>
+     <h1 className="text-xl font-bold mb-6">
+  {type === "deduct"
+    ? "Deduct Wallet Balance"
+    : "Recharge Wallet"}
+</h1>
 
       <div className="grid grid-cols-2 gap-6">
 
@@ -168,7 +192,9 @@ export default function RechargePage({ params }) {
           onClick={handleRecharge}
           className={`px-4 py-2 text-white ${enable ? "bg-blue-600" : "bg-gray-400"}`}
         >
-          Make Payment
+          {type === "deduct"
+  ? "Deduct Amount"
+  : "Recharge Wallet"}
         </button>
 
       </div>

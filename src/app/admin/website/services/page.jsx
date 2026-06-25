@@ -38,6 +38,7 @@ export default function ServicesCMS() {
 
   useEffect(() => {
     fetchServices()
+    
   }, [])
 
   /* ---------------- IMAGE UPLOAD ---------------- */
