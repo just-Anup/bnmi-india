@@ -17,6 +17,7 @@ export default function SubjectPage() {
   const courseName = searchParams.get('name')
   const courseCode = searchParams.get('code')
   const duration = searchParams.get('duration')
+  const examFee = searchParams.get('examFee') // ✅ ADD HERE
 
   const [subjects, setSubjects] = useState([])
   const [selectedSubjects, setSelectedSubjects] = useState([])
@@ -108,7 +109,7 @@ export default function SubjectPage() {
           subjects: selectedSubjects.join('||'),
           courseFees: 0,
           minimumFees: 0,
-          examFees: 0,
+          examFees: Number(examFee || 0),
           status: 'Active'
         }
       )

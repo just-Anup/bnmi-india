@@ -156,7 +156,7 @@ className="fixed inset-0 bg-black/50 z-[80] lg:hidden"
       </aside>
 
       {/* MAIN */}
-      <div className="flex-1 lg:ml-0 w-full">
+   <div className="flex-1 w-0 min-w-0">
 
         {/* TOPBAR */}
         <div className="bg-white shadow p-4 flex justify-between items-center pl-16 lg:pl-4">
@@ -172,7 +172,8 @@ className="fixed inset-0 bg-black/50 z-[80] lg:hidden"
         </div>
 
         {/* CONTENT */}
-        <div className="p-3 sm:p-6">
+        <div className="w-full min-w-0 p-3 sm:p-6">
+
           {children}
         </div>
 

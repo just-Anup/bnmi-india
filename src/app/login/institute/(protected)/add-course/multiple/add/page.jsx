@@ -93,7 +93,7 @@ const fetchCourses = async () => {
 
     const res = await databases.listDocuments(
       DATABASE_ID,
-      "courses_multiple",
+      "franchise_multiple_courses",
       [Query.equal("franchiseEmail", user.email)]
     );
 
@@ -212,11 +212,10 @@ const fetchCourses = async () => {
                         <span className="bg-gray-700 text-gray-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm inline-block whitespace-nowrap">
                           Already Added
                         </span>
-
                       ) : (
 
                         <Link
-                          href={`/login/institute/add-course/multiple/subjects/${course.$id}?name=${course.courseName}&code=${course.courseCode}&duration=${course.duration}`}
+                       href={`/login/institute/add-course/multiple/subjects/${course.$id}?name=${course.courseName}&code=${course.courseCode}&duration=${course.duration}&examFee=${examFee}`}
                           className="bg-orange-500 hover:bg-orange-600 transition px-3 sm:px-4 py-2 rounded-lg text-black font-semibold shadow text-xs sm:text-sm inline-block whitespace-nowrap"
                         >
                           Add Subjects

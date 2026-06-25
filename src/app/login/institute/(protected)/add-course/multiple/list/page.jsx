@@ -110,9 +110,9 @@ export default function ListPage() {
       />
 
       {/* TABLE */}
-      <div className="overflow-x-auto rounded-xl border border-gray-800">
+     <div className="relative w-full overflow-x-auto rounded-xl border border-gray-800">
 
-        <table className="w-full min-w-[900px] bg-[#121212] border-collapse shadow">
+  <table className="min-w-max bg-[#121212] border-collapse shadow">
 
           <thead className="bg-orange-500 text-black text-xs sm:text-sm">
 
@@ -129,6 +129,15 @@ export default function ListPage() {
               <th className="p-3 border border-gray-800 whitespace-nowrap">
                 Subjects
               </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+  Duration
+</th>
+
+<th className="p-3 border border-gray-800 whitespace-nowrap">
+  Exam Fees
+</th>
+
 
               <th className="p-3 border border-gray-800 whitespace-nowrap">
                 Course Fees
@@ -165,11 +174,11 @@ export default function ListPage() {
                   className="border-t border-gray-800 hover:bg-[#1a1a1a]"
                 >
 
-                  <td className="p-3 border border-gray-800 whitespace-nowrap">
+                 <td className="p-3 border border-gray-800 whitespace-nowrap">
                     {course.courseCode}
                   </td>
 
-                  <td className="p-3 border border-gray-800 whitespace-nowrap">
+             <td className="p-3 border border-gray-800 whitespace-nowrap">
   {course.courseName}
 </td>
 
@@ -183,6 +192,14 @@ export default function ListPage() {
           </div>
         ))
     : "No Subjects"}
+</td>
+
+<td className="p-3 border border-gray-800 whitespace-nowrap">
+  {course.duration}
+</td>
+
+<td className="p-3 border border-gray-800 whitespace-nowrap">
+  ₹{course.examFees || 0}
 </td>
 
        <td className="p-3 border border-gray-800 whitespace-nowrap">
