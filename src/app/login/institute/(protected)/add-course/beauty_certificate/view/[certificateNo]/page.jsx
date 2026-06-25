@@ -273,7 +273,7 @@ const downloadCertificate = async () => {
                 width: '850px'
               }}
             >
-              <h2 className="text-4xl text-center font-bold">
+              <h2 className="text-2xl text-center font-bold">
                 {certificate.instituteName}
               </h2>
             </div>
