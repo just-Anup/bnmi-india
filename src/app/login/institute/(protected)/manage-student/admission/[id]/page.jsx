@@ -366,7 +366,9 @@ if (form.courseType === "semester") {
       ),
 
     examFees:
-      dynamicFee
+      dynamicFee,
+        duration: course.duration,
+  courseDuration: course.duration
   }));
 
   return;

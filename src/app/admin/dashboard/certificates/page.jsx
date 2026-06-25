@@ -691,7 +691,7 @@ try {
 
     const res = await databases.listDocuments(
       DATABASE_ID,
-      "courses_multiple",
+      "franchise_multiple_courses",
       [
         Query.equal("courseName", studentData.courseName),
         Query.equal(
