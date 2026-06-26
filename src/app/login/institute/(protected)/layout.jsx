@@ -135,6 +135,7 @@ className="fixed inset-0 bg-black/50 z-[80] lg:hidden"
         <DropdownMenu label="Certificates">
           <NavItem href="/login/institute/certificate" label="Apply Certificates" />
           <NavItem href="/login/institute/certificate/view" label="View Certificates" />
+          <NavItem href="/login/institute/certificate/order" label="Order Certificates" />
         </DropdownMenu>
 
         <NavItem href="/login/institute/wallet" label="My Wallet" />

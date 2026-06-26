@@ -94,7 +94,12 @@ export default function AdminSidebar() {
 
           <MenuItem icon={<Users size={18} />} label="Franchise List" href="/admin/dashboard/franchise" pathname={pathname} />
 
-          <MenuItem icon={<FileText size={18} />} label="Certificate List" href="/admin/dashboard/certificates" pathname={pathname} />
+        
+
+          <DropdownMenu icon={<FileText size={18} />} label="Certificates">
+          <NavItem label="Certificate List" href="/admin/dashboard/certificates" pathname={pathname}/>
+          <NavItem label="Order Certificates" href="/admin/dashboard/certificate-order" pathname={pathname} />
+        </DropdownMenu>
 
           <MenuItem icon={<Image size={18} />} label="Course Section" href="/admin/dashboard/course" pathname={pathname} />
 
@@ -160,4 +165,42 @@ function MenuItem({ icon, label, href, pathname }) {
       <span>{label}</span>
     </Link>
   );
+}
+
+function NavItem({ href, label }) {
+  return (
+    <Link
+      href={href}
+      className="block px-3 py-2 rounded hover:bg-slate-700 transition text-sm sm:text-base"
+    >
+      {label}
+    </Link>
+  )
+}
+
+
+
+function DropdownMenu({ label, children }) {
+
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div>
+
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full text-left px-3 py-2 rounded hover:bg-slate-700 transition flex justify-between items-center"
+      >
+        <span>{label}</span>
+        <span>{open ? '−' : '+'}</span>
+      </button>
+
+      {open && (
+        <div className="ml-4 mt-2 space-y-1">
+          {children}
+        </div>
+      )}
+
+    </div>
+  )
 }

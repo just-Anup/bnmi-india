@@ -182,17 +182,17 @@ export default function IDCard() {
         />
 
         {/* STUDENT NAME */}
-        <div className="absolute top-[334px] left-[145px] text-lg">
+        <div className="absolute top-[341px] left-[145px] text-sm font-semibold">
           {student.studentName}
         </div>
 
         {/* COURSE */}
-        <div className="absolute top-[370px] left-[140px] text-xs">
+        <div className="absolute top-[370px] left-[140px] text-xs font-bold">
           {student.courseName}
         </div>
 
         {/* MOBILE */}
-        <div className="absolute top-[400px] left-[150px] text-sm">
+        <div className="absolute top-[400px] left-[150px] text-sm font-bold">
           {student.mobile || ""}
         </div>
 
