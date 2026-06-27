@@ -316,6 +316,9 @@ const saveCertificate = async () => {
         instituteName: student.instituteName,
         city: student.city,
         issueDate: student.issueDate,
+        relationType: student.relationType,
+showFatherInCertificate: student.showFatherInCertificate,
+showMotherInCertificate: student.showMotherInCertificate,
       }
     );
 
@@ -513,6 +516,18 @@ const franchiseSign =
       className="border p-3 rounded"
     />
 
+    <select
+  value={student.relationType || "S/O"}
+  onChange={(e) =>
+    handleChange("relationType", e.target.value)
+  }
+  className="border p-3 rounded"
+>
+  <option value="S/O">S/O</option>
+  <option value="D/O">D/O</option>
+  <option value="W/O">W/O</option>
+</select>
+
     <input
       type="text"
       value={student.fatherName || ""}
@@ -663,19 +678,18 @@ const franchiseSign =
     </span>
 
     {/* FATHER NAME */}
-    {String(student.showFatherInCertificate).toLowerCase() === "true" && (
-      <span className="text-3xl font-semibold">
-         D/O {student.fatherName || ""}
-      </span>
-    )}
+   {String(student.showFatherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.fatherName}
+  </span>
+)}
 
     {/* MOTHER NAME */}
-    {String(student.showMotherInCertificate).toLowerCase() === "true" && (
-      <span className="text-3xl font-semibold">
-        D/O {student.motherName || ""}
-      </span>
-    )}
-
+ {String(student.showMotherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.motherName}
+  </span>
+)}
   </div>
 
 </div>

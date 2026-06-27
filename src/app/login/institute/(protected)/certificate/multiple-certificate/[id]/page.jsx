@@ -314,6 +314,199 @@ useEffect(() => {
   checkAdmin();
 
 }, []);
+
+const saveCertificate = async () => {
+  try {
+
+    // -------------------------
+    // 1. UPDATE CERTIFICATE
+    // -------------------------
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "certificates",
+      id,
+      {
+        studentName: student.studentName,
+        relationType: student.relationType,
+
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+
+        showFatherInCertificate:
+          student.showFatherInCertificate,
+
+        showMotherInCertificate:
+          student.showMotherInCertificate,
+
+        course: student.course,
+
+        duration: student.duration,
+
+        coursePeriod: student.coursePeriod,
+
+        instituteName: student.instituteName,
+
+        city: student.city,
+
+        issueDate: student.issueDate,
+
+        grade: student.grade,
+
+        marks: student.marks,
+      }
+    );
+
+
+
+    // -------------------------
+    // 2. UPDATE STUDENT
+    // -------------------------
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "student_admissions",
+      student.studentId,
+      {
+
+        studentName: student.studentName,
+
+        relationType: student.relationType,
+
+        fatherName: student.fatherName,
+
+        motherName: student.motherName,
+
+        showFatherInCertificate:
+          student.showFatherInCertificate,
+
+        showMotherInCertificate:
+          student.showMotherInCertificate,
+
+        courseName: student.course,
+
+        duration: student.duration,
+
+        coursePeriod: student.coursePeriod,
+
+        instituteName: student.instituteName,
+
+      }
+    );
+
+
+
+    // -------------------------
+    // 3. UPDATE EXAM RESULT
+    // -------------------------
+
+    const exam = await databases.listDocuments(
+      DATABASE_ID,
+      "exam_results",
+      [
+        Query.equal("studentId", student.studentId)
+      ]
+    );
+
+    await Promise.all(
+
+      exam.documents.map((doc)=>
+
+        databases.updateDocument(
+
+          DATABASE_ID,
+
+          "exam_results",
+
+          doc.$id,
+
+          {
+
+            studentName: student.studentName,
+
+            relationType: student.relationType,
+
+            fatherName: student.fatherName,
+
+            motherName: student.motherName,
+
+            courseName: student.course,
+
+            duration: student.duration,
+
+            coursePeriod: student.coursePeriod,
+
+            instituteName: student.instituteName,
+
+          }
+
+        )
+
+      )
+
+    );
+
+
+
+    // -------------------------
+    // 4. UPDATE SUBJECT RESULT
+    // -------------------------
+
+    const subject = await databases.listDocuments(
+      DATABASE_ID,
+      "student_subject_results",
+      [
+        Query.equal("studentId", student.studentId)
+      ]
+    );
+
+    await Promise.all(
+
+      subject.documents.map((doc)=>
+
+        databases.updateDocument(
+
+          DATABASE_ID,
+
+          "student_subject_results",
+
+          doc.$id,
+
+          {
+
+            studentName: student.studentName,
+
+            fatherName: student.fatherName,
+
+            motherName: student.motherName,
+
+            course: student.course,
+
+            instituteName: student.instituteName,
+
+          }
+
+        )
+
+      )
+
+    );
+
+
+
+    alert("Updated Successfully");
+
+  }
+
+  catch(err){
+
+    console.log(err);
+
+    alert(err.message);
+
+  }
+
+};
   if (!student) return <p className="p-10">Loading certificate...</p>;
     const handleChange = (field, value) => {
   setStudent((prev) => ({
@@ -437,6 +630,13 @@ const grade = getGrade(percentage);
     {editMode ? "Close Edit" : "Edit Certificate"}
   </button>
 
+  <button
+  onClick={saveCertificate}
+  className="bg-green-600 text-white px-5 py-2 rounded"
+>
+  Save Changes
+</button>
+
 </div>
 
 )}
@@ -455,6 +655,17 @@ const grade = getGrade(percentage);
       placeholder="Student Name"
       className="border p-3 rounded"
     />
+    <select
+  value={student.relationType || "S/O"}
+  onChange={(e) =>
+    handleChange("relationType", e.target.value)
+  }
+  className="border p-3 rounded"
+>
+  <option value="S/O">S/O</option>
+  <option value="D/O">D/O</option>
+  <option value="W/O">W/O</option>
+</select>
 
     <input
       type="text"
@@ -496,6 +707,15 @@ const grade = getGrade(percentage);
       className="border p-3 rounded"
     />
 
+<input
+  type="text"
+  value={student.coursePeriod || ""}
+  onChange={(e) =>
+    handleChange("coursePeriod", e.target.value)
+  }
+  placeholder="Course Period"
+  className="border p-3 rounded"
+/>
     <input
       type="text"
       value={student.grade || ""}
@@ -593,18 +813,18 @@ const grade = getGrade(percentage);
     </span>
 
     {/* FATHER NAME */}
-    {student.showFatherInCertificate && (
-      <span className="text-3xl font-semibold">
-        {student.relationType || "S/O"} {student.fatherName || ""}
-      </span>
-    )}
+  {String(student.showFatherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.fatherName}
+  </span>
+)}
 
     {/* MOTHER NAME */}
-  {/* {student.showMotherInCertificate && (
-      <span className="text-3xl font-semibold">
-        M/O {student.motherName || ""}
-      </span>
-    )} */}
+ {String(student.showMotherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.motherName}
+  </span>
+)}
 
   </div>
 

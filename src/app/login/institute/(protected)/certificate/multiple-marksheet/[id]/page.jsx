@@ -51,15 +51,55 @@ const printRef = useRef();
   };
 
 
-  useEffect(() => {
-    const data = localStorage.getItem("marksheetStudent");
+useEffect(() => {
 
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStudent(parsed);
-      fetchMarks(parsed.studentId);
-    }
-  }, []);
+  const fetchStudent = async () => {
+
+    const data = JSON.parse(
+      localStorage.getItem("marksheetStudent")
+    );
+
+    if (!data) return;
+
+    const studentDoc =
+      await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        data.studentId
+      );
+
+    const cert =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "certificates",
+        [
+          Query.equal(
+            "studentId",
+            data.studentId
+          )
+        ]
+      );
+
+    const certificate =
+      cert.documents[0];
+
+    setStudent({
+
+      ...studentDoc,
+
+      ...certificate,
+
+      studentId: data.studentId,
+
+    });
+
+    fetchMarks(data.studentId);
+
+  };
+
+  fetchStudent();
+
+}, []);
 
   
 
