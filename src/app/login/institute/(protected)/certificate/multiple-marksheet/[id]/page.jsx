@@ -275,6 +275,8 @@ const getCoursePeriod = (durationText) => {
   }
 
   if (text.includes("year")) {
+
+
     const years = parseInt(text) || 1;
     end.setFullYear(end.getFullYear() + years);
   }
