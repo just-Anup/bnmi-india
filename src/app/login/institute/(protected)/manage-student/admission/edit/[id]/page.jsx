@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
-import { Storage, Client, ID } from "appwrite";
+import { Storage, Client, ID, Query } from "appwrite";
 import { useParams, useRouter } from "next/navigation";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
@@ -202,6 +202,34 @@ export default function EditStudent() {
 
         }
       );
+
+      // Update certificate also
+try {
+  const cert = await databases.listDocuments(
+    DATABASE_ID,
+    "certificates",
+    [
+      Query.equal("studentId", id)
+    ]
+  );
+
+  if (cert.documents.length > 0) {
+    await databases.updateDocument(
+      DATABASE_ID,
+      "certificates",
+      cert.documents[0].$id,
+      {
+        relationType: form.relationType,
+        fatherName: form.fatherName,
+        motherName: form.motherName,
+        showFatherInCertificate: form.showFatherInCertificate,
+        showMotherInCertificate: form.showMotherInCertificate
+      }
+    );
+  }
+} catch (err) {
+  console.log("Certificate update failed", err);
+}
 
       alert("Student Updated Successfully");
 

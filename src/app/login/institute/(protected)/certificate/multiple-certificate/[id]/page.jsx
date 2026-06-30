@@ -467,7 +467,6 @@ const saveCertificate = async () => {
         databases.updateDocument(
 
           DATABASE_ID,
-
           "student_subject_results",
 
           doc.$id,

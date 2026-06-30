@@ -364,7 +364,7 @@ const totalOutOf = marksArray.length * 100;
 </div> */}
 
 <div className="absolute top-[334px] left-[680px]">
-  {student.marksheetNo}
+  {student.marksheetNo || ""}
 </div>
 
 <div className="absolute top-[355px] left-[680px]">
@@ -372,7 +372,7 @@ const totalOutOf = marksArray.length * 100;
 </div>
 
 <div className="absolute top-[378px] left-[680px] ">
-  {student.coursePeriod || student.duration || "1 Year"}
+  { student.duration } 
 </div>
 
 
