@@ -248,14 +248,21 @@ export default function ParticipationList() {
                         <td className="p-3 border border-gray-800">
 
                           <div className="flex gap-2">
+                            <Link
+                              href={`/login/institute/add-course/beauty_certificate/view/${item.certificateNo}`}
+                              className="bg-green-600 px-3 py-2 rounded"
+                              target="_blank"
+                            >
+                              View Certificate
+                            </Link>
 
-<Link
-  href={`/login/institute/add-course/beauty_certificate/view/${item.certificateNo}`}
-  target="_blank"
-  className="bg-green-600 px-3 py-2 rounded"
->
-  View
-</Link>
+                            <Link
+                              href={`/login/institute/add-course/beauty_certificate/marksheet/${item.certificateNo}`}
+                              className="bg-yellow-600 px-3 py-2 rounded"
+                              target="_blank"
+                            >
+                              View Marksheet
+                            </Link>
 
                             <a
                               href={item.verifyUrl}

@@ -31,6 +31,11 @@ const [dateOfCompletion, setDateOfCompletion] = useState('')
 
 const [studentPhoto, setStudentPhoto] = useState(null)
 const [studentSignature, setStudentSignature] = useState(null)
+const [subjects, setSubjects] = useState("")
+
+const [objectiveMarks, setObjectiveMarks] = useState("")
+
+const [practicalMarks, setPracticalMarks] = useState("")
 
   
 const generateCertificate = async () => {
@@ -56,6 +61,21 @@ const generateCertificate = async () => {
       alert("Select Date Of Completion")
       return
     }
+
+    if (!subjects) {
+  alert("Enter Subjects")
+  return
+}
+
+if (!objectiveMarks) {
+  alert("Enter Objective Marks")
+  return
+}
+
+if (!practicalMarks) {
+  alert("Enter Practical Marks")
+  return
+}
 
     if (!studentPhoto) {
       alert("Upload Student Photo")
@@ -190,82 +210,66 @@ const certificateNo =
 
     // CREATE CERTIFICATE
 
-    await databases.createDocument(
-      DATABASE_ID,
-      COLLECTION_ID,
-      ID.unique(),
-      {
-        studentName,
+const totalMarks =
+  Number(objectiveMarks || 0) +
+  Number(practicalMarks || 0)
 
-        courseName,
-        courseDuration,
-      dateOfCompletion:
-  new Date(dateOfCompletion)
-    .toLocaleDateString("en-GB"),
+await databases.createDocument(
+  DATABASE_ID,
+  COLLECTION_ID,
+  ID.unique(),
+  {
+    studentName,
+    courseName,
+    courseDuration,
+    dateOfCompletion,
 
-      studentPhoto:
-  photoUrl,
+    subjects,
+    objectiveMarks,
+    practicalMarks,
+    totalMarks,
 
-studentPhotoId:
-  photoUpload.$id,
+    studentPhoto: photoUrl,
+    studentPhotoId: photoUpload.$id,
 
-studentSignature:
-  signUrl,
+    studentSignature: signUrl,
+    studentSignatureId: signUpload.$id,
 
-studentSignatureId:
-  signUpload.$id,
+    ownerPhoto: franchise.ownerPhoto || "",
+    ownerSignature: franchise.signature || "",
 
-        ownerPhoto:
-          franchise.ownerPhoto || "",
+    instituteName: franchise.instituteName || "",
+    ownerName: franchise.name || "",
 
-        ownerSignature:
-          franchise.signature || "",
+    designation: franchise.designation || "",
 
-        instituteName:
-          franchise.instituteName || "",
+    mobile: franchise.mobile || "",
 
-          ownerName:
-  franchise.name || "",
+    address: franchise.address || "",
 
-designation:
-  franchise.designation || "",
+    state: franchise.state || "",
 
-mobile:
-  franchise.mobile || "",
+    city: franchise.city || "",
 
-address:
-  franchise.address || "",
+    pincode: franchise.pincode || "",
 
-state:
-  franchise.state || "",
+    logo: franchise.logo || "",
 
-city:
-  franchise.city || "",
+    email: franchise.email || "",
 
-pincode:
-  franchise.pincode || "",
+    franchiseEmail: user.email,
 
-logo:
-  franchise.logo || "",
+    certificateNo,
 
-email:
-  franchise.email || "",
+    certificateFee: 499,
 
-        franchiseEmail:
-          user.email,
+    qrCode,
 
-        certificateNo,
+    verifyUrl,
 
-        certificateFee: 499,
-
-       qrCode,
-verifyUrl,
-
-createdAt:
-  new Date().toISOString()
-      }
-    )
-
+    createdAt: new Date().toISOString()
+  }
+)
     // DEDUCT WALLET
 
 await databases.updateDocument(
@@ -429,6 +433,68 @@ await databases.updateDocument(
       )
     }
     className="w-full p-3 bg-black border border-gray-700 rounded"
+  />
+</div>
+
+<div>
+  <label className="block mb-2">
+    Subjects
+  </label>
+
+  <input
+    type="text"
+    placeholder="Hindi, English, Maths, Science"
+    value={subjects}
+    onChange={(e)=>
+      setSubjects(e.target.value)
+    }
+    className="w-full p-3 bg-black border border-gray-700 rounded"
+  />
+</div>
+
+<div>
+  <label className="block mb-2">
+    Objective Marks
+  </label>
+
+  <input
+    type="number"
+    value={objectiveMarks}
+    onChange={(e)=>
+      setObjectiveMarks(e.target.value)
+    }
+    className="w-full p-3 bg-black border border-gray-700 rounded"
+  />
+</div>
+
+<div>
+  <label className="block mb-2">
+    Practical Marks
+  </label>
+
+  <input
+    type="number"
+    value={practicalMarks}
+    onChange={(e)=>
+      setPracticalMarks(e.target.value)
+    }
+    className="w-full p-3 bg-black border border-gray-700 rounded"
+  />
+</div>
+
+<div>
+  <label className="block mb-2">
+    Total Marks
+  </label>
+
+  <input
+    type="text"
+    readOnly
+    value={
+      Number(objectiveMarks || 0) +
+      Number(practicalMarks || 0)
+    }
+    className="w-full p-3 bg-gray-900 border border-gray-700 rounded"
   />
 </div>
 
