@@ -364,15 +364,14 @@ const totalOutOf = marksArray.length * 100;
 </div> */}
 
 <div className="absolute top-[334px] left-[680px]">
-  {student.marksheetNo || ""}
+  {student.certificateNo || ""}
 </div>
-
 <div className="absolute top-[355px] left-[680px]">
   {student.dob}
 </div>
 
 <div className="absolute top-[378px] left-[680px] ">
-  { student.duration } 
+  { student.duration }  
 </div>
 
 
