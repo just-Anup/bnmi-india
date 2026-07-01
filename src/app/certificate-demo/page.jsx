@@ -71,7 +71,7 @@ export default function ManageImagesPage() {
     { label: 'Hall Ticket', key: 'hallticketImage' },
     { label: 'Fees Receipt', key: 'feesreceiptImage' },
     { label: 'ATC Certificate', key: 'atccertificateImage' },
-    { label: 'Typing Marksheet', key: 'typingmarksheetImage' }
+    { label: 'Beauty Marksheet', key: 'typingmarksheetImage' }
   ]
 
   return (
@@ -91,7 +91,7 @@ export default function ManageImagesPage() {
                 <img
                   src={images[key]}
                   alt={label}
-                  className="w-full h-40 object-contain border rounded-lg mb-3"
+                  className="w-full h-150 object-contain border rounded-lg mb-3"
                 />
               ) : (
                 <div className="w-full h-40 flex items-center justify-center border rounded-lg text-gray-400 mb-3">

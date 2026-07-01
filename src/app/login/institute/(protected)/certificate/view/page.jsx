@@ -48,7 +48,8 @@ export default function FranchiseCertificateView() {
         CERT_COLLECTION,
         [
           Query.equal("status", "approved"),
-          Query.equal("createdById", userId)
+          Query.equal("createdById", userId),
+          Query.limit(500)
         ]
       );
 

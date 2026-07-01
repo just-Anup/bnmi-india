@@ -31,13 +31,18 @@ export default function OfflineExamList() {
     const admissions = await databases.listDocuments(
       DATABASE_ID,
       ADMISSION_COLLECTION,
-      [Query.equal("createdById", user.$id)]
+      [Query.equal("createdById", user.$id),
+        Query.limit(200)
+      ]
+
     );
 
     const examResults = await databases.listDocuments(
       DATABASE_ID,
       RESULT_COLLECTION,
-      [Query.equal("createdById", user.$id)]
+      [Query.equal("createdById", user.$id)
+         Query.limit(200)
+      ]
     );
 
     const resultMap = {};

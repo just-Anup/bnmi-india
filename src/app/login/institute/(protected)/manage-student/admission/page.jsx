@@ -30,7 +30,8 @@ export default function AdmissionList() {
       COLLECTION_ID,
       [
         Query.equal("createdById", user.$id),
-        Query.orderDesc("createdAt")
+        Query.orderDesc("createdAt"),
+        Query.limit(500)
 
       ]
     );
