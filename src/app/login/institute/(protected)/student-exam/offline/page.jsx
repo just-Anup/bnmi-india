@@ -40,7 +40,7 @@ export default function OfflineExamList() {
     const examResults = await databases.listDocuments(
       DATABASE_ID,
       RESULT_COLLECTION,
-      [Query.equal("createdById", user.$id)
+      [Query.equal("createdById", user.$id),
          Query.limit(200)
       ]
     );
