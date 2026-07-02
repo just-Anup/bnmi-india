@@ -1264,7 +1264,7 @@ const toggleStatus = async (req) => {
               />
               <img
                 src={selectedFranchise?.qrCode}
-                className="absolute top-[555px] left-[125px] w-[100px]"
+                className="absolute top-[555px] left-[115px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
 
