@@ -1270,7 +1270,7 @@ const toggleStatus = async (req) => {
 
               {/* Institute Name (RED CENTER) */}
           
-<div className="absolute top-[470px] left-0 w-full flex justify-center px-20">
+<div className="absolute top-[460px] left-0 w-full flex justify-center px-20">
   <h1 className="text-red-600 text-2xl font-bold text-center break-words leading-tight max-w-[650px]">
     {selectedFranchise?.instituteName}
   </h1>
