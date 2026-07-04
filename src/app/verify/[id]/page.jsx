@@ -121,7 +121,7 @@ export default function VerifyPage() {
           
          {/* OWNER IMAGE */}
 {data.ownerPhoto && (
-  <div className="flex justify-center mt-[-80px] md:mt-[-80px] mb-8 relative z-20">
+  <div className="flex justify-center mt-[-110px] md:mt-[-80px] mb-8 relative z-20">
 
     <div className="bg-white p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
 
