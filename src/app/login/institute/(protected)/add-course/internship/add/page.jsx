@@ -169,13 +169,15 @@ Available: ₹${currentWallet}`
       )
 
      
-  await databases.updateDocument(
+ const updatedWallet =
+  currentWallet - CERTIFICATE_FEE
+
+await databases.updateDocument(
   DATABASE_ID,
   "franchise_approved",
   franchise.$id,
   {
-    wallet:
-      currentWallet - CERTIFICATE_FEE
+    wallet: String(updatedWallet)
   }
 )
 
@@ -194,11 +196,8 @@ await databases.createDocument(
     courseName: internshipTitle,
     studentName: studentName,
     certificateNo: certificateNo,
-    remainingBalance: String(
-      currentWallet - CERTIFICATE_FEE
-    ),
-    date: new Date()
-      .toLocaleDateString("en-GB")
+    remainingBalance: String(updatedWallet),
+    date: new Date().toLocaleDateString("en-GB")
   }
 )
 
