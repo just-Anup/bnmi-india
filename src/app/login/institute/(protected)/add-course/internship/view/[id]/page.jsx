@@ -222,13 +222,13 @@ export default function InternshipCertificate() {
   {certificate.signature && (
     <img
       src={certificate.signature}
-      className="absolute bottom-[130px] left-[140px] w-[140px]"
+      className="absolute bottom-[130px] left-[170px] w-[90px]"
     />
   )}
   {certificate.signature && (
     <img
       src={certificate.signature}
-      className="absolute bottom-[130px] right-[230px] w-[140px]"
+      className="absolute bottom-[130px] right-[250px] w-[90px]"
     />
   )}
 
