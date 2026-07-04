@@ -401,7 +401,7 @@ try {
             className="border p-3 w-full bg-white"
           />
 
-          <div className="flex items-center gap-2 mt-2">
+          {/* <div className="flex items-center gap-2 mt-2">
 
             <input
               type="checkbox"
@@ -418,7 +418,7 @@ try {
               Show in Certificate
             </label>
 
-          </div>
+          </div> */}
 
         </div>
 
@@ -489,29 +489,7 @@ try {
           className="border p-3 bg-white"
         />
 
-        <input
-          name="state"
-          value={form.state || ""}
-          placeholder="State"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
-
-        <input
-          name="city"
-          value={form.city || ""}
-          placeholder="City"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
-
-        <input
-          name="postcode"
-          value={form.postcode || ""}
-          placeholder="Postcode"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+      
 
         <textarea
           name="address"

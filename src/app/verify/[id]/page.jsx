@@ -118,7 +118,7 @@ export default function VerifyPage() {
         {/* BODY */}
         <div className="p-8 md:p-10 text-white">
 
-          {/* OWNER IMAGE */}
+          
          {/* OWNER IMAGE */}
 {data.ownerPhoto && (
   <div className="flex justify-center mt-[-80px] md:mt-[-80px] mb-8 relative z-20">

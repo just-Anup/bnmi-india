@@ -178,7 +178,7 @@ export default function IDCard() {
         {/* PHOTO */}
         <img
           src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
-          className="absolute top-[190px] left-[120px] w-[100px] h-[100px] object-cover"
+          className="absolute top-[190px] left-[100px] w-[130px] h-[150px] object-cover rounded-2xl"
         />
 
         {/* STUDENT NAME */}
