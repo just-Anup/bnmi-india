@@ -113,7 +113,7 @@ export default function InternshipList() {
           </h2>
 
           <Link
-           href="/login/institute/add-course/internship/add"
+            href="/login/institute/internship/add"
           >
             <button className="bg-orange-500 hover:bg-orange-600 text-black px-5 py-2 rounded-lg font-semibold">
               Add Internship
