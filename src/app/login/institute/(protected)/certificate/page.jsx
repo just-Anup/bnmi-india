@@ -28,34 +28,58 @@ export default function CertificatePage() {
       const user = await account.get();
 
       // ✅ LOAD RESULTS
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        RESULT_COLLECTION,
-        [Query.orderDesc("$createdAt")]
-      );
+    const res = await databases.listDocuments(
+  DATABASE_ID,
+  RESULT_COLLECTION,
+  [
+    Query.orderDesc("$createdAt"),
+    Query.limit(500),
+  ]
+);
 
       // ✅ LOAD CERTIFICATES
-      const certRes = await databases.listDocuments(
-        DATABASE_ID,
-        CERT_COLLECTION
-      );
+     const certRes = await databases.listDocuments(
+  DATABASE_ID,
+  CERT_COLLECTION,
+  [
+    Query.limit(500)
+  ]
+);
 
       // ✅ CREATE APPLIED ARRAY
-      const appliedStudents = certRes.documents.map(
-        cert => cert.studentId
-      );
+     const appliedStudents = certRes.documents.map(
+  (cert) => String(cert.studentId)
+);
 
       // ✅ FILTER RESULTS
-      const passedStudents = res.documents
-        .filter(
-          r =>
-            r.grade !== "F" &&
-            r.createdById === user.$id
-        )
-       .map(r => ({
-  ...r,
-  alreadyApplied: r.certificateApplied === true
-}));
+ // Only passed students of this institute
+const passed = res.documents.filter(
+  (r) =>
+    r.grade !== "F" &&
+    r.createdById === user.$id
+);
+
+// Remove duplicate studentIds (keep latest result)
+const uniqueMap = new Map();
+
+passed.forEach((r) => {
+
+  if (!uniqueMap.has(r.studentId)) {
+
+    const isApplied = certRes.documents.some(
+      cert => cert.studentId === r.studentId
+    );
+
+    uniqueMap.set(r.studentId, {
+      ...r,
+      alreadyApplied: isApplied,
+    });
+
+  }
+
+});
+
+const passedStudents = [...uniqueMap.values()];
 
       setResults(passedStudents);
 
@@ -147,7 +171,7 @@ export default function CertificatePage() {
 } catch (error) {
   console.log("UPDATE ERROR:", error);
 }
-console.log("UPDATED RESULT:", updatedResult);
+
       }
 
 

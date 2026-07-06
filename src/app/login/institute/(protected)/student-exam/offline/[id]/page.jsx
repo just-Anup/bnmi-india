@@ -295,11 +295,24 @@ setSaving(true);
       const percentage = calculatePercentage();
       const grade = calculateGrade();
 
-      const resultDoc = await databases.createDocument(
+      // CHECK WHETHER RESULT ALREADY EXISTS
+
+const existingResult = await databases.listDocuments(
   DATABASE_ID,
   RESULT_COLLECTION,
-  ID.unique(),
- {
+  [
+    Query.equal("studentId", id),
+    Query.limit(1),
+  ]
+);
+
+console.log("Student ID:", id);
+console.log("Existing Results:", existingResult.documents);
+console.log("Count:", existingResult.documents.length);
+
+let resultId;
+
+const resultData = {
   studentId: id,
   studentName: student.studentName || "",
   course: student.courseName || "",
@@ -307,18 +320,18 @@ setSaving(true);
 
   subjects: subjects.join(", "),
 
-  // ✅ ADD THESE (IMPORTANT)
- semesterNumber: Number(selectedSem),
-courseCode: student.courseCode,
-courseType: student.courseType,
+  semesterNumber: Number(selectedSem),
+  courseCode: student.courseCode,
+  courseType: student.courseType,
 
-  // ✅ KEEP THIS (already correct)
   marksArray: JSON.stringify(
     marks.map((m) => ({
       subject: m.subject,
       objective: Number(m.theory || 0),
       practical: Number(m.practical || 0),
-      total: Number(m.theory || 0) + Number(m.practical || 0)
+      total:
+        Number(m.theory || 0) +
+        Number(m.practical || 0),
     }))
   ),
 
@@ -330,9 +343,53 @@ courseType: student.courseType,
   instituteName: student.instituteName || "",
 
   createdById: user.$id,
-  createdAt: new Date().toISOString()
-}
+  createdAt: new Date().toISOString(),
+};
+
+if (existingResult.documents.length > 0) {
+
+  resultId = existingResult.documents[0].$id;
+
+const updatedDoc = await databases.updateDocument(
+    DATABASE_ID,
+    RESULT_COLLECTION,
+    resultId,
+    resultData
 );
+
+console.log("UPDATED:", updatedDoc.$id);
+} else {
+
+ const newResult = await databases.createDocument(
+    DATABASE_ID,
+    RESULT_COLLECTION,
+    ID.unique(),
+    resultData
+);
+
+console.log("CREATED:", newResult.$id);
+
+resultId = newResult.$id;
+
+}
+
+const oldSubjects = await databases.listDocuments(
+  DATABASE_ID,
+  "student_subject_results",
+  [
+    Query.equal("studentId", id),
+    Query.limit(500),
+  ]
+);
+
+for (const doc of oldSubjects.documents) {
+  await databases.deleteDocument(
+    DATABASE_ID,
+    "student_subject_results",
+    doc.$id
+  );
+}
+
 
 // ===============================
 // ✅ FINAL CORRECT SAVE LOGIC
