@@ -83,15 +83,47 @@ useEffect(() => {
     const certificate =
       cert.documents[0];
 
-    setStudent({
+      let franchise = null;
 
-      ...studentDoc,
+try {
+  const franchiseRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [
+      Query.equal(
+        "email",
+        studentDoc.franchiseEmail
+      )
+    ]
+  );
 
-      ...certificate,
+  if (franchiseRes.documents.length > 0) {
+    franchise = franchiseRes.documents[0];
+  }
+} catch (err) {
+  console.log(err);
+}
 
-      studentId: data.studentId,
 
-    });
+  setStudent({
+  ...studentDoc,
+  ...certificate,
+
+  // Always use latest franchise logo
+  logo: franchise?.logo || certificate?.logo,
+
+  // Always use latest signature
+  franchiseSignature:
+    franchise?.signature ||
+    certificate?.franchiseSignature,
+
+  // Always use latest owner name
+  ownerName:
+    franchise?.name ||
+    certificate?.ownerName,
+
+  studentId: data.studentId,
+});
 
     fetchMarks(data.studentId);
 
@@ -329,7 +361,7 @@ const totalOutOf = marksArray.length * 100;
   }}
 >
         {/* TEMPLATE */}
-        <img src="/multiplemarksheet.png" className="absolute w-full h-full" />
+        <img src="/multiplemarksheet.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
                {student.logo && (

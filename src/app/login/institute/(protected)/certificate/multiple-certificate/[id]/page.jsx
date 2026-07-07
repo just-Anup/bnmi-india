@@ -192,10 +192,10 @@ motherName:
         issueDate:
           formattedIssueDate || "",
 
-        logo:
-          cert.logo ||
-          franchiseData?.logo ||
-          "",
+     logo:
+  franchiseData?.logo ||
+  cert.logo ||
+  "",
 
         ownerName:
           cert.ownerName ||
