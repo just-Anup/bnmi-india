@@ -444,8 +444,14 @@ const rejectFranchise = async (req) => {
       return res.$id
 
     } catch (err) {
-      console.log("FULL ERROR:", err)
-      alert(err?.message || "Update failed")
+      console.error("UPDATE ERROR:", err);
+console.log("FULL ERROR", JSON.stringify(err, null, 2));
+
+alert(
+  err?.response?.message ||
+  err?.message ||
+  JSON.stringify(err)
+);
     }
   }
 
@@ -483,15 +489,27 @@ if (certificateLogoFile) {
 
 
       // -------- OWNER PHOTO --------
-      if (photoFile) {
-        const res = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          photoFile
-        )
+     if (photoFile) {
+  try {
+    console.log("Uploading owner photo:", photoFile);
 
-        updatedData.ownerPhoto = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-      }
+    const res = await storage.createFile(
+      BUCKET_ID,
+      ID.unique(),
+      photoFile
+    );
+
+    console.log("Upload Success:", res);
+
+    updatedData.ownerPhoto =
+      `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+
+  } catch (error) {
+    console.error("PHOTO UPLOAD ERROR:", error);
+    alert(JSON.stringify(error, null, 2));
+    return;
+  }
+}
 
       // -------- SIGNATURE --------
       if (signatureFile) {
