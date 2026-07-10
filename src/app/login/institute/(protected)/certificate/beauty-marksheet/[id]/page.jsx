@@ -43,41 +43,91 @@ useEffect(() => {
         cert.studentId
       );
 
-      const finalData = {
-        ...studentData,
-        ...cert,
+      // ✅ FETCH FRANCHISE
+let franchiseData = null;
 
-        studentName:
-          cert.studentName ||
-          studentData.studentName ||
-          "",
+try {
 
-        fatherName:
-          cert.fatherName ||
-          studentData.fatherName ||
-          "",
+  const franchiseRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [
+      Query.equal(
+        "email",
+        studentData.franchiseEmail
+      )
+    ]
+  );
 
-        motherName:
-          cert.motherName ||
-          studentData.motherName ||
-          "",
+  if (franchiseRes.documents.length > 0) {
+    franchiseData = franchiseRes.documents[0];
+  }
 
-        course:
-          cert.course ||
-          studentData.courseName ||
-          "",
+} catch (err) {
+  console.log("FRANCHISE ERROR:", err);
+}
 
-        instituteName:
-          cert.instituteName ||
-          studentData.instituteName ||
-          "",
+   const finalData = {
+  ...studentData,
+  ...cert,
 
-        marksheetNo:
-          cert.certificateNo || "",
+  studentName:
+    cert.studentName ||
+    studentData.studentName ||
+    "",
 
-        issueDate:
-          cert.issueDate || ""
-      };
+  fatherName:
+    cert.fatherName ||
+    studentData.fatherName ||
+    "",
+
+  motherName:
+    cert.motherName ||
+    studentData.motherName ||
+    "",
+
+  course:
+    cert.course ||
+    studentData.courseName ||
+    "",
+
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName ||
+    "",
+
+  marksheetNo:
+    cert.certificateNo || "",
+
+  issueDate:
+    cert.issueDate || "",
+
+  // ✅ ALWAYS USE LATEST FRANCHISE LOGO
+  logo:
+    franchiseData?.logo ||
+    cert.logo ||
+    "",
+
+  // ✅ ALWAYS USE LATEST SIGNATURE
+  franchiseSignature:
+    franchiseData?.signature ||
+    cert.franchiseSignature ||
+    "",
+
+  // ✅ ALWAYS USE LATEST OWNER NAME
+  ownerName:
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    cert.ownerName ||
+    "Controller",
+
+  city:
+    franchiseData?.city ||
+    franchiseData?.address ||
+    cert.city ||
+    ""
+};
 
       setStudent(finalData);
 

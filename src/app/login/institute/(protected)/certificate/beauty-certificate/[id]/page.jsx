@@ -179,10 +179,9 @@ useEffect(() => {
           formattedIssueDate || "",
 
         logo:
-          cert.logo ||
-          franchiseData?.logo ||
-          "",
-
+       franchiseData?.logo ||
+       cert.logo ||
+       "",
         ownerName:
           cert.ownerName ||
           franchiseData?.ownerName ||

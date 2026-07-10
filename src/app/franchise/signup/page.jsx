@@ -45,6 +45,7 @@ const statesAndCities = {
     'Coimbatore',
     'Madurai',
   ],
+  Chattisgarh:['Dilaspur'],
   Kerala: ['Kochi', 'Trivandrum'],
   Rajasthan: ['Jaipur', 'Udaipur', 'Jodhpur'],
   Gujarat: ['Ahmedabad', 'Surat', 'Vadodara'],
