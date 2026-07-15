@@ -11,12 +11,17 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const CERT_COLLECTION = "certificates";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
+const CACHE_KEY = "bnmi-certificate-cache";
+
+const CACHE_TIME = 60 * 60 * 1000; // 1 Hour
+
 
 
 export default function CertificateApprovalPage() {
 
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   // ===============================
   // ✅ MARKSHEET PRINT
@@ -541,9 +546,38 @@ issueDate: cert.issueDate || "",
   // ===============================
   // 🔹 LOAD DATA
   // ===============================
-  useEffect(() => {
-    loadCertificates();
-  }, []);
+useEffect(() => {
+
+  const cache =
+    localStorage.getItem(CACHE_KEY);
+
+  if (cache) {
+
+    const parsed = JSON.parse(cache);
+
+    if (
+
+      Date.now() - parsed.time < CACHE_TIME
+
+    ) {
+
+      console.log("Certificate Cache Loaded");
+
+      setCertificates(parsed.certificates);
+
+      setLoading(false);
+
+      return;
+
+    }
+
+  }
+
+  localStorage.removeItem(CACHE_KEY);
+
+loadCertificates();
+
+}, []);
 
   const loadCertificates = async () => {
     try {
@@ -583,6 +617,17 @@ const certificatesWithFranchise = await Promise.all(
 );
 
 setCertificates(certificatesWithFranchise);
+
+localStorage.setItem(
+  CACHE_KEY,
+  JSON.stringify({
+
+    certificates: certificatesWithFranchise,
+
+    time: Date.now()
+
+  })
+);
     } catch (err) {
       console.log(err);
     } finally {
@@ -823,7 +868,10 @@ coursePeriod: finalDuration,
 
     alert("Certificate Approved");
 
-    loadCertificates();
+
+localStorage.removeItem(CACHE_KEY);
+
+loadCertificates();
 
   } catch (err) {
 
@@ -841,7 +889,10 @@ coursePeriod: finalDuration,
     await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
       status: "rejected"
     });
-    loadCertificates();
+    
+localStorage.removeItem(CACHE_KEY);
+
+loadCertificates();
   };
 
   const getPhoto = (photoId) => {
@@ -859,9 +910,30 @@ coursePeriod: finalDuration,
       <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
         Certificate Approval Panel
       </h1>
+      <button
+  onClick={() => {
+
+    localStorage.removeItem(CACHE_KEY);
+
+    loadCertificates();
+
+  }}
+  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+>
+  🔄 Refresh Data
+</button>
       <p className="text-gray-500 text-sm">
         Manage and approve student certificates
       </p>
+      <div className="mt-5">
+  <input
+    type="text"
+    placeholder="Search by student name or franchise..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full border rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+  />
+</div>
     </div>
 
     {/* LIST */}
@@ -873,7 +945,23 @@ coursePeriod: finalDuration,
         </div>
       )}
 
-      {certificates.map((c, index) => {
+      {certificates
+.filter((c) => {
+
+  const text = search.toLowerCase();
+
+  return (
+    (c.studentName || "")
+      .toLowerCase()
+      .includes(text) ||
+
+    (c.franchiseName || "")
+      .toLowerCase()
+      .includes(text)
+  );
+
+})
+.map((c, index) => {
 
         const photoUrl = getPhoto(c.photoId)
 

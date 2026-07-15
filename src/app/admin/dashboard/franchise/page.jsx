@@ -18,6 +18,9 @@ const BUCKET_ID = "6986e8a4001925504f6b"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
+const CACHE_KEY = "bnmi-franchise-cache";
+const CACHE_TIME = 60 * 60 * 1000; // 1 hour
+
 export default function Dashboard() {
 
   const router = useRouter()
@@ -83,21 +86,31 @@ const fetchAll = async () => {
 
       setPending(
         Array.isArray(data.pending)
-          ? data.pending.reverse()
+          ? data.pending
           : []
       );
 
       setApproved(
         Array.isArray(data.approved)
-          ? data.approved.reverse()
+          ? data.approved
           : []
       );
 
       setRejected(
         Array.isArray(data.rejected)
-          ? data.rejected.reverse()
+          ? data.rejected
           : []
       );
+
+      localStorage.setItem(
+  CACHE_KEY,
+  JSON.stringify({
+    pending: Array.isArray(data.pending) ? data.pending : [],
+    approved: Array.isArray(data.approved) ? data.approved : [],
+    rejected: Array.isArray(data.rejected) ? data.rejected : [],
+    time: Date.now()
+  })
+);
 
     } else {
 
@@ -304,11 +317,40 @@ const fetchStats = async () => {
     }
   };
 
-  useEffect(() => {
-    fetchAll()
-    fetchStats()
-    fetchPlans();
-  }, [])
+ useEffect(() => {
+
+  const cache = localStorage.getItem(CACHE_KEY);
+
+  if (cache) {
+
+    const parsed = JSON.parse(cache);
+
+    if (Date.now() - parsed.time < CACHE_TIME) {
+
+      console.log("Loaded Franchise Cache");
+
+      setPending(parsed.pending);
+      setApproved(parsed.approved);
+      setRejected(parsed.rejected);
+
+      setLoading(false);
+
+    } else {
+
+      fetchAll();
+
+    }
+
+  } else {
+
+    fetchAll();
+
+  }
+
+  fetchStats();
+  fetchPlans();
+
+}, []);
 
   /* ---------------- APPROVE ---------------- */
   const fixQR = async (req) => {
@@ -703,14 +745,17 @@ const fixUser = async (req) => {
 
     const searchText = search.toLowerCase();
 
-    return (
-      (item.name || "").toLowerCase().includes(searchText) ||
-      (item.email || "").toLowerCase().includes(searchText) ||
-      (item.instituteName || "").toLowerCase().includes(searchText) ||
-      (item.amcCode || "").toLowerCase().includes(searchText) ||
-      (item.mobile || "").toLowerCase().includes(searchText)
-    
-    );
+  return (
+  (item.name || "").toLowerCase().includes(searchText) ||
+  (item.email || "").toLowerCase().includes(searchText) ||
+  (item.instituteName || "").toLowerCase().includes(searchText) ||
+  (item.amcCode || "").toLowerCase().includes(searchText) ||
+  (item.atcCode || "").toLowerCase().includes(searchText) ||
+  (item.mobile || "").toLowerCase().includes(searchText) ||
+  (item.state || "").toLowerCase().includes(searchText) ||
+  (item.city || "").toLowerCase().includes(searchText) ||
+  (item.pincode || "").toLowerCase().includes(searchText)
+);
 
   });
 
@@ -848,6 +893,15 @@ const toggleStatus = async (req) => {
         <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-6 md:mb-8">
           Franchise Dashboard
         </h1>
+        <button
+  onClick={() => {
+    localStorage.removeItem(CACHE_KEY);
+    fetchAll();
+  }}
+  className="bg-blue-600 text-white px-4 py-2 rounded-lg mb-5"
+>
+  🔄 Refresh Data
+</button>
 
         {/* Tabs */}
    <div className="flex flex-wrap gap-3 mb-6">
@@ -876,7 +930,7 @@ const toggleStatus = async (req) => {
         <div className="mb-8">
           <input
             type="text"
-            placeholder="Search by name, email, institute..."
+placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pincode..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white border border-gray-200 px-5 py-3 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"

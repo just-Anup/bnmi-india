@@ -56,7 +56,13 @@ const type = searchParams.get("type") || "add"
 
   const handleRecharge = async () => {
 
-    if (!amount) return alert("Enter amount")
+    if (!amount) {
+  return alert("Enter amount");
+}
+
+if (!rechargeBy.trim()) {
+  return alert("Please enter Recharge By");
+}
 
     try {
 
@@ -104,6 +110,7 @@ if (type === "deduct") {
       )
 
       alert("Recharge Successful")
+      localStorage.removeItem("bnmi-wallet-cache");
       router.push("/admin/dashboard/wallet")
 
     } catch (err) {
@@ -152,10 +159,12 @@ if (type === "deduct") {
         </select>
 
         <input
-          placeholder="Recharge By"
-          onChange={(e)=>setRechargeBy(e.target.value)}
-          className="border p-3"
-        />
+  placeholder="Recharge By *"
+  value={rechargeBy}
+  onChange={(e) => setRechargeBy(e.target.value)}
+  required
+  className="border p-3"
+/>
 
         <input
           placeholder="Lead By"

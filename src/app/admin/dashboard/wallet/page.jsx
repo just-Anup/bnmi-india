@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation"
 import { Query } from "appwrite"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+const CACHE_KEY = "bnmi-wallet-cache";
+
+const CACHE_TIME = 60 * 60 * 1000;
+
 
 export default function WalletPage() {
 
@@ -48,28 +52,81 @@ export default function WalletPage() {
 
       setData(allDocuments)
       setFilteredData(allDocuments)
+      localStorage.setItem(
+  CACHE_KEY,
+  JSON.stringify({
+
+    data: allDocuments,
+
+    time: Date.now()
+
+  })
+);
 
     } catch (err) {
       console.error(err)
     }
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+useEffect(() => {
 
+  const cache =
+    localStorage.getItem(CACHE_KEY);
+
+  if (cache) {
+
+    const parsed = JSON.parse(cache);
+
+    if (
+      Date.now() - parsed.time < CACHE_TIME
+    ) {
+
+      console.log("Wallet Cache Loaded");
+
+      setData(parsed.data);
+
+      setFilteredData(parsed.data);
+
+      return;
+
+    }
+
+  }
+
+  fetchData();
+
+}, []);
 useEffect(() => {
 
   let filtered = [...data]
 
   // Search by franchise name
-  if (search) {
-    filtered = filtered.filter((item) =>
-      item.instituteName
-        ?.toLowerCase()
-        .includes(search.toLowerCase())
-    )
-  }
+// Search by institute, mobile & email
+if (search) {
+
+  const text = search.toLowerCase();
+
+  filtered = filtered.filter((item) =>
+
+    (item.instituteName || "")
+      .toLowerCase()
+      .includes(text)
+
+    ||
+
+    (item.mobile || "")
+      .toLowerCase()
+      .includes(text)
+
+    ||
+
+    (item.email || "")
+      .toLowerCase()
+      .includes(text)
+
+  );
+
+}
 
   // Search by recharge date
   if (rechargeDate) {
@@ -113,6 +170,23 @@ useEffect(() => {
           <h1 className="text-3xl font-semibold text-gray-800">
             Franchise Wallet
           </h1>
+          <button
+
+onClick={() => {
+
+localStorage.removeItem(CACHE_KEY);
+
+fetchData();
+
+}}
+
+className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+
+>
+
+🔄 Refresh
+
+</button>
 
           <p className="text-gray-500 text-sm">
             Manage franchise balances and transactions
@@ -224,9 +298,16 @@ useEffect(() => {
   Deduct
 </button>
 
-                    <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition">
-                      History
-                    </button>
+                  <button
+onClick={() =>
+router.push(`/admin/dashboard/wallet/history/${item.$id}`)
+}
+className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition"
+>
+
+History
+
+</button>
 
                   </td>
 

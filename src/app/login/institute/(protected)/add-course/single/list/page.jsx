@@ -13,6 +13,9 @@ export default function ListSingleCourses() {
   const [courses, setCourses] = useState([])
   const [editCourse, setEditCourse] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
+  const [subjectDocId, setSubjectDocId] = useState(null);
+const [loadingSubject, setLoadingSubject] = useState(false);
+
 
   const [courseFees, setCourseFees] = useState('')
   const [minimumFees, setMinimumFees] = useState('')
@@ -106,18 +109,42 @@ export default function ListSingleCourses() {
 
     try {
 
-      const user = await account.get()
+     const user = await account.get();
 
-      const res = await databases.createDocument(
-        DATABASE_ID,
-        SUBJECT_COLLECTION,
-        ID.unique(),
-        {
-          courseId: String(selectedCourse.$id),
-          subjectName: String(subject).toUpperCase(),
-          franchiseEmail: user.email
-        }
-      )
+if (subjectDocId) {
+
+  // Update existing subject
+  await databases.updateDocument(
+    DATABASE_ID,
+    SUBJECT_COLLECTION,
+    subjectDocId,
+    {
+      subjectName: subject.toUpperCase()
+    }
+  );
+
+  alert("Subject Updated Successfully");
+
+} else {
+
+  // Create new subject
+  const doc = await databases.createDocument(
+    DATABASE_ID,
+    SUBJECT_COLLECTION,
+    ID.unique(),
+    {
+      courseId: selectedCourse.$id,
+      subjectName: subject.toUpperCase(),
+      franchiseEmail: user.email
+    }
+  );
+
+  setSubjectDocId(doc.$id);
+
+  alert("Subject Saved Successfully");
+}
+
+setSelectedCourse(null);
 
       console.log("Saved:", res)
 
@@ -138,6 +165,39 @@ export default function ListSingleCourses() {
 
     }
   }
+
+  const loadSubject = async (course) => {
+  try {
+    setLoadingSubject(true);
+
+    const user = await account.get();
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      SUBJECT_COLLECTION,
+      [
+        Query.equal("courseId", course.$id),
+        Query.equal("franchiseEmail", user.email),
+        Query.limit(1)
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      setSubject(res.documents[0].subjectName);
+      setSubjectDocId(res.documents[0].$id);
+    } else {
+      setSubject("");
+      setSubjectDocId(null);
+    }
+
+    setSelectedCourse(course);
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoadingSubject(false);
+  }
+};
 
   const handleInput = (e) => {
 
@@ -244,7 +304,7 @@ export default function ListSingleCourses() {
                         </button>
 
                         <button
-                          onClick={() => setSelectedCourse(course)}
+                          onClick={() => loadSubject(course)}
                           className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
                         >
                           Add Subject
@@ -337,18 +397,18 @@ export default function ListSingleCourses() {
 
             <div className="flex flex-col gap-4">
 
-              <textarea
-                value={subject}
-                onChange={(e) => {
-                  setSubject(e.target.value)
+            <textarea
+  value={subject}
+  onChange={(e) => {
+    setSubject(e.target.value);
 
-                  e.target.style.height = "auto"
-                  e.target.style.height = e.target.scrollHeight + "px"
-                }}
-                placeholder="Enter subjects"
-                rows={1}
-                className="border border-gray-700 bg-black text-white p-3 w-full rounded resize-none overflow-hidden uppercase outline-none"
-              />
+    e.target.style.height = "auto";
+    e.target.style.height = e.target.scrollHeight + "px";
+  }}
+  placeholder="Enter subjects (one per line)"
+  rows={10}
+  className="border border-gray-700 bg-black text-white p-3 w-full min-h-[250px] max-h-[500px] rounded resize-y overflow-auto uppercase outline-none focus:border-orange-500"
+/>
 
               <div className="flex flex-col sm:flex-row justify-end gap-2">
 
