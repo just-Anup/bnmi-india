@@ -53,111 +53,111 @@ export default function WalletPage() {
       setData(allDocuments)
       setFilteredData(allDocuments)
       localStorage.setItem(
-  CACHE_KEY,
-  JSON.stringify({
+        CACHE_KEY,
+        JSON.stringify({
 
-    data: allDocuments,
+          data: allDocuments,
 
-    time: Date.now()
+          time: Date.now()
 
-  })
-);
+        })
+      );
 
     } catch (err) {
       console.error(err)
     }
   }
 
-useEffect(() => {
+  useEffect(() => {
 
-  const cache =
-    localStorage.getItem(CACHE_KEY);
+    const cache =
+      localStorage.getItem(CACHE_KEY);
 
-  if (cache) {
+    if (cache) {
 
-    const parsed = JSON.parse(cache);
+      const parsed = JSON.parse(cache);
 
-    if (
-      Date.now() - parsed.time < CACHE_TIME
-    ) {
+      if (
+        Date.now() - parsed.time < CACHE_TIME
+      ) {
 
-      console.log("Wallet Cache Loaded");
+        console.log("Wallet Cache Loaded");
 
-      setData(parsed.data);
+        setData(parsed.data);
 
-      setFilteredData(parsed.data);
+        setFilteredData(parsed.data);
 
-      return;
-
-    }
-
-  }
-
-  fetchData();
-
-}, []);
-useEffect(() => {
-
-  let filtered = [...data]
-
-  // Search by franchise name
-// Search by institute, mobile & email
-if (search) {
-
-  const text = search.toLowerCase();
-
-  filtered = filtered.filter((item) =>
-
-    (item.instituteName || "")
-      .toLowerCase()
-      .includes(text)
-
-    ||
-
-    (item.mobile || "")
-      .toLowerCase()
-      .includes(text)
-
-    ||
-
-    (item.email || "")
-      .toLowerCase()
-      .includes(text)
-
-  );
-
-}
-
-  // Search by recharge date
-  if (rechargeDate) {
-
-    filtered = filtered.filter((item) => {
-
-      if (!item.lastRecharge) return false
-
-      try {
-
-        const dateValue =
-          typeof item.lastRecharge === "string"
-            ? item.lastRecharge
-            : String(item.lastRecharge)
-
-        const storedDate = dateValue.split("T")[0]
-
-        return storedDate === rechargeDate
-
-      } catch (error) {
-
-        return false
+        return;
 
       }
 
-    })
-  }
+    }
 
-  setFilteredData(filtered)
+    fetchData();
 
-}, [search, rechargeDate, data])
+  }, []);
+  useEffect(() => {
+
+    let filtered = [...data]
+
+    // Search by franchise name
+    // Search by institute, mobile & email
+    if (search) {
+
+      const text = search.toLowerCase();
+
+      filtered = filtered.filter((item) =>
+
+        (item.instituteName || "")
+          .toLowerCase()
+          .includes(text)
+
+        ||
+
+        (item.mobile || "")
+          .toLowerCase()
+          .includes(text)
+
+        ||
+
+        (item.email || "")
+          .toLowerCase()
+          .includes(text)
+
+      );
+
+    }
+
+    // Search by recharge date
+    if (rechargeDate) {
+
+      filtered = filtered.filter((item) => {
+
+        if (!item.lastRecharge) return false
+
+        try {
+
+          const dateValue =
+            typeof item.lastRecharge === "string"
+              ? item.lastRecharge
+              : String(item.lastRecharge)
+
+          const storedDate = dateValue.split("T")[0]
+
+          return storedDate === rechargeDate
+
+        } catch (error) {
+
+          return false
+
+        }
+
+      })
+    }
+
+    setFilteredData(filtered)
+
+  }, [search, rechargeDate, data])
 
   return (
 
@@ -172,56 +172,56 @@ if (search) {
           </h1>
           <button
 
-onClick={() => {
+            onClick={() => {
 
-localStorage.removeItem(CACHE_KEY);
+              localStorage.removeItem(CACHE_KEY);
 
-fetchData();
+              fetchData();
 
-}}
+            }}
 
-className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
 
->
+          >
 
-🔄 Refresh
+            🔄 Refresh
 
-</button>
+          </button>
 
           <p className="text-gray-500 text-sm">
             Manage franchise balances and transactions
           </p>
         </div>
-<div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
 
-  <input
-    type="text"
-    placeholder="Search Franchise Name..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
-  />
+          <input
+            type="text"
+            placeholder="Search Franchise Name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-  <input
-    type="date"
-    value={rechargeDate}
-    onChange={(e) => setRechargeDate(e.target.value)}
-    className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
-  />
+          <input
+            type="date"
+            value={rechargeDate}
+            onChange={(e) => setRechargeDate(e.target.value)}
+            className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-  {(search || rechargeDate) && (
-    <button
-      onClick={() => {
-        setSearch("")
-        setRechargeDate("")
-      }}
-      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-    >
-      Clear
-    </button>
-  )}
+          {(search || rechargeDate) && (
+            <button
+              onClick={() => {
+                setSearch("")
+                setRechargeDate("")
+              }}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              Clear
+            </button>
+          )}
 
-</div>
+        </div>
 
       </div>
 
@@ -284,30 +284,30 @@ className="bg-blue-600 text-white px-4 py-2 rounded-lg"
                   {/* Actions */}
                   <td className="p-4 text-center space-x-2">
 
-            <button
-  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=add`)}
-  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
->
-  Recharge
-</button>
+                    <button
+                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=add`)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
+                      Recharge
+                    </button>
 
-<button
-  onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=deduct`)}
-  className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
->
-  Deduct
-</button>
+                    <button
+                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=deduct`)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
+                      Deduct
+                    </button>
 
-                  <button
-onClick={() =>
-router.push(`/admin/dashboard/wallet/history/${item.$id}`)
-}
-className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition"
->
+                    <button
+                      onClick={() =>
+                        router.push(`/admin/dashboard/wallet/history/${item.$id}`)
+                      }
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
 
-History
+                      History
 
-</button>
+                    </button>
 
                   </td>
 
@@ -317,7 +317,7 @@ History
               {filteredData.length === 0 && (
                 <tr>
                   <td colSpan="7" className="p-6 text-center text-gray-400">
-                    No franchise data found
+                    No franchise data found for the given search criteria.
                   </td>
                 </tr>
               )}
