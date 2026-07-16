@@ -176,10 +176,59 @@ const createOrder = async () => {
 
     setOrdering(true);
 
-    // Selected Students
-    const students = results.filter(item =>
+       const students = results.filter(item =>
       selected.includes(item.$id)
     );
+
+    // ===============================
+// CHECK WALLET & DEDUCT ₹150
+// ===============================
+
+// ===============================
+// CHECK WALLET & DEDUCT ₹150
+// ===============================
+
+const franchise = await databases.getDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  students[0].franchiseId
+);
+
+const currentWallet = Number(franchise.wallet || 0);
+
+if (currentWallet < 150) {
+  alert("Insufficient Wallet Balance. Please recharge your wallet.");
+  setOrdering(false);
+  return;
+}
+
+await databases.updateDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  franchise.$id,
+  {
+    wallet: (currentWallet - 150).toFixed(2),
+    lastRecharge: new Date().toLocaleString()
+  }
+);
+
+await databases.createDocument(
+  DATABASE_ID,
+  "wallet_transactions",
+  ID.unique(),
+  {
+    franchiseId: franchise.$id,
+    amount: 150,
+    type: "deduct",
+    paymentMode: "Certificate Order",
+    rechargeBy: "System",
+    leadBy: "",
+    remarks: `Certificate Order - ${students.length} Certificate(s)`,
+    date: new Date().toISOString()
+  }
+);
+    // Selected Students
+ 
 
     // Create Order Number
     const orderNo =
@@ -304,6 +353,19 @@ return (
           Select up to 10 passed students and place one certificate order.
         </p>
 
+<div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+  <h3 className="text-amber-800 font-semibold text-lg mb-2">
+    📢 Certificate Order Charges
+  </h3>
+
+  <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+    <li>One certificate order costs <span className="font-bold text-red-600">₹150</span>.</li>
+    <li>You can select <span className="font-semibold">1 to 10 certificates</span> in a single order.</li>
+    <li>Whether you order <span className="font-semibold">1 certificate or 10 certificates</span>, only <span className="font-bold text-red-600">₹150</span> will be deducted once.</li>
+    <li>If your wallet balance is less than <span className="font-bold text-red-600">₹150</span>, the order cannot be placed.</li>
+    <li>Please ensure your wallet has sufficient balance before placing an order.</li>
+  </ul>
+</div>
       </div>
 
       <div className="flex flex-wrap gap-3">
