@@ -5,6 +5,7 @@ import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import { useParams } from "next/navigation";
 
 import jsPDF from "jspdf";
 
@@ -12,6 +13,8 @@ import QRCode from "qrcode";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheetMultiple() {
+
+  const { id } = useParams();
 
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
@@ -53,85 +56,94 @@ const printRef = useRef();
 
 useEffect(() => {
 
+  if (!id) return;
+
   const fetchStudent = async () => {
 
-    const data = JSON.parse(
-      localStorage.getItem("marksheetStudent")
-    );
+    try {
 
-    if (!data) return;
-
-    const studentDoc =
-      await databases.getDocument(
+      // Load exam result
+      const result = await databases.getDocument(
         DATABASE_ID,
-        "student_admissions",
-        data.studentId
+        "exam_results",
+        id
       );
 
-    const cert =
-      await databases.listDocuments(
+      // Load student
+      const studentDoc = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        result.studentId
+      );
+
+      // Load certificate
+      const cert = await databases.listDocuments(
         DATABASE_ID,
         "certificates",
         [
-          Query.equal(
-            "studentId",
-            data.studentId
-          )
+          Query.equal("studentId", result.studentId)
         ]
       );
 
-    const certificate =
-      cert.documents[0];
+      const certificate = cert.documents[0];
 
+      // Load franchise
       let franchise = null;
 
-try {
-  const franchiseRes = await databases.listDocuments(
-    DATABASE_ID,
-    "franchise_approved",
-    [
-      Query.equal(
-        "email",
-        studentDoc.franchiseEmail
-      )
-    ]
-  );
+      try {
 
-  if (franchiseRes.documents.length > 0) {
-    franchise = franchiseRes.documents[0];
-  }
-} catch (err) {
-  console.log(err);
-}
+        const franchiseRes = await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal(
+              "email",
+              studentDoc.franchiseEmail
+            )
+          ]
+        );
 
+        if (franchiseRes.documents.length > 0) {
+          franchise = franchiseRes.documents[0];
+        }
 
-  setStudent({
-  ...studentDoc,
-  ...certificate,
+      } catch (err) {
+        console.log(err);
+      }
 
-  // Always use latest franchise logo
-  logo: franchise?.logo || certificate?.logo,
+      setStudent({
+        ...studentDoc,
+        ...certificate,
 
-  // Always use latest signature
-  franchiseSignature:
-    franchise?.signature ||
-    certificate?.franchiseSignature,
+        logo: franchise?.logo || certificate?.logo,
 
-  // Always use latest owner name
-  ownerName:
-    franchise?.name ||
-    certificate?.ownerName,
+        franchiseSignature:
+          franchise?.signature ||
+          certificate?.franchiseSignature,
 
-  studentId: data.studentId,
-});
+        ownerName:
+          franchise?.ownerName ||
+          franchise?.owner ||
+          franchise?.name ||
+          certificate?.ownerName,
 
-    fetchMarks(data.studentId);
+        studentId: result.studentId,
+        courseType: result.courseType
+      });
+
+      fetchMarks(result.studentId);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
 
   };
 
   fetchStudent();
 
-}, []);
+}, [id]);
 
   
 

@@ -327,11 +327,70 @@ return (
 
                 <td className="p-4">
 
-                 <button
-  onClick={async () => {
+  <div className="flex gap-2">
+<button
+  onClick={() => {
 
-    try {
+    let marksheetUrl = "";
 
+    switch (student.courseType) {
+
+      case "single":
+        marksheetUrl = `/login/institute/certificate/marksheet/${student.$id}`;
+        break;
+
+      case "multiple":
+        marksheetUrl = `/login/institute/certificate/multiple-marksheet/${student.$id}`;
+        break;
+
+      case "beauty":
+        marksheetUrl = `/login/institute/certificate/beauty-marksheet/${student.$id}`;
+        break;
+
+      case "semester":
+        marksheetUrl = `/login/institute/certificate/semester-marksheet/${student.$id}`;
+        break;
+
+      default:
+        alert("Unknown course type");
+        return;
+
+    }
+
+    window.open(marksheetUrl, "_blank");
+
+  }}
+  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
+>
+  Marksheet
+</button>
+  <button
+    onClick={async () => {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        CERTIFICATE_COLLECTION,
+        [
+          Query.equal("studentId", student.studentId)
+        ]
+      );
+
+      if (res.documents.length === 0) {
+        alert("Certificate not found");
+        return;
+      }
+
+      window.open(
+        `/login/institute/certificate/print/${res.documents[0].$id}`,
+        "_blank"
+      );
+    }}
+    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm"
+  >
+    Certificate
+  </button>
+
+  <button
+    onClick={async () => {
       const res = await databases.listDocuments(
         DATABASE_ID,
         CERTIFICATE_COLLECTION,
@@ -352,16 +411,43 @@ return (
         "_blank"
       );
 
-    }  catch (err) {
-  console.log("CERT ERROR:", err);
-  alert(err.message);
-}
+   setTimeout(() => {
 
-  }}
-  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg"
->
-  Print
-</button>
+  let marksheetUrl = "";
+
+  switch (student.courseType) {
+
+    case "single":
+      marksheetUrl = `/login/institute/certificate/marksheet/${student.$id}`;
+      break;
+
+    case "multiple":
+      marksheetUrl = `/login/institute/certificate/multiple-marksheet/${student.$id}`;
+      break;
+
+    case "beauty":
+      marksheetUrl = `/login/institute/certificate/beauty-marksheet/${student.$id}`;
+      break;
+
+    case "semester":
+      marksheetUrl = `/login/institute/certificate/semester-marksheet/${student.$id}`;
+      break;
+
+    default:
+      alert("Unknown Course Type");
+      return;
+  }
+
+  window.open(marksheetUrl, "_blank");
+
+}, 400);
+    }}
+    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"
+  >
+    Print All
+  </button>
+
+</div>
 
                 </td>
 

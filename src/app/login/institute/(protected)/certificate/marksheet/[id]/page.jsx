@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import * as htmlToImage from "html-to-image";
@@ -10,23 +11,43 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
 
+  const { id } = useParams();
   const [student, setStudent] = useState(null);
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
 
   const printRef = useRef();
 
-  useEffect(() => {
+useEffect(() => {
 
-    const data = localStorage.getItem("marksheetStudent");
+  const loadStudent = async () => {
 
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStudent(parsed);
-      fetchMarks(parsed.studentId, parsed);
+    try {
+
+      // Load exam result using URL id
+      const result = await databases.getDocument(
+        DATABASE_ID,
+        "exam_results",
+        id
+      );
+
+      setStudent(result);
+
+      fetchMarks(result.studentId, result);
+
+    } catch (err) {
+
+      console.log("LOAD ERROR:", err);
+
     }
 
-  }, []);
+  };
+
+  if (id) {
+    loadStudent();
+  }
+
+}, [id]);
 
   const fixColors = () => {
 
