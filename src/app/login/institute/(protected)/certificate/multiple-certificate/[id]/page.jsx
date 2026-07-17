@@ -506,6 +506,8 @@ const saveCertificate = async () => {
   }
 
 };
+
+
   if (!student) return <p className="p-10">Loading certificate...</p>;
     const handleChange = (field, value) => {
   setStudent((prev) => ({
