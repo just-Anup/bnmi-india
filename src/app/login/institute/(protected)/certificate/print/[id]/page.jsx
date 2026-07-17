@@ -207,8 +207,8 @@ export default function PrintCertificate() {
             formattedIssueDate || "",
 
           logo:
-            cert.logo ||
-            franchiseData?.logo ||
+          franchiseData?.logo ||
+          cert.logo ||
             "",
 
           ownerName:
