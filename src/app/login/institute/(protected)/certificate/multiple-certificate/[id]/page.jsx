@@ -12,7 +12,7 @@ import { useParams } from "next/navigation";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
-
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintCertificate() {
   const { id } = useParams();
@@ -702,7 +702,7 @@ const grade = getGrade(percentage);
       onChange={(e) =>
         handleChange("duration", e.target.value)
       }
-      placeholder="Course Duration"
+      placeholder="Course Period"
       className="border p-3 rounded"
     />
 
@@ -712,7 +712,7 @@ const grade = getGrade(percentage);
   onChange={(e) =>
     handleChange("coursePeriod", e.target.value)
   }
-  placeholder="Course Period"
+  placeholder="Course Duration"
   className="border p-3 rounded"
 />
     <input

@@ -30,19 +30,30 @@ useEffect(() => {
     try {
 
       // Certificate
-      const cert = await databases.getDocument(
-        DATABASE_ID,
-        "certificates",
-        id
-      );
+     // Exam Result
+const result = await databases.getDocument(
+  DATABASE_ID,
+  "exam_results",
+  id
+);
 
-      // Student
-      const studentData = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+// Student
+const studentData = await databases.getDocument(
+  DATABASE_ID,
+  "student_admissions",
+  result.studentId
+);
 
+// Certificate
+const certRes = await databases.listDocuments(
+  DATABASE_ID,
+  "certificates",
+  [
+    Query.equal("studentId", result.studentId)
+  ]
+);
+
+const cert = certRes.documents[0];
       // ✅ FETCH FRANCHISE
 let franchiseData = null;
 
@@ -71,6 +82,8 @@ try {
   ...studentData,
   ...cert,
 
+  courseType: result.courseType,
+  
   studentName:
     cert.studentName ||
     studentData.studentName ||
@@ -131,7 +144,7 @@ try {
 
       setStudent(finalData);
 
-      fetchMarks(cert.studentId);
+    fetchMarks(result.studentId);
 
     } catch (err) {
       console.log(err);

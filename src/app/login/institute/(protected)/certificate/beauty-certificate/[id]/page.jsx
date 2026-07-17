@@ -295,43 +295,110 @@ const handleChange = (field, value) => {
   }));
 };
 
-
 const saveCertificate = async () => {
   try {
 
+    // UPDATE CERTIFICATE
     await databases.updateDocument(
       DATABASE_ID,
       "certificates",
       id,
       {
         studentName: student.studentName,
+        relationType: student.relationType,
         fatherName: student.fatherName,
         motherName: student.motherName,
+        showFatherInCertificate: student.showFatherInCertificate,
+        showMotherInCertificate: student.showMotherInCertificate,
         course: student.course,
         duration: student.duration,
         coursePeriod: student.coursePeriod,
-        grade: student.grade,
-        marks: student.marks,
         instituteName: student.instituteName,
         city: student.city,
         issueDate: student.issueDate,
-        relationType: student.relationType,
-showFatherInCertificate: student.showFatherInCertificate,
-showMotherInCertificate: student.showMotherInCertificate,
+        grade: student.grade,
+        marks: student.marks,
       }
     );
 
-    alert("Certificate Updated Successfully");
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert(
-      "Update Failed : " + err.message
+    // UPDATE STUDENT
+    await databases.updateDocument(
+      DATABASE_ID,
+      "student_admissions",
+      student.studentId,
+      {
+        studentName: student.studentName,
+        relationType: student.relationType,
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+        showFatherInCertificate: student.showFatherInCertificate,
+        showMotherInCertificate: student.showMotherInCertificate,
+        courseName: student.course,
+        duration: student.duration,
+        coursePeriod: student.coursePeriod,
+        instituteName: student.instituteName,
+      }
     );
+
+    // UPDATE EXAM RESULT
+    const exam = await databases.listDocuments(
+      DATABASE_ID,
+      "exam_results",
+      [Query.equal("studentId", student.studentId)]
+    );
+
+    await Promise.all(
+      exam.documents.map((doc) =>
+        databases.updateDocument(
+          DATABASE_ID,
+          "exam_results",
+          doc.$id,
+          {
+            studentName: student.studentName,
+            relationType: student.relationType,
+            fatherName: student.fatherName,
+            motherName: student.motherName,
+            courseName: student.course,
+            duration: student.duration,
+            coursePeriod: student.coursePeriod,
+            instituteName: student.instituteName,
+          }
+        )
+      )
+    );
+
+    // UPDATE SUBJECT RESULT
+    const subject = await databases.listDocuments(
+      DATABASE_ID,
+      "student_subject_results",
+      [Query.equal("studentId", student.studentId)]
+    );
+
+    await Promise.all(
+      subject.documents.map((doc) =>
+        databases.updateDocument(
+          DATABASE_ID,
+          "student_subject_results",
+          doc.$id,
+          {
+            studentName: student.studentName,
+            fatherName: student.fatherName,
+            motherName: student.motherName,
+            course: student.course,
+            instituteName: student.instituteName,
+          }
+        )
+      )
+    );
+
+    alert("Updated Successfully");
+  } catch (err) {
+    console.log(err);
+    alert(err.message);
   }
 };
+
+
   // ✅ PHOTO
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
