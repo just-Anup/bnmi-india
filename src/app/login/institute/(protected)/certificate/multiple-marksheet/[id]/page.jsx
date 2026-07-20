@@ -373,7 +373,7 @@ const totalOutOf = marksArray.length * 100;
   }}
 >
         {/* TEMPLATE */}
-        <img src="/multiplemarksheet.jpeg" className="absolute w-full h-full" />
+        <img src="/multiplemarksheet.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
                {student.logo && (
