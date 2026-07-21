@@ -35,9 +35,9 @@ const printRef = useRef();
         [Query.equal("studentId", studentId)]
       );
 
-      const docs = [...res.documents].sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
+     const docs = [...res.documents].sort(
+  (a, b) => new Date(a.$createdAt) - new Date(b.$createdAt)
+);
 
       const finalMarks = docs.map((m) => ({
         subject: m.subject,
@@ -63,29 +63,35 @@ useEffect(() => {
     try {
 
       // Load exam result
-      const result = await databases.getDocument(
-        DATABASE_ID,
-        "exam_results",
-        id
-      );
+     // ✅ Load certificate first
+const certificate = await databases.getDocument(
+  DATABASE_ID,
+  "certificates",
+  id
+);
 
-      // Load student
-      const studentDoc = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        result.studentId
-      );
+// ✅ Load student
+const studentDoc = await databases.getDocument(
+  DATABASE_ID,
+  "student_admissions",
+  certificate.studentId
+);
 
-      // Load certificate
-      const cert = await databases.listDocuments(
-        DATABASE_ID,
-        "certificates",
-        [
-          Query.equal("studentId", result.studentId)
-        ]
-      );
+// ✅ Load exam result using studentId
+const resultRes = await databases.listDocuments(
+  DATABASE_ID,
+  "exam_results",
+  [
+    Query.equal("studentId", certificate.studentId)
+  ]
+);
 
-      const certificate = cert.documents[0];
+if (resultRes.documents.length === 0) {
+  alert("Exam result not found");
+  return;
+}
+
+const result = resultRes.documents[0];
 
       // Load franchise
       let franchise = null;
@@ -111,25 +117,25 @@ useEffect(() => {
         console.log(err);
       }
 
-      setStudent({
-        ...studentDoc,
-        ...certificate,
+    setStudent({
+  ...studentDoc,
+  ...certificate,
 
-        logo: franchise?.logo || certificate?.logo,
+  logo: franchise?.logo || certificate?.logo,
 
-        franchiseSignature:
-          franchise?.signature ||
-          certificate?.franchiseSignature,
+  franchiseSignature:
+    franchise?.signature ||
+    certificate?.franchiseSignature,
 
-        ownerName:
-          franchise?.ownerName ||
-          franchise?.owner ||
-          franchise?.name ||
-          certificate?.ownerName,
+  ownerName:
+    franchise?.ownerName ||
+    franchise?.owner ||
+    franchise?.name ||
+    certificate?.ownerName,
 
-        studentId: result.studentId,
-        courseType: result.courseType
-      });
+  studentId: certificate.studentId,
+  courseType: studentDoc.courseType,
+});
 
       fetchMarks(result.studentId);
 
