@@ -31,29 +31,35 @@ useEffect(() => {
 
       // Certificate
      // Exam Result
-const result = await databases.getDocument(
+// ✅ Load certificate first
+const cert = await databases.getDocument(
   DATABASE_ID,
-  "exam_results",
+  "certificates",
   id
 );
 
-// Student
+// ✅ Load student
 const studentData = await databases.getDocument(
   DATABASE_ID,
   "student_admissions",
-  result.studentId
+  cert.studentId
 );
 
-// Certificate
-const certRes = await databases.listDocuments(
+// ✅ Load exam result by studentId
+const resultRes = await databases.listDocuments(
   DATABASE_ID,
-  "certificates",
+  "exam_results",
   [
-    Query.equal("studentId", result.studentId)
+    Query.equal("studentId", cert.studentId)
   ]
 );
 
-const cert = certRes.documents[0];
+if (resultRes.documents.length === 0) {
+  alert("Exam result not found");
+  return;
+}
+
+const result = resultRes.documents[0];
       // ✅ FETCH FRANCHISE
 let franchiseData = null;
 
@@ -82,7 +88,7 @@ try {
   ...studentData,
   ...cert,
 
-  courseType: result.courseType,
+  courseType: studentData.courseType,
   
   studentName:
     cert.studentName ||
@@ -144,7 +150,7 @@ try {
 
       setStudent(finalData);
 
-    fetchMarks(result.studentId);
+    fetchMarks(cert.studentId);
 
     } catch (err) {
       console.log(err);

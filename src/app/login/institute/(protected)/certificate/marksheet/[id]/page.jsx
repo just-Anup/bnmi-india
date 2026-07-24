@@ -25,15 +25,46 @@ useEffect(() => {
     try {
 
       // Load exam result using URL id
-      const result = await databases.getDocument(
-        DATABASE_ID,
-        "exam_results",
-        id
-      );
+   // ✅ Load certificate
+const cert = await databases.getDocument(
+  DATABASE_ID,
+  "certificates",
+  id
+);
 
-      setStudent(result);
+// ✅ Load student
+const studentData = await databases.getDocument(
+  DATABASE_ID,
+  "student_admissions",
+  cert.studentId
+);
 
-      fetchMarks(result.studentId, result);
+// ✅ Load exam result
+const resultRes = await databases.listDocuments(
+  DATABASE_ID,
+  "exam_results",
+  [
+    Query.equal("studentId", cert.studentId)
+  ]
+);
+
+if (resultRes.documents.length === 0) {
+  alert("Exam result not found");
+  return;
+}
+
+const result = resultRes.documents[0];
+
+// ✅ Merge all required data
+const finalData = {
+  ...result,
+  ...studentData,
+  ...cert,
+};
+
+setStudent(finalData);
+
+fetchMarks(cert.studentId, finalData);
 
     } catch (err) {
 
@@ -105,9 +136,9 @@ useEffect(() => {
 
         const docs = res.documents || [];
 
-        const sorted = [...docs].sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-        );
+      const sorted = [...docs].sort(
+  (a, b) => new Date(a.$createdAt) - new Date(b.$createdAt)
+);
 
         const finalMarks = sorted.map((m) => ({
           subject: m.subject,
