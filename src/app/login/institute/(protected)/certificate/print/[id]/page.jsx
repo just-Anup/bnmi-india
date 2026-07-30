@@ -22,7 +22,7 @@ export default function PrintCertificate() {
   const [editMode, setEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
-  
+
 
   const printRef = useRef();
 
@@ -43,40 +43,72 @@ export default function PrintCertificate() {
 
 
         // ✅ STUDENT
-        const studentData = await databases.getDocument(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-          "student_admissions",
-          cert.studentId
-        );
+        let studentData = null;
+
+        // Only fetch student if some required field is missing
+        const needStudentData =
+          !cert.studentName ||
+          !cert.fatherName ||
+          !cert.motherName ||
+          !cert.photoId ||
+          !cert.signatureId ||
+          !cert.relationType ||
+          cert.showFatherInCertificate === undefined ||
+          cert.showMotherInCertificate === undefined ||
+          !cert.dob ||
+          !cert.courseType ||
+          !cert.subjects;
+
+        if (needStudentData) {
+          studentData = await databases.getDocument(
+            DATABASE_ID,
+            "student_admissions",
+            cert.studentId
+          );
+        }
 
 
         // ✅ FETCH FRANCHISE
-        let franchiseData = null;
+   let franchiseData = null;
 
-        try {
+try {
 
-          const franchiseRes =
-            await databases.listDocuments(
-              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-              "franchise_approved",
-              [
-                Query.equal(
-                  "email",
-                  studentData.franchiseEmail
-                )
-              ]
-            );
+  const needFranchiseData =
+    !cert.logo ||
+    !cert.ownerName ||
+    !cert.franchiseSignature ||
+    !cert.city;
 
-          if (franchiseRes.documents.length > 0) {
-            franchiseData =
-              franchiseRes.documents[0];
-          }
+  if (needFranchiseData) {
 
-        } catch (err) {
+    const franchiseEmail =
+      cert.franchiseEmail ||
+      studentData?.franchiseEmail;
 
-          console.log("FRANCHISE ERROR:", err);
+    if (franchiseEmail) {
 
-        }
+      const franchiseRes =
+        await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal("email", franchiseEmail)
+          ]
+        );
+
+      if (franchiseRes.documents.length > 0) {
+        franchiseData = franchiseRes.documents[0];
+      }
+
+    }
+
+  }
+
+} catch (err) {
+
+  console.log("FRANCHISE ERROR:", err);
+
+}
 
 
 
@@ -133,63 +165,69 @@ export default function PrintCertificate() {
         const finalData = {
 
           // ✅ STUDENT DATA
-          ...studentData,
+          ...(studentData || {}),
 
           // ✅ CERTIFICATE DATA
-          ...cert,
+          ...(cert || {}),
 
           // ✅ FORCE VALUES
           studentName:
-            cert.studentName ||
-            studentData.studentName ||
-            "",
+  cert.studentName ||
+  studentData?.studentName ||
+  "",
 
-          fatherName:
-            cert.fatherName ||
-            studentData.fatherName ||
-            "",
+       fatherName:
+  cert.fatherName ||
+  studentData?.fatherName ||
+  "",
 
-          motherName:
-            cert.motherName ||
-            studentData.motherName ||
-            "",
+         motherName:
+  cert.motherName ||
+  studentData?.motherName ||
+  "",
 
-          relationType:
-            studentData.relationType ||
-            "S/O",
+         relationType:
+  cert.relationType ||
+  studentData?.relationType ||
+  "S/O",
 
-          showFatherInCertificate:
-            String(
-              studentData.showFatherInCertificate
-            ).toLowerCase() === "true",
+        showFatherInCertificate:
+String(
+  cert.showFatherInCertificate ??
+  studentData?.showFatherInCertificate
+).toLowerCase() === "true",
 
-          showMotherInCertificate:
-            String(
-              studentData.showMotherInCertificate
-            ).toLowerCase() === "true",
+         showMotherInCertificate:
+String(
+  cert.showMotherInCertificate ??
+  studentData?.showMotherInCertificate
+).toLowerCase() === "true",
 
           course:
             cert.course ||
-            studentData.courseName ||
+            studentData?.courseName ||
             "",
-          duration:
-            cert.duration || "",
+   duration:
+  cert.duration ||
+  studentData?.duration ||
+  studentData?.courseDuration ||
+  "",
 
-            
           coursePeriod:
-  cert.coursePeriod || "",
-
+  cert.coursePeriod ||
+  studentData?.coursePeriod ||
+  "",
 
           marks:
-            cert.marks || "",
+            studentData?.marks || "",
 
           grade:
             cert.grade || "",
 
-          instituteName:
-            cert.instituteName ||
-            studentData.instituteName ||
-            "",
+         instituteName:
+  cert.instituteName ||
+  studentData?.instituteName ||
+  "",
 
           city:
             cert.city ||
@@ -207,31 +245,34 @@ export default function PrintCertificate() {
           issueDate:
             formattedIssueDate || "",
 
-          logo:
-          franchiseData?.logo ||
-          cert.logo ||
-            "",
+         logo:
+         cert.logo ||
+         franchiseData?.logo ||
+"",
 
           ownerName:
             cert.ownerName ||
             franchiseData?.ownerName ||
             franchiseData?.owner ||
             franchiseData?.name ||
-            "Controller", 
+            "Controller",
 
 
          franchiseSignature:
-  franchiseData?.signature ||
-  franchiseData?.franchiseSignature ||
-  cert.franchiseSignature ||
+cert.franchiseSignature ||
+franchiseData?.signature ||
+franchiseData?.franchiseSignature ||
+"",
+
+photoId:
+  cert.photoId ||
+  studentData?.photoId ||
   "",
 
-
-          photoId:
-            studentData.photoId || "",
-
-          signatureId:
-            studentData.signatureId || "",
+         signatureId:
+  cert.signatureId ||
+  studentData?.signatureId ||
+  "",
         };
 
 
@@ -288,204 +329,204 @@ export default function PrintCertificate() {
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
   const handleChange = (field, value) => {
-  setStudent((prev) => ({
-    ...prev,
-    [field]: value,
-  }));
-};
+    setStudent((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-    const saveCertificate = async () => {
-      try {
-    
-        // -------------------------
-        // 1. UPDATE CERTIFICATE
-        // -------------------------
-    
-        await databases.updateDocument(
-          DATABASE_ID,
-          "certificates",
-          id,
-          {
-            studentName: student.studentName,
-            relationType: student.relationType,
-    
-            fatherName: student.fatherName,
-            motherName: student.motherName,
-    
-            showFatherInCertificate:
-              student.showFatherInCertificate,
-    
-            showMotherInCertificate:
-              student.showMotherInCertificate,
-    
-            course: student.course,
-    
-            duration: student.duration,
-    
-            coursePeriod: student.coursePeriod,
-    
-            instituteName: student.instituteName,
-    
-            city: student.city,
-    
-            issueDate: student.issueDate,
-    
-            grade: student.grade,
-    
-            marks: student.marks,
-          }
-        );
-    
-    
-    
-        // -------------------------
-        // 2. UPDATE STUDENT
-        // -------------------------
-    
-        await databases.updateDocument(
-          DATABASE_ID,
-          "student_admissions",
-          student.studentId,
-          {
-    
-            studentName: student.studentName,
-    
-            relationType: student.relationType,
-    
-            fatherName: student.fatherName,
-    
-            motherName: student.motherName,
-    
-            showFatherInCertificate:
-              student.showFatherInCertificate,
-    
-            showMotherInCertificate:
-              student.showMotherInCertificate,
-    
-            courseName: student.course,
-    
-            duration: student.duration,
-    
-            coursePeriod: student.coursePeriod,
-    
-            instituteName: student.instituteName,
-    
-          }
-        );
-    
-    
-    
-        // -------------------------
-        // 3. UPDATE EXAM RESULT
-        // -------------------------
-    
-        const exam = await databases.listDocuments(
-          DATABASE_ID,
-          "exam_results",
-          [
-            Query.equal("studentId", student.studentId)
-          ]
-        );
-    
-        await Promise.all(
-    
-          exam.documents.map((doc)=>
-    
-            databases.updateDocument(
-    
-              DATABASE_ID,
-    
-              "exam_results",
-    
-              doc.$id,
-    
-              {
-    
-                studentName: student.studentName,
-    
-                relationType: student.relationType,
-    
-                fatherName: student.fatherName,
-    
-                motherName: student.motherName,
-    
-                courseName: student.course,
-    
-                duration: student.duration,
-    
-                coursePeriod: student.coursePeriod,
-    
-                instituteName: student.instituteName,
-    
-              }
-    
-            )
-    
+  const saveCertificate = async () => {
+    try {
+
+      // -------------------------
+      // 1. UPDATE CERTIFICATE
+      // -------------------------
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        "certificates",
+        id,
+        {
+          studentName: student.studentName,
+          relationType: student.relationType,
+
+          fatherName: student.fatherName,
+          motherName: student.motherName,
+
+          showFatherInCertificate:
+            student.showFatherInCertificate,
+
+          showMotherInCertificate:
+            student.showMotherInCertificate,
+
+          course: student.course,
+
+          duration: student.duration,
+
+          coursePeriod: student.coursePeriod,
+
+          instituteName: student.instituteName,
+
+          city: student.city,
+
+          issueDate: student.issueDate,
+
+          grade: student.grade,
+
+          marks: student.marks,
+        }
+      );
+
+
+
+      // -------------------------
+      // 2. UPDATE STUDENT
+      // -------------------------
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        "student_admissions",
+        student.studentId,
+        {
+
+          studentName: student.studentName,
+
+          relationType: student.relationType,
+
+          fatherName: student.fatherName,
+
+          motherName: student.motherName,
+
+          showFatherInCertificate:
+            student.showFatherInCertificate,
+
+          showMotherInCertificate:
+            student.showMotherInCertificate,
+
+          courseName: student.course,
+
+          duration: student.duration,
+
+          coursePeriod: student.coursePeriod,
+
+          instituteName: student.instituteName,
+
+        }
+      );
+
+
+
+      // -------------------------
+      // 3. UPDATE EXAM RESULT
+      // -------------------------
+
+      const exam = await databases.listDocuments(
+        DATABASE_ID,
+        "exam_results",
+        [
+          Query.equal("studentId", student.studentId)
+        ]
+      );
+
+      await Promise.all(
+
+        exam.documents.map((doc) =>
+
+          databases.updateDocument(
+
+            DATABASE_ID,
+
+            "exam_results",
+
+            doc.$id,
+
+            {
+
+              studentName: student.studentName,
+
+              relationType: student.relationType,
+
+              fatherName: student.fatherName,
+
+              motherName: student.motherName,
+
+              courseName: student.course,
+
+              duration: student.duration,
+
+              coursePeriod: student.coursePeriod,
+
+              instituteName: student.instituteName,
+
+            }
+
           )
-    
-        );
-    
-    
-    
-        // -------------------------
-        // 4. UPDATE SUBJECT RESULT
-        // -------------------------
-    
-        const subject = await databases.listDocuments(
-          DATABASE_ID,
-          "student_subject_results",
-          [
-            Query.equal("studentId", student.studentId)
-          ]
-        );
-    
-        await Promise.all(
-    
-          subject.documents.map((doc)=>
-    
-            databases.updateDocument(
-    
-              DATABASE_ID,
-              "student_subject_results",
-    
-              doc.$id,
-    
-              {
-    
-                studentName: student.studentName,
-    
-                fatherName: student.fatherName,
-    
-                motherName: student.motherName,
-    
-                course: student.course,
-    
-                instituteName: student.instituteName,
-    
-              }
-    
-            )
-    
+
+        )
+
+      );
+
+
+
+      // -------------------------
+      // 4. UPDATE SUBJECT RESULT
+      // -------------------------
+
+      const subject = await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [
+          Query.equal("studentId", student.studentId)
+        ]
+      );
+
+      await Promise.all(
+
+        subject.documents.map((doc) =>
+
+          databases.updateDocument(
+
+            DATABASE_ID,
+            "student_subject_results",
+
+            doc.$id,
+
+            {
+
+              studentName: student.studentName,
+
+              fatherName: student.fatherName,
+
+              motherName: student.motherName,
+
+              course: student.course,
+
+              instituteName: student.instituteName,
+
+            }
+
           )
-    
-        );
-    
-    
-    
-        alert("Updated Successfully");
-    
-      }
-    
-      catch(err){
-    
-        console.log(err);
-    
-        alert(err.message);
-    
-      }
-    
-    };
-    
+
+        )
+
+      );
+
+
+
+      alert("Updated Successfully");
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+      alert(err.message);
+
+    }
+
+  };
+
 
   // ✅ PHOTO
   const photoUrl = student.photoId
@@ -605,18 +646,18 @@ export default function PrintCertificate() {
 
   const printPage = () => window.print();
 
-const getGrade = (marks) => {
-  const m = Number(marks);
+  const getGrade = (marks) => {
+    const m = Number(marks);
 
-  if (m >= 85) return "A+";
-  if (m >= 70) return "A";
-  if (m >= 55) return "B";
-  if (m >= 40) return "C";
+    if (m >= 85) return "A+";
+    if (m >= 70) return "A";
+    if (m >= 55) return "B";
+    if (m >= 40) return "C";
 
-  return "F";
-};
+    return "F";
+  };
 
-const grade = getGrade(student.marks);
+  const grade = getGrade(student.marks);
 
   return (
 
@@ -642,11 +683,11 @@ const grade = getGrade(student.marks);
           </button>
 
           <button
-  onClick={saveCertificate}
-  className="bg-green-600 text-white px-5 py-2 rounded"
->
-  Save Changes
-</button>
+            onClick={saveCertificate}
+            className="bg-green-600 text-white px-5 py-2 rounded"
+          >
+            Save Changes
+          </button>
 
         </div>
 
@@ -708,14 +749,14 @@ const grade = getGrade(student.marks);
           />
 
           <input
-  type="text"
-  value={student.coursePeriod || ""}
-  onChange={(e) =>
-    handleChange("coursePeriod", e.target.value)
-  }
-  placeholder="Course Period"
-  className="border p-3 rounded"
-/>
+            type="text"
+            value={student.coursePeriod || ""}
+            onChange={(e) =>
+              handleChange("coursePeriod", e.target.value)
+            }
+            placeholder="Course Period"
+            className="border p-3 rounded"
+          />
 
           <input
             type="text"
@@ -848,22 +889,22 @@ const grade = getGrade(student.marks);
         </div>
 
         {/* COURSE DURATION */}
-     <div
-  className="absolute top-[854px] left-[0px] font-semibold w-full text-center text-[15px]"
->
-  Course Period: {student.duration || "N/A"}
-</div>
+        <div
+          className="absolute top-[854px] left-[0px] font-semibold w-full text-center text-[15px]"
+        >
+          Course Period: {student.duration || "N/A"}
+        </div>
 
-<div
-  className="absolute top-[874px] left-[0px] font-semibold w-full text-center text-[15px]"
->
-   Course Duration: {student.coursePeriod || "N/A"}
-</div>
+        <div
+          className="absolute top-[874px] left-[0px] font-semibold w-full text-center text-[15px]"
+        >
+          Course Duration: {student.coursePeriod || "N/A"}
+        </div>
 
         {/* GRADE */}
-     <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
-  {grade}
-</div>
+        <div className="absolute top-[770px] left-[535px] font-bold text-2xl">
+          {grade}
+        </div>
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
           {student.marks}.00%

@@ -60,6 +60,73 @@ const finalData = {
   ...result,
   ...studentData,
   ...cert,
+
+  studentName:
+    cert.studentName ||
+    studentData.studentName,
+
+  fatherName:
+    cert.fatherName ||
+    studentData.fatherName,
+
+  motherName:
+    cert.motherName ||
+    studentData.motherName,
+
+  surname:
+    cert.surname ||
+    studentData.surname ||
+    "",
+
+  course:
+    cert.course ||
+    studentData.courseName,
+
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName,
+
+  duration:
+    cert.duration ||
+    studentData.duration,
+
+  coursePeriod:
+    cert.coursePeriod ||
+    studentData.coursePeriod,
+
+  certificateNo:
+    cert.certificateNo || "",
+
+  marksheetNo:
+    cert.marksheetNo ||
+    cert.certificateNo ||
+    "",
+
+  dob:
+    cert.dob ||
+    studentData.dob ||
+    "",
+
+  relationType:
+    cert.relationType ||
+    studentData.relationType,
+
+  showFatherInCertificate:
+    cert.showFatherInCertificate ??
+    studentData.showFatherInCertificate,
+
+  showMotherInCertificate:
+    cert.showMotherInCertificate ??
+    studentData.showMotherInCertificate,
+
+  logo:
+    cert.logo,
+
+  ownerName:
+    cert.ownerName,
+
+  franchiseSignature:
+    cert.franchiseSignature,
 };
 
 setStudent(finalData);
@@ -379,7 +446,10 @@ fetchMarks(cert.studentId, finalData);
         </div>
 
         <div className="absolute top-[367px] left-[330px]">
-          {student.surname}
+          {
+  student.surname ||
+  ""
+}
         </div>
 
         <div className="absolute top-[388px] left-[330px]">
@@ -400,19 +470,33 @@ fetchMarks(cert.studentId, finalData);
         </div> */}
 
         <div className="absolute top-[348px] left-[680px] text-[15px]">
-          {student.marksheetNo},
+          {
+  student.marksheetNo ||
+  student.certificateNo ||
+  ""
+}
         </div>
 
         <div className="absolute top-[369px] left-[680px] text-[15px]">
-          {student.dob
-            ? new Date(student.dob)
-                .toLocaleDateString("en-GB")
-                .replace(/\//g, "-")
-            : ""}
+         {
+  (student.dob || student.dateOfBirth)
+    ? new Date(
+        student.dob || student.dateOfBirth
+      )
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-")
+    : ""
+}
         </div>
 
         <div className="absolute top-[392px] left-[680px] text-[13px]">
-          {student.coursePeriod || student.duration || "1 Year"}
+          {
+  student.coursePeriod ||
+  student.duration ||
+  cert?.coursePeriod ||
+  cert?.duration ||
+  "1 Year"
+}
         </div>
 
         {/* SUBJECT SECTION */}

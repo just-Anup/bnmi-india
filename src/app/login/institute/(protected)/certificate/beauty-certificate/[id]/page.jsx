@@ -44,39 +44,71 @@ useEffect(() => {
       );
 
       // ✅ STUDENT
-      const studentData = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+    let studentData = null;
+
+// Only fetch student if required fields are missing
+const needStudentData =
+  !cert.studentName ||
+  !cert.fatherName ||
+  !cert.motherName ||
+  !cert.photoId ||
+  !cert.signatureId ||
+  !cert.relationType ||
+  cert.showFatherInCertificate === undefined ||
+  cert.showMotherInCertificate === undefined ||
+  !cert.dob ||
+  !cert.courseType ||
+  !cert.subjects;
+
+if (needStudentData) {
+  studentData = await databases.getDocument(
+    DATABASE_ID,
+    "student_admissions",
+    cert.studentId
+  );
+}
 
       // ✅ FRANCHISE
-      let franchiseData = null;
+     let franchiseData = null;
 
-      try {
+try {
 
-        const franchiseRes =
-          await databases.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-            "franchise_approved",
-            [
-              Query.equal(
-                "email",
-                studentData.franchiseEmail
-              )
-            ]
-          );
+  const needFranchiseData =
+    !cert.logo ||
+    !cert.ownerName ||
+    !cert.franchiseSignature ||
+    !cert.city;
 
-        if (franchiseRes.documents.length > 0) {
-          franchiseData =
-            franchiseRes.documents[0];
-        }
+  if (needFranchiseData) {
 
-      } catch (err) {
+    const franchiseEmail =
+      cert.franchiseEmail ||
+      studentData?.franchiseEmail;
 
-        console.log("FRANCHISE ERROR:", err);
+    if (franchiseEmail) {
 
+      const franchiseRes =
+        await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal("email", franchiseEmail)
+          ]
+        );
+
+      if (franchiseRes.documents.length > 0) {
+        franchiseData = franchiseRes.documents[0];
       }
+
+    }
+
+  }
+
+} catch (err) {
+
+  console.log("FRANCHISE ERROR:", err);
+
+}
 
       // ✅ ISSUE DATE
       let formattedIssueDate = "";
@@ -126,81 +158,129 @@ useEffect(() => {
       }
 
       // ✅ FINAL DATA
-      const finalData = {
+   const finalData = {
+  ...(studentData || {}),
+  ...(cert || {}),
 
-        ...studentData,
-        ...cert,
+  studentId: cert.studentId,
 
-        studentName:
-          cert.studentName ||
-          studentData.studentName ||
-          "",
+  studentName:
+    cert.studentName ||
+    studentData?.studentName ||
+    "",
 
-        course:
-          cert.course ||
-          studentData.courseName ||
-          "",
+  fatherName:
+    cert.fatherName ||
+    studentData?.fatherName ||
+    "",
 
-        duration:
-          cert.duration ||
-          studentData.duration ||
-          studentData.courseDuration ||
-          "",
+  motherName:
+    cert.motherName ||
+    studentData?.motherName ||
+    "",
 
-          coursePeriod:
-  cert.coursePeriod || "",
+  relationType:
+    cert.relationType ||
+    studentData?.relationType ||
+    "S/O",
 
-        marks:
-          cert.marks || "",
+  showFatherInCertificate:
+    String(
+      cert.showFatherInCertificate ??
+      studentData?.showFatherInCertificate
+    ).toLowerCase() === "true",
 
-        grade:
-          cert.grade || "",
+  showMotherInCertificate:
+    String(
+      cert.showMotherInCertificate ??
+      studentData?.showMotherInCertificate
+    ).toLowerCase() === "true",
 
-        instituteName:
-          cert.instituteName ||
-          studentData.instituteName ||
-          "",
+  course:
+    cert.course ||
+    studentData?.courseName ||
+    "",
 
-        city:
-  cert.city ||
-  franchiseData?.city ||
-  franchiseData?.address ||
-  "",
+  duration:
+    cert.duration ||
+    studentData?.duration ||
+    studentData?.courseDuration ||
+    "",
 
-        qrCode:
-          qrCodeImage || "",
+  coursePeriod:
+    cert.coursePeriod ||
+    studentData?.coursePeriod ||
+    "",
 
-        verifyUrl,
+  marks:
+    cert.marks ??
+    studentData?.marks ??
+    "",
 
-        certificateNo:
-          cert.certificateNo || "",
+  grade:
+    cert.grade ||
+    "",
 
-        issueDate:
-          formattedIssueDate || "",
+  instituteName:
+    cert.instituteName ||
+    studentData?.instituteName ||
+    "",
 
-        logo:
-       franchiseData?.logo ||
-       cert.logo ||
-       "",
-        ownerName:
-          cert.ownerName ||
-          franchiseData?.ownerName ||
-          franchiseData?.owner ||
-          franchiseData?.name ||
-          "Controller",
+  city:
+    cert.city ||
+    franchiseData?.city ||
+    franchiseData?.address ||
+    "",
 
- franchiseSignature:
-  franchiseData?.signature ||
-  franchiseData?.franchiseSignature ||
-  cert.franchiseSignature ||
-  "",
+  dob:
+    cert.dob ||
+    studentData?.dob ||
+    "",
 
-        photoId:
-          studentData.photoId || "",
+  surname:
+    cert.surname ||
+    studentData?.surname ||
+    "",
 
-        signatureId:
-          studentData.signatureId || ""
-      };
+  certificateNo:
+    cert.certificateNo ||
+    "",
+
+  issueDate:
+    formattedIssueDate,
+
+  verifyUrl,
+
+  qrCode:
+    qrCodeImage,
+
+  logo:
+    cert.logo ||
+    franchiseData?.logo ||
+    "",
+
+  ownerName:
+    cert.ownerName ||
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "Controller",
+
+  franchiseSignature:
+    cert.franchiseSignature ||
+    franchiseData?.signature ||
+    "",
+
+  photoId:
+    cert.photoId ||
+    studentData?.photoId ||
+    "",
+
+  signatureId:
+    cert.signatureId ||
+    studentData?.signatureId ||
+    "",
+};
 
       setStudent(finalData);
 
@@ -286,7 +366,11 @@ const getGrade = (marks) => {
 };
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
-  const gradeData = getGrade(student.marks);
+  const gradeData = {
+  grade:
+    student.grade ||
+    getGrade(student.marks).grade
+};
 
 const handleChange = (field, value) => {
   setStudent((prev) => ({
@@ -787,7 +871,7 @@ const franchiseSign =
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {student.marks}.00%
+          {Number(student.marks || 0).toFixed(2)}%
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}

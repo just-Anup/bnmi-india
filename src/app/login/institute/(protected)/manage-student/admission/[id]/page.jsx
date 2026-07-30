@@ -4,18 +4,44 @@ import { useState, useEffect } from "react";
 import { databases, account } from "@/lib/appwrite";
 import { ID, Storage, Client, Query } from "appwrite";
 import { useRouter } from "next/navigation";
+import imageCompression from "browser-image-compression";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
-const MAX_FILE_SIZE = 300 * 1024; // 300 KB
+
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
 
 const storage = new Storage(client);
+
+const compressImage = async (file, isSignature = false) => {
+  const options = {
+    maxSizeMB: isSignature ? 0.03 : 0.06,
+    maxWidthOrHeight: isSignature ? 350 : 300,
+    useWebWorker: true,
+    fileType: "image/webp",
+    initialQuality: 0.75,
+  };
+
+  try {
+    const compressed = await imageCompression(file, options);
+
+    return new File(
+      [compressed],
+      file.name.replace(/\.\w+$/, ".webp"),
+      {
+        type: "image/webp",
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    return file;
+  }
+};
 
 export default function AddStudent() {
 
@@ -714,18 +740,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
      <input
   type="file"
   accept="image/*"
-  onChange={(e) => {
+ onChange={async (e) => {
     const file = e.target.files[0];
 
-    if (file && file.size > MAX_FILE_SIZE) {
-      alert("Photo must be less than 300 kb");
-      e.target.value = "";
-      return;
-    }
+    if (!file) return;
 
-    setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file)); // ✅ preview
-  }}
+    const compressed = await compressImage(file);
+
+    setPhoto(compressed);
+
+    setPhotoPreview(URL.createObjectURL(compressed));
+}}
   className="border p-2 w-full"
   required
 />
@@ -752,18 +777,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 <input
   type="file"
   accept="image/*"
-  onChange={(e) => {
+ onChange={async (e) => {
     const file = e.target.files[0];
 
-    if (file && file.size > MAX_FILE_SIZE) {
-      alert("Signature must be less than 300 MB");
-      e.target.value = "";
-      return;
-    }
+    if (!file) return;
 
-    setSignature(file);
-    setSignaturePreview(URL.createObjectURL(file)); // ✅ preview
-  }}
+    const compressed = await compressImage(file, true);
+
+    setSignature(compressed);
+
+    setSignaturePreview(URL.createObjectURL(compressed));
+}}
   className="border p-2 w-full"
   required
 />

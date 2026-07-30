@@ -23,6 +23,13 @@ export default function CertificateApprovalPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  const LIMIT = 10;
+
+const [page, setPage] = useState(0);
+
+const [hasMore, setHasMore] = useState(false);
+
+
   // ===============================
   // ✅ MARKSHEET PRINT
   // ===============================
@@ -551,22 +558,14 @@ useEffect(() => {
   const cache =
     localStorage.getItem(CACHE_KEY);
 
-  if (cache) {
+  if (cache && page === 0) {
 
     const parsed = JSON.parse(cache);
 
-    if (
-
-      Date.now() - parsed.time < CACHE_TIME
-
-    ) {
-
-      console.log("Certificate Cache Loaded");
+    if (Date.now() - parsed.time < CACHE_TIME) {
 
       setCertificates(parsed.certificates);
-
       setLoading(false);
-
       return;
 
     }
@@ -575,9 +574,9 @@ useEffect(() => {
 
   localStorage.removeItem(CACHE_KEY);
 
-loadCertificates();
+  loadCertificates();
 
-}, []);
+}, [page]);
 
   const loadCertificates = async () => {
     try {
@@ -586,48 +585,24 @@ loadCertificates();
   CERT_COLLECTION,
   [
     Query.orderDesc("$createdAt"),
-     Query.limit(500)
+Query.limit(LIMIT),
+Query.offset(page * LIMIT)
   ]
 );
 
-const certificatesWithFranchise = await Promise.all(
-  res.documents.map(async (cert) => {
-    try {
-      const student = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+setCertificates(res.documents);
 
-      return {
-        ...cert,
-        franchiseName:
-          student.instituteName ||
-          student.franchiseName ||
-          student.centerName ||
-          ""
-      };
-    } catch (err) {
-      return {
-        ...cert,
-        franchiseName: ""
-      };
-    }
-  })
-);
+setHasMore(res.documents.length === LIMIT);
 
-setCertificates(certificatesWithFranchise);
-
-localStorage.setItem(
-  CACHE_KEY,
-  JSON.stringify({
-
-    certificates: certificatesWithFranchise,
-
-    time: Date.now()
-
-  })
-);
+if (page === 0) {
+  localStorage.setItem(
+    CACHE_KEY,
+    JSON.stringify({
+      certificates: res.documents,
+      time: Date.now(),
+    })
+  );
+}
     } catch (err) {
       console.log(err);
     } finally {
@@ -1065,8 +1040,31 @@ loadCertificates();
       })}
 
     </div>
+<div className="flex justify-center gap-4 mt-8">
 
+  <button
+    disabled={page === 0}
+    onClick={() => setPage((p) => p - 1)}
+    className="px-4 py-2 rounded bg-gray-300 disabled:opacity-50"
+  >
+    Previous
+  </button>
+
+  <span className="px-4 py-2">
+    Page {page + 1}
+  </span>
+
+  <button
+    disabled={!hasMore}
+    onClick={() => setPage((p) => p + 1)}
+    className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
+  >
+    Next
+  </button>
+
+</div>
   </div>
+  
 )
 }
 

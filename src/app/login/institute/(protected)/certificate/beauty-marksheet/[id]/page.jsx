@@ -84,70 +84,100 @@ try {
   console.log("FRANCHISE ERROR:", err);
 }
 
-   const finalData = {
-  ...studentData,
-  ...cert,
+const finalData = {
+  ...(studentData || {}),
+  ...(cert || {}),
 
-  courseType: studentData.courseType,
-  
+  studentId: cert.studentId,
+
   studentName:
     cert.studentName ||
-    studentData.studentName ||
+    studentData?.studentName ||
     "",
 
   fatherName:
     cert.fatherName ||
-    studentData.fatherName ||
+    studentData?.fatherName ||
     "",
 
   motherName:
     cert.motherName ||
-    studentData.motherName ||
+    studentData?.motherName ||
     "",
+
+  surname:
+    cert.surname ||
+    studentData?.surname ||
+    "",
+
+  dob:
+    cert.dob ||
+    studentData?.dob ||
+    "",
+
+  relationType:
+    cert.relationType ||
+    studentData?.relationType ||
+    "S/O",
 
   course:
     cert.course ||
-    studentData.courseName ||
+    studentData?.courseName ||
     "",
 
   instituteName:
     cert.instituteName ||
-    studentData.instituteName ||
+    studentData?.instituteName ||
+    "",
+
+  duration:
+    cert.duration ||
+    studentData?.duration ||
+    "",
+
+  coursePeriod:
+    cert.coursePeriod ||
+    studentData?.coursePeriod ||
+    "",
+
+  marks:
+    cert.marks ??
+    studentData?.marks ??
+    "",
+
+  grade:
+    cert.grade ||
     "",
 
   marksheetNo:
-    cert.certificateNo || "",
+    cert.marksheetNo ||
+    cert.certificateNo ||
+    "",
 
   issueDate:
-    cert.issueDate || "",
+    cert.issueDate ||
+    "",
 
-  // ✅ ALWAYS USE LATEST FRANCHISE LOGO
   logo:
     franchiseData?.logo ||
     cert.logo ||
     "",
 
-  // ✅ ALWAYS USE LATEST SIGNATURE
   franchiseSignature:
     franchiseData?.signature ||
     cert.franchiseSignature ||
     "",
 
-  // ✅ ALWAYS USE LATEST OWNER NAME
   ownerName:
     franchiseData?.ownerName ||
-    franchiseData?.owner ||
-    franchiseData?.name ||
     cert.ownerName ||
-    "Controller",
+    "",
 
   city:
     franchiseData?.city ||
-    franchiseData?.address ||
     cert.city ||
-    ""
+    "",
 };
-
       setStudent(finalData);
 
     fetchMarks(cert.studentId);
@@ -346,15 +376,19 @@ const rect = node.getBoundingClientRect();
 </div> */}
 
 <div className="absolute top-[348px] left-[680px]">
-  {student.marksheetNo}
+  {student.marksheetNo || student.certificateNo}
 </div>
 
 <div className="absolute top-[369px] left-[680px]">
-  {student.dob}
+  {student.dob
+    ? new Date(student.dob)
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-")
+    : ""}
 </div>
 
 <div className="absolute top-[392px] left-[680px] text-[13px]">
-  {student.coursePeriod || student.duration || "1 Year"}
+  {student.coursePeriod || student.duration}
 </div>
 
         {/* SUBJECTS */}

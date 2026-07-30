@@ -12,30 +12,32 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 export default function AdmissionList() {
 
   const [students, setStudents] = useState([]);
+  const [page, setPage] = useState(0);
+const LIMIT = 10;
+const [hasMore, setHasMore] = useState(false);
   const router = useRouter();
 
 
-  useEffect(() => {
-
-    fetchStudents();
-
-  }, []);
+useEffect(() => {
+  fetchStudents();
+}, [page]);
 
   const fetchStudents = async () => {
 
     const user = await account.get();
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTION_ID,
-      [
-        Query.equal("createdById", user.$id),
-        Query.orderDesc("createdAt"),
-        Query.limit(500)
+  const res = await databases.listDocuments(
+  DATABASE_ID,
+  COLLECTION_ID,
+  [
+    Query.equal("createdById", user.$id),
+    Query.orderDesc("createdAt"),
+    Query.limit(LIMIT),
+    Query.offset(page * LIMIT)
+  ]
+);
 
-      ]
-    );
-
+setHasMore(res.documents.length === LIMIT);
     setStudents(res.documents);
 
 
@@ -122,9 +124,9 @@ export default function AdmissionList() {
 
               <tr key={item.$id}>
 
-                <td className="border p-2">
-                  {index + 1}
-                </td>
+               <td className="border p-2">
+  {page * LIMIT + index + 1}
+</td>
 
                 <td className="border p-2">
                   {item.status}
@@ -134,10 +136,15 @@ export default function AdmissionList() {
 
                   {item.photoId ? (
 
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${item.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
-                      width="40"
-                    />
+           <img
+  src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${item.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
+  loading="lazy"
+  decoding="async"
+  width={40}
+  height={40}
+  className="w-10 h-10 rounded object-cover"
+  alt={item.studentName}
+/>
 
                   ) : "No Photo"}
 
@@ -202,6 +209,29 @@ export default function AdmissionList() {
         </tbody>
 
       </table>
+      <div className="flex justify-between mt-6">
+
+  <button
+    disabled={page === 0}
+    onClick={() => setPage(page - 1)}
+    className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+  >
+    Previous
+  </button>
+
+  <span className="font-semibold">
+    Page {page + 1}
+  </span>
+
+  <button
+    disabled={!hasMore}
+    onClick={() => setPage(page + 1)}
+    className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+
+</div>
 
     </div>
 

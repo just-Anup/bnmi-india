@@ -71,12 +71,22 @@ const certificate = await databases.getDocument(
 );
 
 // ✅ Load student
-const studentDoc = await databases.getDocument(
-  DATABASE_ID,
-  "student_admissions",
-  certificate.studentId
-);
+let studentDoc = null;
 
+const needStudentData =
+  !certificate.studentName ||
+  !certificate.fatherName ||
+  !certificate.motherName ||
+  !certificate.surname ||
+  !certificate.dob;
+
+if (needStudentData) {
+  studentDoc = await databases.getDocument(
+    DATABASE_ID,
+    "student_admissions",
+    certificate.studentId
+  );
+}
 // ✅ Load exam result using studentId
 const resultRes = await databases.listDocuments(
   DATABASE_ID,
@@ -98,16 +108,38 @@ const result = resultRes.documents[0];
 
       try {
 
-        const franchiseRes = await databases.listDocuments(
-          DATABASE_ID,
-          "franchise_approved",
-          [
-            Query.equal(
-              "email",
-              studentDoc.franchiseEmail
-            )
-          ]
-        );
+     
+
+const needFranchiseData =
+  !certificate.logo ||
+  !certificate.ownerName ||
+  !certificate.franchiseSignature ||
+  !certificate.city;
+
+if (needFranchiseData) {
+
+  const franchiseEmail =
+    certificate.franchiseEmail ||
+    studentDoc?.franchiseEmail;
+
+  if (franchiseEmail) {
+
+    const franchiseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal("email", franchiseEmail)
+        ]
+      );
+
+    if (franchiseRes.documents.length > 0) {
+      franchise = franchiseRes.documents[0];
+    }
+
+  }
+
+}
 
         if (franchiseRes.documents.length > 0) {
           franchise = franchiseRes.documents[0];
@@ -117,24 +149,84 @@ const result = resultRes.documents[0];
         console.log(err);
       }
 
-    setStudent({
-  ...studentDoc,
-  ...certificate,
+  setStudent({
 
-  logo: franchise?.logo || certificate?.logo,
+  ...(studentDoc || {}),
+  ...(certificate || {}),
+
+  studentId: certificate.studentId,
+
+  studentName:
+    certificate.studentName ||
+    studentDoc?.studentName ||
+    "",
+
+  fatherName:
+    certificate.fatherName ||
+    studentDoc?.fatherName ||
+    "",
+
+  motherName:
+    certificate.motherName ||
+    studentDoc?.motherName ||
+    "",
+
+  surname:
+    certificate.surname ||
+    studentDoc?.surname ||
+    "",
+
+  dob:
+    certificate.dob ||
+    studentDoc?.dob ||
+    "",
+
+  course:
+    certificate.course ||
+    studentDoc?.courseName ||
+    "",
+
+  instituteName:
+    certificate.instituteName ||
+    studentDoc?.instituteName ||
+    "",
+
+  duration:
+    certificate.duration ||
+    studentDoc?.duration ||
+    "",
+
+  coursePeriod:
+    certificate.coursePeriod ||
+    studentDoc?.coursePeriod ||
+    "",
+
+  certificateNo:
+    certificate.certificateNo ||
+    "",
+
+  logo:
+    certificate.logo ||
+    franchise?.logo ||
+    "",
 
   franchiseSignature:
+    certificate.franchiseSignature ||
     franchise?.signature ||
-    certificate?.franchiseSignature,
+    "",
 
   ownerName:
+    certificate.ownerName ||
     franchise?.ownerName ||
     franchise?.owner ||
     franchise?.name ||
-    certificate?.ownerName,
+    "",
 
-  studentId: certificate.studentId,
-  courseType: studentDoc.courseType,
+  city:
+    certificate.city ||
+    franchise?.city ||
+    "",
+
 });
 
       fetchMarks(result.studentId);
@@ -414,14 +506,20 @@ const totalOutOf = marksArray.length * 100;
 </div> */}
 
 <div className="absolute top-[334px] left-[680px]">
-  {student.certificateNo || ""}
+  {student.marksheetNo || student.certificateNo}
 </div>
 <div className="absolute top-[355px] left-[680px]">
-  {student.dob}
+  {
+student.dob
+? new Date(student.dob)
+    .toLocaleDateString("en-GB")
+    .replace(/\//g,"-")
+: ""
+}
 </div>
 
-<div className="absolute top-[378px] left-[680px] ">
-  { student.duration }  
+<div className="absolute top-[378px] left-[680px] text-[13px]">
+  {student.coursePeriod || student.duration}
 </div>
 
 
