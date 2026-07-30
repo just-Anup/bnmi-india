@@ -64,24 +64,10 @@ export default function InternshipCertificate() {
 
     const node = printRef.current
 
-  const dataUrl = await htmlToImage.toPng(node, {
-  quality: 1,
-  pixelRatio: 4,
-  cacheBust: true,
-
-  width: 1000,
-  height: 1414,
-
-  canvasWidth: 4000,
-  canvasHeight: 5656,
-
-  skipFonts: true,
-
-  style: {
-    margin: "0",
-    padding: "0",
-    overflow: "hidden"
-  }
+ const dataUrl = await htmlToImage.toJpeg(node, {
+  quality: 0.95,
+  pixelRatio: 2,
+  cacheBust: true
 })
     const link =
       document.createElement('a')
@@ -175,10 +161,10 @@ export default function InternshipCertificate() {
   >
     {certificate.internshipTitle}
   </div>
-
+s
   {/* DURATION */}
  <div
-  className="absolute top-[684px] right-[257px] text-[24px] font-semibold"
+  className="absolute top-[684px] left-[670px] text-[24px] font-semibold"
 >
   For {certificate.days}
 </div>
