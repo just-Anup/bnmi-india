@@ -531,11 +531,11 @@ export default function StartExamPage() {
 
     } catch (err) {
 
-      console.log(err);
+     console.error("Submit Error:", err);
+console.log(err.message);
+console.log(err.code);
 
-      alert(
-        "Failed To Submit Exam"
-      );
+alert(err.message || "Failed To Submit Exam");
 
       setSubmitted(false);
 

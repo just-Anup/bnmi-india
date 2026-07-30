@@ -18,6 +18,17 @@ export default function InternshipCertificate() {
     useState(null)
 
   const printRef = useRef()
+  const formatDate = (date) => {
+  if (!date) return "";
+
+  const d = new Date(date);
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
 
   useEffect(() => {
 
@@ -53,30 +64,25 @@ export default function InternshipCertificate() {
 
     const node = printRef.current
 
-    const dataUrl = await htmlToImage.toPng(
-      node,
-      {
-        quality: 1,
-        pixelRatio: 3,
-        cacheBust: true,
+  const dataUrl = await htmlToImage.toPng(node, {
+  quality: 1,
+  pixelRatio: 4,
+  cacheBust: true,
 
-        width: node.scrollWidth,
-        height: node.scrollHeight,
+  width: 1000,
+  height: 1414,
 
-        canvasWidth:
-          node.scrollWidth * 3,
+  canvasWidth: 4000,
+  canvasHeight: 5656,
 
-        canvasHeight:
-          node.scrollHeight * 3,
+  skipFonts: true,
 
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
-          overflow: 'visible'
-        }
-      }
-    )
-
+  style: {
+    margin: "0",
+    padding: "0",
+    overflow: "hidden"
+  }
+})
     const link =
       document.createElement('a')
 
@@ -117,19 +123,22 @@ export default function InternshipCertificate() {
   ref={printRef}
   style={{
     width: "1000px",
-    minHeight: "1414px",
+    height: "1414px",
     position: "relative",
     margin: "auto",
-    overflow: "visible"
+    overflow: "hidden",
+    background: "#fff"
   }}
 >
   {/* TEMPLATE */}
- <img
+<img
   src="/internship.jpeg"
   style={{
-    width: "1000px",
-    height: "1414px",
-    display: "block"
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0
   }}
 />
 
@@ -168,15 +177,15 @@ export default function InternshipCertificate() {
   </div>
 
   {/* DURATION */}
-  <div
-    className="absolute top-[720px] left-[455px] text-[22px] font-semibold"
-  >
-    {certificate.duration}
-  </div>
+ <div
+  className="absolute top-[684px] right-[257px] text-[24px] font-semibold"
+>
+  For {certificate.days}
+</div>
 
   {/* SHIFT */}
   <div
-    className="absolute top-[681px] left-[250px] text-[24px]"
+    className="absolute top-[682px] left-[250px] text-[24px]"
   >
     {certificate.shift}
   </div>
@@ -200,10 +209,10 @@ export default function InternshipCertificate() {
 
   {/* DATE RANGE */}
   <div
-    className="absolute top-[720px] left-0 w-full text-center text-[20px]"
-  >
-    {certificate.fromDate} To {certificate.toDate}
-  </div>
+  className="absolute top-[720px] left-0 w-full text-center text-[20px]"
+>
+  From {formatDate(certificate.fromDate)} To {formatDate(certificate.toDate)}
+</div>
 
   {/* STUDENT PHOTO */}
   <img
@@ -212,11 +221,11 @@ export default function InternshipCertificate() {
   />
 
   {/* ISSUE DATE */}
-  <div
-    className="absolute bottom-[200px] left-[590px] text-[22px] font-semibold"
-  >
-    {certificate.issueDate}
-  </div>
+ <div
+  className="absolute bottom-[200px] left-[590px] text-[22px] font-semibold"
+>
+  {formatDate(certificate.issueDate)}
+</div>
 
   {/* SIGNATURE */}
   {certificate.signature && (
