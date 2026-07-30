@@ -928,7 +928,7 @@ const grade =
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {student.marks || percentage}%
+          {percentage}%
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
