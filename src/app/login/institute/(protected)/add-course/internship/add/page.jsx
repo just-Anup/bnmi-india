@@ -332,19 +332,18 @@ await databases.createDocument(
           <div>
 
             <label className="block mb-2">
-              Internship Days
-            </label>
+  Internship Duration
+</label>
 
-            <input
-              type="number"
-              value={days}
-              onChange={(e) =>
-                setDays(
-                  e.target.value
-                )
-              }
-              className="w-full p-3 bg-black border border-gray-700 rounded"
-            />
+<input
+  type="text"
+  placeholder="Example: 30 Days or 240 Hours"
+  value={days}
+  onChange={(e)=>
+    setDays(e.target.value)
+  }
+  className="w-full p-3 bg-black border border-gray-700 rounded"
+/>
 
           </div>
 
