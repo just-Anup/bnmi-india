@@ -41,28 +41,65 @@ const [loadingUser, setLoadingUser] = useState(true);
       );
 
       // ✅ STUDENT
-      const studentData = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+   let studentData = null;
 
+const needStudentData =
+  !cert.studentName ||
+  !cert.fatherName ||
+  !cert.motherName ||
+  !cert.photoId ||
+  !cert.signatureId ||
+  !cert.relationType ||
+  cert.showFatherInCertificate === undefined ||
+  cert.showMotherInCertificate === undefined ||
+  !cert.dob ||
+  !cert.courseType ||
+  !cert.subjects ||
+  !cert.surname;
+
+if (needStudentData) {
+  studentData = await databases.getDocument(
+    DATABASE_ID,
+    "student_admissions",
+    cert.studentId
+  );
+}
       // ✅ FRANCHISE
       let franchiseData = null;
 
       try {
 
-        const franchiseRes =
-          await databases.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-            "franchise_approved",
-            [
-              Query.equal(
-                "email",
-                studentData.franchiseEmail
-              )
-            ]
-          );
+
+
+const needFranchiseData =
+  !cert.logo ||
+  !cert.ownerName ||
+  !cert.franchiseSignature ||
+  !cert.city;
+
+if (needFranchiseData) {
+
+  const franchiseEmail =
+    cert.franchiseEmail ||
+    studentData?.franchiseEmail;
+
+  if (franchiseEmail) {
+
+    const franchiseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal("email", franchiseEmail)
+        ]
+      );
+
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
+
+  }
+}
 
         if (franchiseRes.documents.length > 0) {
 
@@ -130,107 +167,126 @@ const [loadingUser, setLoadingUser] = useState(true);
       }
 
       // ✅ FINAL DATA
-      const finalData = {
+const finalData = {
+  ...(studentData || {}),
+  ...(cert || {}),
 
-        ...studentData,
-        ...cert,
+  studentId: cert.studentId,
 
-       studentName:
-  cert.studentName ||
-  studentData.studentName ||
-  "",
+  studentName:
+    cert.studentName ||
+    studentData?.studentName ||
+    "",
 
-fatherName:
-  cert.fatherName ||
-  studentData.fatherName ||
-  "",
+  fatherName:
+    cert.fatherName ||
+    studentData?.fatherName ||
+    "",
 
-motherName:
-  cert.motherName ||
-  studentData.motherName ||
-  "",
+  motherName:
+    cert.motherName ||
+    studentData?.motherName ||
+    "",
 
-        course:
-          cert.course ||
-          studentData.courseName ||
-          "",
+  surname:
+    cert.surname ||
+    studentData?.surname ||
+    "",
 
-        duration:
-          cert.duration ||
-          studentData.duration ||
-          studentData.courseDuration ||
-          "",
+  relationType:
+    cert.relationType ||
+    studentData?.relationType ||
+    "S/O",
 
-          coursePeriod:
-  cert.coursePeriod || "",
+  showFatherInCertificate:
+    String(
+      cert.showFatherInCertificate ??
+      studentData?.showFatherInCertificate
+    ).toLowerCase() === "true",
 
-        grade:
-          cert.grade || "",
+  showMotherInCertificate:
+    String(
+      cert.showMotherInCertificate ??
+      studentData?.showMotherInCertificate
+    ).toLowerCase() === "true",
 
-        marks:
-          cert.marks || "",
+  course:
+    cert.course ||
+    studentData?.courseName ||
+    "",
 
-        instituteName:
-          cert.instituteName ||
-          studentData.instituteName ||
-          "",
+  duration:
+    cert.duration ||
+    studentData?.duration ||
+    "",
 
-        city:
-          cert.city ||
-          franchiseData?.city ||
-          franchiseData?.address ||
-          "",
+  coursePeriod:
+    cert.coursePeriod ||
+    studentData?.coursePeriod ||
+    "",
 
-        qrCode:
-          qrCodeImage || "",
+  marks:
+    cert.marks ??
+    "",
 
-        verifyUrl,
+  grade:
+    cert.grade ||
+    "",
 
-        certificateNo:
-          cert.certificateNo || "",
+  dob:
+    cert.dob ||
+    studentData?.dob ||
+    "",
 
-        issueDate:
-          formattedIssueDate || "",
+  instituteName:
+    cert.instituteName ||
+    studentData?.instituteName ||
+    "",
 
-     logo:
-  franchiseData?.logo ||
-  cert.logo ||
-  "",
+  certificateNo:
+    cert.certificateNo ||
+    "",
 
-        ownerName:
-          cert.ownerName ||
-          franchiseData?.ownerName ||
-          franchiseData?.owner ||
-          franchiseData?.name ||
-          "Controller",
+  issueDate:
+    formattedIssueDate,
 
-         franchiseSignature:
-  franchiseData?.signature ||
-  franchiseData?.franchiseSignature ||
-  cert.franchiseSignature ||
-  "",
+  logo:
+    cert.logo ||
+    franchiseData?.logo ||
+    "",
 
+  ownerName:
+    cert.ownerName ||
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "",
 
-        photoId:
-          studentData.photoId || "",
+  franchiseSignature:
+    cert.franchiseSignature ||
+    franchiseData?.signature ||
+    "",
 
-        signatureId:
-          studentData.signatureId || "",
+  city:
+    cert.city ||
+    franchiseData?.city ||
+    franchiseData?.address ||
+    "",
 
-        relationType:
-          studentData.relationType ||
-          "S/O",
+  photoId:
+    cert.photoId ||
+    studentData?.photoId ||
+    "",
 
-        showFatherInCertificate:
-          String(
-            studentData.showFatherInCertificate
-          ).toLowerCase() === "true",
+  signatureId:
+    cert.signatureId ||
+    studentData?.signatureId ||
+    "",
 
-        showMotherInCertificate:
-          String(
-            studentData.showMotherInCertificate
-          ).toLowerCase() === "true"
-      };
+  qrCode: qrCodeImage,
+
+  verifyUrl
+};
 
       setStudent(finalData);
 
@@ -606,7 +662,9 @@ const saveCertificate = async () => {
   return "F";
 };
 
-const grade = getGrade(percentage);
+const grade =
+  student.grade ||
+  getGrade(percentage);
 
   return (
 
@@ -870,7 +928,7 @@ const grade = getGrade(percentage);
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {percentage}%
+          {student.marks || percentage}%
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}

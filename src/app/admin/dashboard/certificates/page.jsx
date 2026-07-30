@@ -837,7 +837,42 @@ coursePeriod: finalDuration,
           franchiseData?.ownerName ||
           franchiseData?.owner ||
           franchiseData?.name ||
-          ""
+          "",
+          courseType:
+    studentData.courseType || "",
+
+franchiseEmail:
+    studentData.franchiseEmail || "",
+
+dob:
+    studentData.dob || "",
+
+relationType:
+    studentData.relationType || "",
+
+surname:
+    studentData.surname || "",
+
+courseId:
+    studentData.courseId || "",
+
+courseCode:
+    studentData.courseCode || "",
+
+subjects:
+    studentData.subjects || "",
+
+selectedSubjectIds:
+    studentData.selectedSubjectIds || "",
+
+semesterNumber:
+    studentData.semesterNumber || null,
+
+showFatherInCertificate:
+    studentData.showFatherInCertificate,
+
+showMotherInCertificate:
+    studentData.showMotherInCertificate,
       }
     );
 

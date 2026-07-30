@@ -218,8 +218,10 @@ String(
   studentData?.coursePeriod ||
   "",
 
-          marks:
-            studentData?.marks || "",
+         marks:
+  cert.marks ??
+  studentData?.marks ??
+  "",
 
           grade:
             cert.grade || "",
@@ -657,7 +659,9 @@ photoId:
     return "F";
   };
 
-  const grade = getGrade(student.marks);
+  const grade =
+  student.grade ||
+  getGrade(student.marks);
 
   return (
 
