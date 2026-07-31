@@ -212,14 +212,13 @@ return (
 
       </div>
 
-      <div className="font-bold text-lg mt-2">
-
-        order?.createdAt
-  ? new Date(order.createdAt).toLocaleDateString()
-  : "-"
-
-      </div>
-
+  <div className="font-bold text-lg mt-2">
+{
+order?.createdAt
+? new Date(order.createdAt).toLocaleDateString()
+: "-"
+}
+</div>
     </div>
 
     <div className="bg-white rounded-xl shadow p-5">
@@ -329,35 +328,49 @@ return (
 
   <div className="flex gap-2">
 <button
-  onClick={() => {
+  onClick={async () => {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      CERTIFICATE_COLLECTION,
+      [
+        Query.equal("studentId", student.studentId)
+      ]
+    );
+
+    if (res.documents.length === 0) {
+      alert("Certificate not found");
+      return;
+    }
+
+    const certificateId = res.documents[0].$id;
 
     let marksheetUrl = "";
 
     switch (student.courseType) {
 
       case "single":
-        marksheetUrl = `/login/institute/certificate/marksheet/${student.$id}`;
+        marksheetUrl = `/login/institute/certificate/marksheet/${certificateId}`;
         break;
 
       case "multiple":
-        marksheetUrl = `/login/institute/certificate/multiple-marksheet/${student.$id}`;
+        marksheetUrl = `/login/institute/certificate/multiple-marksheet/${certificateId}`;
         break;
 
       case "beauty":
-        marksheetUrl = `/login/institute/certificate/beauty-marksheet/${student.$id}`;
+        marksheetUrl = `/login/institute/certificate/beauty-marksheet/${certificateId}`;
         break;
 
       case "semester":
-        marksheetUrl = `/login/institute/certificate/semester-marksheet/${student.$id}`;
+        marksheetUrl = `/login/institute/certificate/semester-marksheet/${certificateId}`;
         break;
 
       default:
-        alert("Unknown course type");
+        alert("Unknown Course Type");
         return;
-
     }
 
-    window.open(marksheetUrl, "_blank");
+    window.open(marksheetUrl,"_blank");
 
   }}
   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
@@ -418,19 +431,19 @@ return (
   switch (student.courseType) {
 
     case "single":
-      marksheetUrl = `/login/institute/certificate/marksheet/${student.$id}`;
-      break;
+marksheetUrl =
+`/login/institute/certificate/marksheet/${certificateId}`;
 
     case "multiple":
-      marksheetUrl = `/login/institute/certificate/multiple-marksheet/${student.$id}`;
+      marksheetUrl = `/login/institute/certificate/multiple-marksheet/${certificateId}`;
       break;
 
     case "beauty":
-      marksheetUrl = `/login/institute/certificate/beauty-marksheet/${student.$id}`;
+      marksheetUrl = `/login/institute/certificate/beauty-marksheet/${certificateId}`;
       break;
 
     case "semester":
-      marksheetUrl = `/login/institute/certificate/semester-marksheet/${student.$id}`;
+      marksheetUrl = `/login/institute/certificate/semester-marksheet/${certificateId}`;
       break;
 
     default:

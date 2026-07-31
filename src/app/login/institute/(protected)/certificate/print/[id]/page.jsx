@@ -17,6 +17,7 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 export default function PrintCertificate() {
   const { id } = useParams();
 
+  const [percentage, setPercentage] = useState(0);
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
   const [editMode, setEditMode] = useState(false);
@@ -207,6 +208,13 @@ String(
             cert.course ||
             studentData?.courseName ||
             "",
+
+            courseType:
+  cert.courseType ||
+  studentData?.courseType ||
+  "",
+
+
    duration:
   cert.duration ||
   studentData?.duration ||
@@ -326,6 +334,71 @@ photoId:
     checkAdmin();
 
   }, []);
+
+
+  useEffect(() => {
+
+  const fetchPercentage = async () => {
+
+    if (!student?.studentId) return;
+
+    // Only Multiple Course
+  const type = String(student.courseType || "")
+  .trim()
+  .toLowerCase();
+
+if (type !== "multiple") {
+
+    setPercentage(student.marks || 0);
+
+    return;
+
+}
+
+    try {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [
+          Query.equal("studentId", student.studentId)
+        ]
+      );
+
+      if (res.documents.length === 0) {
+
+        setPercentage(student.marks || 0);
+
+        return;
+
+      }
+
+      const total = res.documents.reduce(
+        (sum, item) => sum + Number(item.total || 0),
+        0
+      );
+
+      const percent = (
+        total / res.documents.length
+      ).toFixed(2);
+
+      setPercentage(percent);
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+      setPercentage(student.marks || 0);
+
+    }
+
+  };
+
+  fetchPercentage();
+
+}, [student]);
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
@@ -648,20 +721,22 @@ photoId:
 
   const printPage = () => window.print();
 
-  const getGrade = (marks) => {
-    const m = Number(marks);
+ const getGrade = (percent) => {
 
-    if (m >= 85) return "A+";
-    if (m >= 70) return "A";
-    if (m >= 55) return "B";
-    if (m >= 40) return "C";
+  const m = Number(percent);
 
-    return "F";
-  };
+  if (m >= 85) return "A+";
+  if (m >= 70) return "A";
+  if (m >= 55) return "B";
+  if (m >= 40) return "C";
 
-  const grade =
-  student.grade ||
-  getGrade(student.marks);
+  return "F";
+
+};
+
+const grade =
+student.grade ||
+getGrade(percentage);
 
   return (
 
@@ -861,7 +936,7 @@ photoId:
         {/* NAME */}
         <div className="absolute top-[650px] left-[10px] w-full text-center">
 
-          <div className="text-2xl font-bold flex items-center justify-center gap-3 flex-wrap">
+          <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
             {/* STUDENT NAME */}
             <span>
@@ -910,9 +985,17 @@ photoId:
           {grade}
         </div>
         {/* MARKS */}
-        <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {student.marks}.00%
-        </div>
+       {/* PERCENTAGE */}
+
+<div className="absolute top-[770px] left-[660px] font-bold text-2xl">
+
+{
+student.courseType === "multiple"
+? `${percentage}%`
+: `${student.marks}.00%`
+}
+
+</div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}
         {student.qrCode && (
@@ -962,7 +1045,7 @@ photoId:
         {franchiseSign && (
           <img
             src={franchiseSign}
-            className="absolute bottom-[100px] left-[100px] w-[100px]"
+            className="absolute bottom-[90px] left-[100px] w-[100px]"
           />
         )}
 
