@@ -651,7 +651,7 @@ const saveCertificate = async () => {
 
 
 
-  const getGrade = (percent) => {
+const getGrade = (percent) => {
   const p = Number(percent);
 
   if (p >= 85) return "A+";
@@ -662,10 +662,8 @@ const saveCertificate = async () => {
   return "F";
 };
 
-const grade =
-  student.grade ||
-  getGrade(percentage);
-
+// Always calculate grade from percentage
+const grade = getGrade(percentage);
   return (
 
     <div className="p-10">

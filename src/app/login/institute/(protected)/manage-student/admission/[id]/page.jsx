@@ -53,7 +53,7 @@ export default function AddStudent() {
 const [signaturePreview, setSignaturePreview] = useState(null);
 const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("");
+  
 const [semesterSubjects, setSemesterSubjects] = useState([]);
  
 
@@ -88,6 +88,14 @@ showMotherInCertificate: false,
     qualification: "",
     occupation: "",
 
+    currentSemester: 1,
+
+completedSemester: 0,
+
+totalSemesters: 0,
+
+courseStatus: "Active",
+    
     courseFees: 0,
     discount: 0,
     totalFees: 0,
@@ -231,9 +239,9 @@ const loadSemesterSubjects = async (
         DATABASE_ID,
         "franchise_semester_course_subjects",
         [
-        Query.equal(
+  Query.equal(
   "courseCode",
-  form.courseCode
+  courseCode
 ),
 
           Query.equal(
@@ -256,13 +264,15 @@ const subjectNames = res.documents
 
 setForm((prev) => ({
   ...prev,
+
   subjects: subjectNames,
 
   selectedSubjectIds: res.documents
     .map((s) => s.subjectId)
-    .join("||")
-}));
+    .join("||"),
 
+  currentSemester: Number(semester)
+}));
   } catch (err) {
 
     console.log(
@@ -352,50 +362,54 @@ if (form.courseType === "semester") {
     ]
   );
 
-  const plan =
-    resPlan.documents[0]?.plan;
+  const plan = resPlan.documents[0]?.plan;
 
-  const planRes =
-    await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_plans",
-      [
-        Query.equal("name", plan)
-      ]
-    );
+  const planRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_plans",
+    [
+      Query.equal("name", plan)
+    ]
+  );
 
   const dynamicFee =
-    Number(
-      planRes.documents[0]?.amount || 0
-    );
-
-  setSelectedSemester("");
+    Number(planRes.documents[0]?.amount || 0);
 
   setForm(prev => ({
     ...prev,
 
     courseName: course.$id,
 
-    courseDisplayName:
-      course.courseName,
+    courseDisplayName: course.courseName,
 
-    courseCode:
-      course.courseCode,
+    courseCode: course.courseCode,
 
     subjects: "",
 
     selectedSubjectIds: "",
 
-    courseFees:
-      Number(
-        course.courseFees || 0
-      ),
+    courseFees: Number(course.courseFees || 0),
 
-    examFees:
-      dynamicFee,
-        duration: course.duration,
-  courseDuration: course.duration
+    examFees: dynamicFee,
+
+    duration: course.duration,
+
+    courseDuration: course.duration,
+
+    currentSemester: 1,
+
+    completedSemester: 0,
+
+    totalSemesters: Number(course.totalSemesters),
+
+    courseStatus: "Active"
   }));
+
+  // Automatically load Semester 1 subjects
+  await loadSemesterSubjects(
+    course.courseCode,
+    1
+  );
 
   return;
 }
@@ -620,6 +634,14 @@ const password = generatePassword();
   balance: Number(form.balance || 0),
   examFees: Number(form.examFees || 0),
 
+  currentSemester: 1,
+
+completedSemester: 0,
+
+totalSemesters: Number(form.totalSemesters),
+
+courseStatus: "Active",
+
   courseCode: form.courseCode,
   courseName: form.courseDisplayName,
   courseId: form.courseName,
@@ -695,7 +717,17 @@ const password = generatePassword();
         franchiseEmail: user.email,
         franchiseId: franchise.franchiseId,
         instituteName: franchise.instituteName,
-semesterNumber: selectedSemester ? Number(selectedSemester) : null,
+
+        semesterNumber: form.currentSemester,
+
+currentSemester: form.currentSemester,
+
+completedSemester: form.completedSemester,
+
+totalSemesters: form.totalSemesters,
+
+courseStatus: form.courseStatus,
+
         createdById: franchise.userId,
         createdByName: franchise.instituteName,
 
@@ -1015,43 +1047,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
   Semester
 </button>
 
-        {form.courseType === "semester" && form.courseName && (
 
-  <div className="mb-4">
-
-    <label className="block mb-1 font-semibold">
-      Select Semester
-    </label>
-
-    <select
-      value={selectedSemester}
-      onChange={(e) => {
-        const sem = e.target.value;
-        setSelectedSemester(sem);
-
-        const selectedCourse = courses.find(c => c.$id === form.courseName);
-
-        if (selectedCourse) {
-          loadSemesterSubjects(selectedCourse.courseCode, sem);
-        }
-      }}
-      className="border p-2 w-full"
-    >
-      <option value="">Select Semester</option>
-
-      {courses.find(c => c.$id === form.courseName)?.totalSemesters &&
-        [...Array(courses.find(c => c.$id === form.courseName).totalSemesters)].map((_, i) => (
-          <option key={i + 1} value={i + 1}>
-            Semester {i + 1}
-          </option>
-        ))
-      }
-
-    </select>
-
-  </div>
-
-)}
 
       </div>
 

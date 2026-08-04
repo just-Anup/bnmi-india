@@ -29,6 +29,9 @@ export default function VerifyCertificate() {
   const [loading, setLoading] = useState(true);
   const [percentage, setPercentage] = useState(null);
   const [isMultiple, setIsMultiple] = useState(false);
+  const [isSemester, setIsSemester] = useState(false);
+
+  const [semesterResults, setSemesterResults] = useState([]);
 
   // =========================
   // FETCH DATA
@@ -37,100 +40,115 @@ export default function VerifyCertificate() {
 
     if (!id) return;
 
-const fetchAll = async () => {
-
-  try {
-
-    // =========================
-    // CERTIFICATE ONLY
-    // =========================
-    const certRes = await databases.listDocuments(
-      DATABASE_ID,
-      "certificates",
-      [Query.equal("studentId", id)]
-    );
-
-    if (!certRes.documents.length) {
-      setData(false);
-      return;
-    }
-
-    const certificate = certRes.documents[0];
-
-    // =========================
-    // FRANCHISE
-    // =========================
-    let franchise = null;
-
-    if (certificate.franchiseId) {
+    const fetchAll = async () => {
 
       try {
 
-        const res = await databases.getDocument(
+        // =========================
+        // CERTIFICATE ONLY
+        // =========================
+        const certRes = await databases.listDocuments(
           DATABASE_ID,
-          "franchise_approved",
-          certificate.franchiseId
+          "certificates",
+          [Query.equal("studentId", id)]
         );
 
-        franchise = res;
+        if (!certRes.documents.length) {
+          setData(false);
+          return;
+        }
 
+        const certificate = certRes.documents[0];
+
+        // =========================
+        // FRANCHISE
+        // =========================
+        let franchise = null;
+
+        if (certificate.franchiseId) {
+
+          try {
+
+            const res = await databases.getDocument(
+              DATABASE_ID,
+              "franchise_approved",
+              certificate.franchiseId
+            );
+
+            franchise = res;
+
+          } catch (err) {
+            console.log(err);
+          }
+
+        }
+
+        // =========================
+        // CREATE STUDENT OBJECT
+        // =========================
+        const student = {
+
+          studentName:
+            certificate.studentName || "",
+
+          fatherName:
+            certificate.fatherName || "",
+
+          motherName:
+            certificate.motherName || "",
+
+          courseName:
+            certificate.course || "",
+
+          instituteName:
+            certificate.instituteName || "",
+
+          photoId:
+            certificate.photoId || "",
+
+          duration:
+            certificate.duration || "",
+
+          courseDuration:
+certificate.coursePeriod ||
+certificate.duration|| ""
+
+        };
+
+        setData({
+          student,
+          certificate,
+          franchise,
+          courseDuration:
+            certificate.coursePeriod || ""
+        });
+
+       const admission =
+await databases.getDocument(
+DATABASE_ID,
+"student_admissions",
+id
+);
+
+if (admission.courseType === "semester") {
+   setIsSemester(true);
+}else {
+
+          setIsSemester(false);
+
+        }
       } catch (err) {
+
         console.log(err);
+        setData(false);
+
+      } finally {
+
+        setLoading(false);
+
       }
 
-    }
-
-    // =========================
-    // CREATE STUDENT OBJECT
-    // =========================
-    const student = {
-
-      studentName:
-        certificate.studentName || "",
-
-      fatherName:
-        certificate.fatherName || "",
-
-      motherName:
-        certificate.motherName || "",
-
-      courseName:
-        certificate.course || "",
-
-      instituteName:
-        certificate.instituteName || "",
-
-      photoId:
-        certificate.photoId || "",
-
-      duration:
-        certificate.duration || "",
-
-      courseDuration:
-        certificate.coursePeriod || ""
-
     };
-
-    setData({
-      student,
-      certificate,
-      franchise,
-      courseDuration:
-        certificate.coursePeriod || ""
-    });
-
-  } catch (err) {
-
-    console.log(err);
-    setData(false);
-
-  } finally {
-
-    setLoading(false);
-
-  }
-
-};
     fetchAll();
 
   }, [id]);
@@ -182,6 +200,66 @@ const fetchAll = async () => {
 
     fetchPercentage();
 
+    useEffect(() => {
+
+      const loadSemesterResults = async () => {
+
+        if (!id) return;
+
+        try {
+
+          const res =
+            await databases.listDocuments(
+
+              DATABASE_ID,
+
+              "exam_results",
+
+              [
+
+                Query.equal(
+                  "studentId",
+                  id
+                ),
+
+                Query.equal(
+                  "resultStatus",
+                  "Approved"
+                ),
+
+                Query.equal(
+                  "certificateApplied",
+                  true
+                ),
+
+                Query.orderAsc(
+                  "semesterNumber"
+                )
+
+              ]
+
+            );
+
+          setSemesterResults(
+            res.documents
+          );
+
+        } catch (err) {
+
+          console.log(err);
+
+        }
+
+      };
+
+      if (isSemester) {
+
+        loadSemesterResults();
+
+      }
+
+    }, [id, isSemester]);
+
   }, [id]);
 
   // =========================
@@ -232,17 +310,17 @@ const fetchAll = async () => {
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  
 
-  
+
+
 
   // =========================
   // LOGO
   // =========================
- const logoUrl =
-  certificate?.logo ||
-  franchise?.logo ||
-  null;
+  const logoUrl =
+    certificate?.logo ||
+    franchise?.logo ||
+    null;
   // =========================
   // DATE FORMAT
   // =========================
@@ -271,16 +349,16 @@ const fetchAll = async () => {
     }
   };
 
-// ✅ ISSUE DATE FROM CERTIFICATE DB
-const finalIssueDate =
-  certificate?.issueDate || "";
+  // ✅ ISSUE DATE FROM CERTIFICATE DB
+  const finalIssueDate =
+    certificate?.issueDate || "";
 
 
   // ✅ DURATION FROM DB
-const finalDuration =
-  certificate?.coursePeriod ||
-  certificate?.duration ||
-  "N/A";
+  const finalDuration =
+    certificate?.coursePeriod ||
+    certificate?.duration ||
+    "N/A";
 
   return (
 
@@ -341,11 +419,11 @@ const finalDuration =
 
               <div className="text-[18px] font-medium text-gray-700">
                 {
-  certificate?.course ||
-  student.courseName ||
-  student.course ||
-  "N/A"
-}
+                  certificate?.course ||
+                  student.courseName ||
+                  student.course ||
+                  "N/A"
+                }
               </div>
 
             </div>
@@ -429,12 +507,20 @@ const finalDuration =
 
             <span className="font-medium">
 
-              {isMultiple
-                ? percentage
-                  ? `${percentage}%`
-                  : "N/A"
-                : certificate?.marks || "N/A"}
-  
+              {isSemester
+
+                ? `${certificate?.overallPercentage || certificate?.marks}%`
+
+                : isMultiple
+
+                  ? percentage
+                    ? `${percentage}%`
+                    : "N/A"
+
+                  : certificate?.marks || "N/A"
+
+              }
+
 
             </span>
 
@@ -454,10 +540,14 @@ const finalDuration =
             </div>
 
             <span className="font-medium">
-             {
- certificate?.grade || "N/A"
+              {
+                isSemester
 
-}
+                  ? certificate?.overallGrade || certificate?.grade
+
+                  : certificate?.grade || "N/A"
+
+              }
             </span>
 
           </div>
@@ -500,11 +590,11 @@ const finalDuration =
             </div>
 
             <span className="font-medium text-right">
-             {
-  certificate?.instituteName ||
-  student.instituteName ||
-  "N/A"
-}
+              {
+                certificate?.instituteName ||
+                student.instituteName ||
+                "N/A"
+              }
             </span>
 
           </div>
@@ -567,6 +657,60 @@ const finalDuration =
           </div>
 
         </div>
+
+        {isSemester && (
+
+          <div className="mx-6 mt-6 border rounded-2xl p-5">
+
+            <h2 className="font-bold text-xl mb-4">
+
+              Approved Semester
+
+            </h2>
+
+            <div className="space-y-3">
+
+              {semesterResults.map((sem) => (
+
+                <button
+
+                  key={sem.$id}
+
+                  onClick={() => {
+
+                    localStorage.setItem(
+
+                      "marksheetStudent",
+
+                      JSON.stringify(sem)
+
+                    );
+
+                    window.open(
+
+                      "/print-semester-marksheet",
+
+                      "_blank"
+
+                    );
+
+                  }}
+
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl"
+
+                >
+
+                  Semester {sem.semesterNumber}
+
+                </button>
+
+              ))}
+
+            </div>
+
+          </div>
+
+        )}
 
         {/* VERIFIED BOTTOM */}
         <div className="mx-6 mb-8 bg-green-50 border border-green-300 rounded-2xl p-5 flex gap-4">

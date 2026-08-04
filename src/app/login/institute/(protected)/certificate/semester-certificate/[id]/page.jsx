@@ -99,8 +99,8 @@ useEffect(() => {
 
       // ✅ VERIFY URL
       const verifyUrl =
-        cert.verifyUrl ||
-        `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+  cert.verifyUrl ||
+  `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
       // ✅ QR
       let qrCodeImage =
@@ -146,22 +146,21 @@ useEffect(() => {
           studentData.motherName ||
           "",
 
-        course:
-          cert.course ||
-          studentData.courseName ||
-          "",
+course:
+cert.course ||
+studentData.courseDisplayName ||
+studentData.courseName,
 
         duration:
-          cert.duration ||
-          studentData.duration ||
-          studentData.courseDuration ||
-          "",
+studentData.courseDuration ||
+cert.duration ||
+studentData.duration,
 
-        grade:
-          cert.grade || "",
+      marks:
+  cert.overallPercentage || cert.marks || "",
 
-        marks:
-          cert.marks || "",
+grade:
+  cert.overallGrade || cert.grade || "",
 
         instituteName:
           cert.instituteName ||
@@ -444,7 +443,7 @@ useEffect(() => {
       <div className="relative w-[900px] h-[1200px] mx-auto">
 
         {/* TEMPLATE */}
-        <img src="/beautycerti.png" className="absolute w-full h-full" />
+        <img src="/certificate.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
             {student?.logo && (
@@ -501,9 +500,13 @@ useEffect(() => {
 
         {/* ✅ COURSE DURATION (FIXED) */}
         <div className="absolute top-[857px] left-[300px]  font-semibold">
-          Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "1 year"
-          )}
+         Course Duration:
+{
+student.coursePeriod ||
+getCourseDuration(
+student.duration
+)
+}
         </div>
 
         {/* GRADE */}

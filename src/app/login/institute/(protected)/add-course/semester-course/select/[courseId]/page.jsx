@@ -207,6 +207,10 @@ const toggleSubject = (subject) => {
   const saveCourse =
     async () => {
 
+       if (loading) return;
+
+  setLoading(true);
+
       try {
 
         setLoading(true);
@@ -352,6 +356,11 @@ for (
   );
 
 }
+console.log(
+  "Saving Subject:",
+  subject.subjectName,
+  subject.semesterNumber
+);
         alert(
           "Semester Course Added"
         );

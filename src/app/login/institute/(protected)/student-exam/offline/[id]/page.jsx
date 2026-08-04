@@ -27,14 +27,20 @@ export default function ResultPage() {
   }, [id]);
 
 useEffect(() => {
-  if (
-    student?.courseType === "semester" &&
-    student?.courseCode &&
-    selectedSem
-  ) {
-    loadSemesterSubjects(student.courseCode, selectedSem);
-  }
-}, [selectedSem, student]);
+  const initSemester = async () => {
+    if (
+      student?.courseType === "semester" &&
+      student?.courseCode &&
+      selectedSem
+    ) {
+      await loadSemesterSubjects(student.courseCode, selectedSem, student.franchiseEmail
+);
+      await loadExistingResult(id, selectedSem);
+    }
+  };
+
+  initSemester();
+}, [selectedSem, student, id]);
 
 
 const loadStudent = async () => {
@@ -88,16 +94,17 @@ if (res.courseType === "semester") {
   }
 
   // ✅ STORE COURSE CODE
-  setStudent((prev) => ({
-    ...prev,
-    courseCode
-  }));
+ res.courseCode = courseCode;
+setStudent(res);
+
+setSelectedSem(res.currentSemester || 1);
 
   // ✅ LOAD FIRST SEMESTER
-  await loadSemesterSubjects(courseCode, 1);
+  
 
   return;
 }
+
 
     // ✅ OLD LOGIC (UNCHANGED)
  let subjectList = [];
@@ -164,9 +171,71 @@ else if (res.courseType === "multiple") {
   }
 };
 
+  const loadExistingResult = async (
+  studentId,
+  semester
+) => {
+
+  try {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      RESULT_COLLECTION,
+      [
+        Query.equal("studentId", studentId),
+        Query.equal(
+          "semesterNumber",
+          Number(semester)
+        ),
+        Query.limit(1)
+      ]
+    );
+
+    if (!res.documents.length) {
+
+  const blankMarks = subjects.map((sub) => ({
+    subject: sub,
+    theory: "",
+    practical: "",
+    total: 0,
+  }));
+
+  setMarks(blankMarks);
+  return;
+}
+
+    const result = res.documents[0];
+
+    const parsed =
+      typeof result.marksArray === "string"
+        ? JSON.parse(result.marksArray)
+        : result.marksArray;
+
+    const restored = parsed.map((m) => ({
+      subject: m.subject,
+      theory: Number(m.objective || 0),
+      practical: Number(m.practical || 0),
+      total: Number(m.total || 0),
+    }));
+
+    setMarks(restored);
+
+  } catch (err) {
+
+    console.log(
+      "LOAD RESULT ERROR",
+      err
+    );
+
+  }
+
+};
+
 const loadSemesterSubjects = async (
   courseCode,
-  semester
+  semester,
+  franchiseEmail
+
 ) => {
 
   try {
@@ -188,9 +257,12 @@ const loadSemesterSubjects = async (
         ),
 
         Query.equal(
-          "franchiseEmail",
-          student.franchiseEmail
-        )
+
+"franchiseEmail",
+
+franchiseEmail
+
+)
       ]
     );
 
@@ -207,9 +279,8 @@ const loadSemesterSubjects = async (
         total: 0
       }));
 
-    setSubjects(subjectList);
-    setMarks(initialMarks);
-
+setSubjects(subjectList);
+setMarks(initialMarks);
   } catch (err) {
 
     console.log(
@@ -302,6 +373,7 @@ const existingResult = await databases.listDocuments(
   RESULT_COLLECTION,
   [
     Query.equal("studentId", id),
+    Query.equal("semesterNumber", Number(selectedSem)),
     Query.limit(1),
   ]
 );
@@ -321,6 +393,11 @@ const resultData = {
   subjects: subjects.join(", "),
 
   semesterNumber: Number(selectedSem),
+  
+  status: "draft",
+
+certificateApplied: false,
+
   courseCode: student.courseCode,
   courseType: student.courseType,
 
@@ -378,6 +455,11 @@ const oldSubjects = await databases.listDocuments(
   "student_subject_results",
   [
     Query.equal("studentId", id),
+
+Query.equal(
+"semesterNumber",
+Number(selectedSem)
+),
     Query.limit(500),
   ]
 );
@@ -405,6 +487,8 @@ if (student.courseType === "multiple") {
       {
         studentId: id,
 
+        semesterNumber:
+Number(selectedSem),
         // ✅ SUBJECT COMES DIRECTLY FROM UI
         subject: m.subject,
 
@@ -432,6 +516,8 @@ if (student.courseType === "multiple") {
       ID.unique(),
       {
         studentId: id,
+        semesterNumber:
+Number(selectedSem),
         subject: m.subject || "Course",
         objective: Number(m.theory || 0),
         practical: Number(m.practical || 0),
@@ -555,6 +641,8 @@ if (student.courseType === "multiple") {
                   <td className="border p-3">
                    <input
   type="number"
+  value={marks[index]?.theory || ""}
+
   max={50}
   min={0}
   className="border p-2 w-24 bg-black text-white"
@@ -567,6 +655,7 @@ if (student.courseType === "multiple") {
                   <td className="border p-3">
                    <input
   type="number"
+  value={marks[index]?.practical || ""}
   max={50}
   min={0}
   className="border p-2 w-24 bg-black text-white"

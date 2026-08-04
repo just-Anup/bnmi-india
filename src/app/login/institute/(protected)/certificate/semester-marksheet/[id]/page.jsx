@@ -25,7 +25,11 @@ const [courseData, setCourseData] = useState(null);
     if (data) {
       const parsed = JSON.parse(data);
       setStudent(parsed);
-      fetchMarks(parsed.studentId, parsed.semesterNumber);
+      fetchMarks(
+parsed.studentId,
+parsed.semesterNumber,
+parsed.marksheetNo
+)
     }
   }, []);
 
@@ -33,7 +37,8 @@ const [courseData, setCourseData] = useState(null);
   const generateQR = async () => {
     if (!student?.studentId) return;
 
-    const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${student.studentId}?sem=${student.semesterNumber || 0}`;
+    const verifyUrl =
+  `https://www.bnmiindia.org/beauty-verification/${student.studentId}?semester=${student.semesterNumber}`;
 
     const qr = await QRCode.toDataURL(verifyUrl, {
       width: 300,
@@ -71,15 +76,34 @@ const [courseData, setCourseData] = useState(null);
   // ===============================
   // ✅ FETCH SEMESTER RESULTS
   // ===============================
-  const fetchMarks = async (studentId, semesterNumber) => {
+  const fetchMarks = async (
+
+studentId,
+
+semesterNumber,
+
+marksheetNo
+
+) => {
     try {
 
     const res = await databases.listDocuments(
   DATABASE_ID,
   "exam_results",
   [
-    Query.equal("studentId", studentId),
-    Query.equal("semesterNumber", Number(semesterNumber))
+    Query.equal(
+"studentId",
+studentId
+),
+
+Query.equal(
+"semesterNumber",
+Number(semesterNumber)
+),
+Query.equal(
+"resultStatus",
+"Approved"
+)
   ]
 );
 
@@ -89,7 +113,26 @@ const [courseData, setCourseData] = useState(null);
 
 const doc = res.documents[0];
 
-const subjects = JSON.parse(doc.marksArray || "[]");
+setStudent((prev) => ({
+
+  ...prev,
+
+  percentage: doc.percentage,
+
+  grade: doc.grade,
+
+  marksheetNo: doc.marksheetNo,
+
+  semesterNumber: doc.semesterNumber,
+
+}));
+
+const subjects =
+typeof doc.marksArray==="string"
+
+?JSON.parse(doc.marksArray)
+
+:doc.marksArray;
 
 const finalMarks = subjects.map((s) => ({
   subject: s.subject,
@@ -99,7 +142,7 @@ const finalMarks = subjects.map((s) => ({
   semester: doc.semesterNumber
 }));
 
-setMarksArray(finalMarks);
+
 
       setMarksArray(finalMarks);
 
@@ -147,17 +190,9 @@ setMarksArray(finalMarks);
     0
   );
 
-  const percentage = marksArray.length
-    ? ((total / (marksArray.length * 100)) * 100).toFixed(2)
-    : 0;
-
-  const getGrade = () => {
-    if (percentage >= 85) return "A+";
-    if (percentage >= 70) return "A";
-    if (percentage >= 55) return "B";
-    if (percentage >= 40) return "C";
-    return "F";
-  };
+  const percentage =
+student.percentage ||
+0;
 
   return (
     <div className="p-10 bg-white">
@@ -250,12 +285,12 @@ setMarksArray(finalMarks);
 
         {/* PERCENTAGE */}
         <div className="absolute bottom-[289px] left-[350px] font-bold">
-          Percentage: {percentage}%
+          Percentage: {student.percentage}%
         </div>
 
         {/* GRADE */}
         <div className="absolute bottom-[289px] left-[250px] font-bold">
-          Grade: {getGrade()}
+          Grade: {student.grade}
         </div>
 
         {/* QR */}
