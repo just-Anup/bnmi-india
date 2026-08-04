@@ -218,11 +218,11 @@ await databases.createDocument(
   ID.unique(),
   {
     franchiseId: franchise.$id,
-    amount: 150,
+    amount: "150",
     type: "deduct",
     paymentMode: "Certificate Order",
     rechargeBy: "System",
-    leadBy: "",
+    
     remarks: `Certificate Order - ${students.length} Certificate(s)`,
     date: new Date().toISOString()
   }

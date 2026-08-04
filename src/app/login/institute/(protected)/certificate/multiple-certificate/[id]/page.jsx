@@ -409,7 +409,7 @@ const saveCertificate = async () => {
 
         grade: student.grade,
 
-        marks: student.marks,
+        
       }
     );
 
@@ -784,14 +784,12 @@ const grade = getGrade(percentage);
     />
 
     <input
-      type="text"
-      value={student.marks || ""}
-      onChange={(e) =>
-        handleChange("marks", e.target.value)
-      }
-      placeholder="Marks"
-      className="border p-3 rounded"
-    />
+  type="number"
+  value={student.marks ?? ""}
+  onChange={(e) =>
+    handleChange("marks", Number(e.target.value))
+  }
+/>
 
     <input
       type="text"
