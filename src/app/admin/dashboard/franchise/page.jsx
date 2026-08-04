@@ -989,7 +989,7 @@ placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pinco
   </span>
 
   <span className="bg-orange-100 text-orange-700 px-5 py-3 rounded-xl text-base font-bold shadow-sm">
-    Courier: ₹{stats[req.email]?.courier || 0}
+    Courier Wallet: ₹{req.courierWallet || "0.00"}
   </span>
 
 </div>

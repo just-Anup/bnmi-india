@@ -194,10 +194,10 @@ const franchise = await databases.getDocument(
   students[0].franchiseId
 );
 
-const currentWallet = Number(franchise.wallet || 0);
+const currentCourierWallet = Number(franchise.courierWallet || 0);
 
-if (currentWallet < 150) {
-  alert("Insufficient Wallet Balance. Please recharge your wallet.");
+if (currentCourierWallet < 150) {
+  alert("Insufficient Courier Wallet Balance. Please recharge your courier wallet.");
   setOrdering(false);
   return;
 }
@@ -207,14 +207,14 @@ await databases.updateDocument(
   "franchise_approved",
   franchise.$id,
   {
-    wallet: (currentWallet - 150).toFixed(2),
-    lastRecharge: new Date().toLocaleString()
+    courierWallet: (currentCourierWallet - 150).toFixed(2),
+    lastCourierRecharge: new Date().toLocaleString()
   }
 );
 
 await databases.createDocument(
   DATABASE_ID,
-  "wallet_transactions",
+  "courier_transactions",
   ID.unique(),
   {
     franchiseId: franchise.$id,
