@@ -444,9 +444,39 @@ console.log("UPDATED:", updatedDoc.$id);
     resultData
 );
 
+
 console.log("CREATED:", newResult.$id);
 
 resultId = newResult.$id;
+
+}
+
+// ===============================
+// UPDATE CERTIFICATE
+// ===============================
+
+const cert = await databases.listDocuments(
+  DATABASE_ID,
+  "certificates",
+  [
+    Query.equal("studentId", id),
+    Query.limit(1),
+  ]
+);
+
+if (cert.documents.length > 0) {
+
+  await databases.updateDocument(
+    DATABASE_ID,
+    "certificates",
+    cert.documents[0].$id,
+    {
+      marks: Number(totalMarks),
+            percentage: Number(percentage),
+
+      grade: grade,
+    }
+  );
 
 }
 

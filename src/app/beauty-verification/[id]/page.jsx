@@ -259,7 +259,7 @@ if (admission.courseType === "semester") {
       if (isSemester) {
 
         loadSemesterResults();
-
+        
       }
 
     }, [id, isSemester]);
