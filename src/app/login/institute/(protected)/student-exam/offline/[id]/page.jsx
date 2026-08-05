@@ -472,7 +472,7 @@ if (cert.documents.length > 0) {
     cert.documents[0].$id,
     {
       marks: Number(totalMarks),
-            percentage: Number(percentage),
+            
 
       grade: grade,
     }

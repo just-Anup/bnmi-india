@@ -157,6 +157,13 @@ updated[semesterIndex].subjects.push({
     setSemesters(updated);
   };
 
+  const finalAward =
+  award === "OTHER"
+    ? customAward
+    : award;
+
+
+
   // SAVE COURSE
   const saveCourse = async () => {
 
@@ -221,10 +228,6 @@ if (franchiseRes.documents.length > 0) {
   }
 }
 
-const finalAward =
-  award === "OTHER"
-    ? customAward
-    : award;
 
       // SAVE COURSE
 if (isEditing) {
@@ -528,25 +531,35 @@ const handleEdit = async (course) => {
     className="input"
   />
 
-  <select
-    value={award}
-    onChange={(e) => setAward(e.target.value)}
-    className="input"
-     style={{
+ <select
+  value={award}
+  onChange={(e) => setAward(e.target.value)}
+  className="input"
+  style={{
     color: "white",
     backgroundColor: "#1f1f23",
   }}
-  >
-    <option value="">-- Select Award --</option>
+>
+  <option value="">-- Select Award --</option>
 
-    {awardList.map((a, i) => (
-      <option key={i} value={a}>
-        {a}
-      </option>
-    ))}
+  {awardList.map((a, i) => (
+    <option key={i} value={a}>
+      {a}
+    </option>
+  ))}
 
-    <option value="OTHER">Other</option>
-  </select>
+  <option value="OTHER">Other</option>
+</select>
+
+{award === "OTHER" && (
+  <input
+    type="text"
+    placeholder="Enter Award"
+    value={customAward}
+    onChange={(e) => setCustomAward(e.target.value)}
+    className="input mt-4"
+  />
+)}
 
   <input
     type="text"
