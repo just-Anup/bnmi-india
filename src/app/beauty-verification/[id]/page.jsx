@@ -200,7 +200,11 @@ if (admission.courseType === "semester") {
 
     fetchPercentage();
 
-    useEffect(() => {
+ 
+
+  }, [id]);
+
+     useEffect(() => {
 
       const loadSemesterResults = async () => {
 
@@ -259,8 +263,6 @@ if (admission.courseType === "semester") {
       }
 
     }, [id, isSemester]);
-
-  }, [id]);
 
   // =========================
   // LOADING
