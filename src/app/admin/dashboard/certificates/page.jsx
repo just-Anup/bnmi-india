@@ -1005,15 +1005,20 @@ grade: avg.grade
           `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
         // ✅ AUTO GRADE FROM MARKS
-        const marks = Number(cert.marks);
+  // ✅ AUTO GRADE FROM PERCENTAGE
+const marks = Number(
+  cert.percentage ??
+  cert.overallPercentage ??
+  cert.marks ??
+  0
+);
 
-        let finalGrade = "F";
+let finalGrade = "F";
 
-        if (marks >= 85) finalGrade = "A+";
-        else if (marks >= 70) finalGrade = "A";
-        else if (marks >= 55) finalGrade = "B";
-        else if (marks >= 40) finalGrade = "C";
-
+if (marks >= 85) finalGrade = "A+";
+else if (marks >= 70) finalGrade = "A";
+else if (marks >= 55) finalGrade = "B";
+else if (marks >= 40) finalGrade = "C";
 
 
         // ✅ AUTO GENERATE COURSE DURATION

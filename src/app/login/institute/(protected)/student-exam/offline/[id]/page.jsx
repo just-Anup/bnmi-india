@@ -471,11 +471,11 @@ if (cert.documents.length > 0) {
     "certificates",
     cert.documents[0].$id,
     {
-      marks: Number(totalMarks),
-            
-
-      grade: grade,
-    }
+    totalMarks: Number(totalMarks),
+    percentage: Number(percentage),
+    marks: Number(percentage),
+    grade: grade,
+}
   );
 
 }

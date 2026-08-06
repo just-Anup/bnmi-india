@@ -144,17 +144,19 @@ if (existingCert.documents.length > 0) {
         DATABASE_ID,
         CERT_COLLECTION,
         existingCert.documents[0].$id,
-        {
-            semesterNumber: Number(student.semesterNumber),
+      {
+    semesterNumber: Number(student.semesterNumber),
 
-            totalMarks: student.totalMarks || 0,
+    totalMarks: student.totalMarks || 0,
 
-            percentage: student.percentage || 0,
+    percentage: student.percentage || 0,
 
-            grade: student.grade || "",
+    marks: student.percentage || 0,
 
-            overallPercentage: student.percentage || 0
-        }
+    grade: student.grade || "",
+
+    overallPercentage: student.percentage || 0
+}
     );
 
 } else {
@@ -181,9 +183,10 @@ if (existingCert.documents.length > 0) {
 
             photoId: student.photoId || "",
 
-            totalMarks: student.totalMarks || 0,
-            percentage: student.percentage || 0,
-            grade: student.grade || "",
+           totalMarks: student.totalMarks || 0,
+percentage: student.percentage || 0,
+marks: student.percentage || 0,
+grade: student.grade || "",
 
             status: "pending",
 
