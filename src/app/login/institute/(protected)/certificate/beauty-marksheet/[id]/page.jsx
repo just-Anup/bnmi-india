@@ -407,19 +407,19 @@ const rect = node.getBoundingClientRect();
     whiteSpace: "normal",
   }}
 >
-  {m.subject
-    ?.split(/\d+\.\s/)
-    .filter(Boolean)
-    .map((sub, i) => (
-      <div
-        key={i}
-        style={{
-          marginBottom: "8px",
-        }}
-      >
-        {i + 1}. {sub.trim()}
-      </div>
-    ))}
+ {m.subject
+  ?.split("\n")
+  .filter(line => line.trim() !== "")
+  .map((line, i) => (
+    <div
+      key={i}
+      style={{
+        marginBottom: "6px"
+      }}
+    >
+      {i + 1}. {line.trim()}
+    </div>
+))}
 </div>
             <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
               {m.objective}
