@@ -859,11 +859,11 @@ grade: avg.grade
   `CERT-${Date.now()}`;
 
       // 5. Issue Date
-      const issueDate =
-          cert.issueDate ||
-          new Date()
-              .toLocaleDateString("en-GB")
-              .replace(/\//g, "-");
+    const issueDate =
+  cert.issueDate ||
+  new Date()
+    .toLocaleDateString("en-GB")
+    .replace(/\//g, "-");
 
       // 6. Verification URL
       const verifyUrl =
@@ -994,12 +994,11 @@ grade: avg.grade
           `CERT-${Date.now()}`;
 
         // ✅ ISSUE DATE
-      const issueDate =
-      cert.issueDate ??
-      new Date()
-        .toLocaleDateString("en-GB")
-        .replace(/\//g, "-");
-
+    const issueDate =
+  cert.issueDate ||
+  new Date()
+    .toLocaleDateString("en-GB")
+    .replace(/\//g, "-");
         // ✅ VERIFY URL
         const verifyUrl =
           `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
