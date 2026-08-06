@@ -460,7 +460,7 @@ fetchMarks(cert.studentId, finalData);
           {student.course}
         </div>
 
-        <div className="absolute top-[432px] left-[330px] font-bold text-lg">
+        <div className="absolute top-[432px] left-[330px] font-semibold">
           {student.instituteName}
         </div>
 
@@ -603,18 +603,29 @@ fetchMarks(cert.studentId, finalData);
                   }}
                 >
 
-                  {marksArray.map((s, i) => (
+                {marksArray.map((s, i) => (
 
-                    <div
-                      key={i}
-                      style={{
-                        marginBottom: "8px",
-                      }}
-                    >
-                      {i + 1}. {s.subject}
-                    </div>
+  <div key={i}>
 
-                  ))}
+    {(s.subject || "")
+      .split("\n")
+      .filter(line => line.trim() !== "")
+      .map((line, j) => (
+
+        <div
+          key={j}
+          style={{
+            marginBottom: "8px",
+          }}
+        >
+          {j + 1}. {line.trim()}
+        </div>
+
+      ))}
+
+  </div>
+
+))}
 
                 </div>
 
