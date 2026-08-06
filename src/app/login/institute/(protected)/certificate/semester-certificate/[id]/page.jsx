@@ -2,15 +2,18 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import QRCode from "qrcode";
 import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import { useParams } from "next/navigation";
+import * as htmlToImage from "html-to-image";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function PrintCertificate() {
+
+  const printRef = useRef(null);
 
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
@@ -37,44 +40,72 @@ useEffect(() => {
       );
 
       // ✅ STUDENT
-      const studentData = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+    let studentData = null;
+
+const needStudentData =
+  !cert.studentName ||
+  !cert.fatherName ||
+  !cert.motherName ||
+  !cert.photoId ||
+  !cert.signatureId ||
+  !cert.relationType ||
+  cert.showFatherInCertificate === undefined ||
+  cert.showMotherInCertificate === undefined ||
+  !cert.dob ||
+  !cert.course ||
+  !cert.duration ||
+  !cert.coursePeriod ||
+  !cert.surname;
+
+if (needStudentData) {
+  studentData = await databases.getDocument(
+    process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+    "student_admissions",
+    cert.studentId
+  );
+}
 
       // ✅ FRANCHISE
-      let franchiseData = null;
+   let franchiseData = null;
 
-      try {
+try {
 
-        const franchiseRes =
-          await databases.listDocuments(
-            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-            "franchise_approved",
-            [
-              Query.equal(
-                "email",
-                studentData.franchiseEmail
-              )
-            ]
-          );
+  const needFranchiseData =
+    !cert.logo ||
+    !cert.ownerName ||
+    !cert.franchiseSignature ||
+    !cert.city;
 
-        if (franchiseRes.documents.length > 0) {
+  if (needFranchiseData) {
 
-          franchiseData =
-            franchiseRes.documents[0];
-        }
+    const franchiseEmail =
+      cert.franchiseEmail ||
+      studentData?.franchiseEmail;
 
-      } catch (err) {
+    if (franchiseEmail) {
 
-        console.log(
-          "FRANCHISE ERROR:",
-          err
+      const franchiseRes =
+        await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal("email", franchiseEmail)
+          ]
         );
 
+      if (franchiseRes.documents.length > 0) {
+        franchiseData = franchiseRes.documents[0];
       }
 
+    }
+
+  }
+
+} catch (err) {
+  console.log("FRANCHISE ERROR:", err);
+}
+
+      
       // ✅ ISSUE DATE
       let formattedIssueDate = "";
 
@@ -126,103 +157,149 @@ useEffect(() => {
       }
 
       // ✅ FINAL DATA
-      const finalData = {
+ const finalData = {
+  ...(studentData || {}),
+  ...(cert || {}),
 
-        ...studentData,
-        ...cert,
+  studentId: cert.studentId,
 
-        studentName:
-          cert.studentName ||
-          studentData.studentName ||
-          "",
+  studentName:
+    cert.studentName ||
+    studentData?.studentName ||
+    "",
 
-        fatherName:
-          cert.fatherName ||
-          studentData.fatherName ||
-          "",
+  fatherName:
+    cert.fatherName ||
+    studentData?.fatherName ||
+    "",
 
-        motherName:
-          cert.motherName ||
-          studentData.motherName ||
-          "",
+  motherName:
+    cert.motherName ||
+    studentData?.motherName ||
+    "",
 
-course:
-cert.course ||
-studentData.courseDisplayName ||
-studentData.courseName,
+  surname:
+    cert.surname ||
+    studentData?.surname ||
+    "",
 
-        duration:
-studentData.courseDuration ||
-cert.duration ||
-studentData.duration,
+  relationType:
+    cert.relationType ||
+    studentData?.relationType ||
+    "S/O",
 
-      marks:
-  cert.overallPercentage || cert.marks || "",
+  showFatherInCertificate:
+    String(
+      cert.showFatherInCertificate ??
+      studentData?.showFatherInCertificate
+    ).toLowerCase() === "true",
 
-grade:
-  cert.overallGrade || cert.grade || "",
+  showMotherInCertificate:
+    String(
+      cert.showMotherInCertificate ??
+      studentData?.showMotherInCertificate
+    ).toLowerCase() === "true",
 
-        instituteName:
-          cert.instituteName ||
-          studentData.instituteName ||
-          "",
+  course:
+    cert.course ||
+    studentData?.courseDisplayName ||
+    studentData?.courseName ||
+    "",
 
-        city:
-          cert.city ||
-          franchiseData?.city ||
-          franchiseData?.address ||
-          "",
+  duration:
+    cert.duration ||
+    studentData?.courseDuration ||
+    studentData?.duration ||
+    "",
 
-        qrCode:
-          qrCodeImage || "",
+  coursePeriod:
+    cert.coursePeriod ||
+    studentData?.coursePeriod ||
+    "",
 
-        verifyUrl,
+  // ✅ Semester uses overall values
+  marks:
+    cert.overallPercentage ??
+    cert.marks ??
+    "",
 
-        certificateNo:
-          cert.certificateNo || "",
+  percentage:
+    cert.overallPercentage ??
+    cert.percentage ??
+    "",
 
-        issueDate:
-          formattedIssueDate || "",
+  grade:
+    cert.overallGrade ||
+    cert.grade ||
+    "",
 
-        logo:
-          cert.logo ||
-          franchiseData?.logo ||
-          "",
+  overallPercentage:
+    cert.overallPercentage ??
+    "",
 
-        ownerName:
-          cert.ownerName ||
-          franchiseData?.ownerName ||
-          franchiseData?.owner ||
-          franchiseData?.name ||
-          "Controller",
+  overallGrade:
+    cert.overallGrade ??
+    "",
 
-        franchiseSignature:
-  franchiseData?.signature ||
-  franchiseData?.franchiseSignature ||
-  cert.franchiseSignature ||
-  "",
+  dob:
+    cert.dob ||
+    studentData?.dob ||
+    "",
 
+  instituteName:
+    cert.instituteName ||
+    studentData?.instituteName ||
+    "",
 
-        photoId:
-          studentData.photoId || "",
+  certificateNo:
+    cert.certificateNo ||
+    "",
 
-        signatureId:
-          studentData.signatureId || "",
+  marksheetNo:
+    cert.marksheetNo ||
+    cert.certificateNo ||
+    "",
 
-        relationType:
-          studentData.relationType ||
-          "S/O",
+  issueDate:
+    formattedIssueDate,
 
-        showFatherInCertificate:
-          String(
-            studentData.showFatherInCertificate
-          ).toLowerCase() === "true",
+  logo:
+    cert.logo ||
+    franchiseData?.logo ||
+    "",
 
-        showMotherInCertificate:
-          String(
-            studentData.showMotherInCertificate
-          ).toLowerCase() === "true"
-      };
+  ownerName:
+    cert.ownerName ||
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "",
+
+  franchiseSignature:
+    cert.franchiseSignature ||
+    franchiseData?.signature ||
+    "",
+
+  city:
+    cert.city ||
+    franchiseData?.city ||
+    franchiseData?.address ||
+    "",
+
+  photoId:
+    cert.photoId ||
+    studentData?.photoId ||
+    "",
+
+  signatureId:
+    cert.signatureId ||
+    studentData?.signatureId ||
+    "",
+
+  qrCode: qrCodeImage,
+
+  verifyUrl
+};
 
       setStudent(finalData);
 
@@ -305,18 +382,40 @@ grade:
 
   return `${format(start)} To ${format(end)}`;
 };
-  const printPage = () => window.print();
+  const handleDownload = async () => {
+  try {
+    const node = printRef.current;
+
+    if (!node) return;
+
+    const rect = node.getBoundingClientRect();
+
+    const dataUrl = await htmlToImage.toPng(node, {
+      pixelRatio: 3,
+      width: rect.width,
+      height: rect.height,
+      cacheBust: true,
+    });
+
+    const link = document.createElement("a");
+    link.download = `${student.studentName}_certificate.png`;
+    link.href = dataUrl;
+    link.click();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   return (
 
     <div className="p-10">
 
-      <button
-        onClick={printPage}
-        className="bg-blue-600 text-white px-6 py-2 mb-6"
-      >
-        Print Certificate
-      </button>
+    <button
+    onClick={handleDownload}
+    className="bg-green-600 text-white px-6 py-2 mb-6 rounded-lg"
+>
+    Download Certificate
+</button>
 
 
       {/* EDIT BUTTON */}
@@ -440,7 +539,10 @@ grade:
 
 )}
 
-      <div className="relative w-[900px] h-[1200px] mx-auto">
+      <div
+    ref={printRef}
+    className="relative w-[900px] h-[1200px] mx-auto bg-white"
+>
 
         {/* TEMPLATE */}
         <img src="/certificate.png" className="absolute w-full h-full" />
@@ -465,7 +567,7 @@ grade:
 
    
 {/* NAME */}
-<div className="absolute top-[660px] left-[10px] w-full text-center">
+<div className="absolute top-[650px] left-[10px] w-full text-center">
 
   <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
@@ -475,18 +577,18 @@ grade:
     </span>
 
     {/* FATHER NAME */}
-    {student.showFatherInCertificate && (
-      <span className="text-3xl font-semibold">
-        {student.relationType || "S/O"} {student.fatherName || ""}
-      </span>
-    )}
+  {String(student.showFatherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.fatherName}
+  </span>
+)}
 
     {/* MOTHER NAME */}
-   {student.showMotherInCertificate && (
-      <span className="text-3xl font-semibold">
-        M/O {student.motherName || ""}
-      </span>
-    )}
+ {String(student.showMotherInCertificate).toLowerCase() === "true" && (
+  <span className="text-3xl font-semibold">
+    {student.relationType} {student.motherName}
+  </span>
+)}
 
   </div>
 
@@ -494,20 +596,34 @@ grade:
 
 
         {/* COURSE */}
-        <div className="absolute top-[837px] left-[300px] font-semibold">
-          Course Name: {student.course}
-        </div>
+       <div
+  className="absolute top-[827px] left-0 w-full px-16"
+>
+  <div
+    className="text-center font-bold text-[18px] leading-tight"
+    style={{
+      wordBreak: "break-word",
+      overflowWrap: "break-word",
+      whiteSpace: "normal",
+    }}
+  >
+    {student.course || "N/A"}
+  </div>
+</div>
 
         {/* ✅ COURSE DURATION (FIXED) */}
-        <div className="absolute top-[857px] left-[300px]  font-semibold">
-         Course Duration:
-{
-student.coursePeriod ||
-getCourseDuration(
-student.duration
-)
-}
-        </div>
+      <div
+  className="absolute top-[848px] left-0 w-full text-center font-semibold"
+>
+  Course Period: {student.duration || "N/A"}
+</div>
+
+{/* COURSE DURATION */}
+<div
+  className="absolute top-[870px] left-0 w-full text-center font-semibold"
+>
+  Course Duration: {student.coursePeriod || "N/A"}
+</div>
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[550px] font-bold text-2xl">
@@ -516,7 +632,7 @@ student.duration
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[680px] font-bold text-2xl">
-          {student.marks}
+          {student.marks}%
         </div>
 
         {/* QR */}
@@ -539,10 +655,19 @@ student.duration
         </div>
 
         {/* INSTITUTE + CITY */}
-        <div className="absolute bottom-[440px] left-[150px] text-4xl font-bold text-red-700">
-
-          ATC: {student.instituteName} | {[ student.city].filter(Boolean).join(", ")}
-        </div>
+        <div
+  className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
+  style={{
+    fontSize: "25px",
+    lineHeight: "32px",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    whiteSpace: "normal",
+  }}
+>
+  ATC: {student.instituteName} |{" "}
+  {[student.city].filter(Boolean).join(", ")}
+</div>
 
         {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">

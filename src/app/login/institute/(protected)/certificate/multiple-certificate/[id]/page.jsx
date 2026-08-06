@@ -924,7 +924,7 @@ const grade = getGrade(percentage);
 
         {/* MARKS */}
         <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {percentage}%
+          {percentage} %
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}

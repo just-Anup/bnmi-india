@@ -24,7 +24,17 @@ const [courseData, setCourseData] = useState(null);
 
     if (data) {
       const parsed = JSON.parse(data);
-      setStudent(parsed);
+      setStudent({
+    ...parsed,
+
+    coursePeriod: parsed.coursePeriod || parsed.duration,
+    logo: parsed.logo,
+    franchiseSignature: parsed.franchiseSignature,
+    ownerName: parsed.ownerName,
+    city: parsed.city,
+    certificateNo: parsed.certificateNo,
+    marksheetNo: parsed.marksheetNo || parsed.certificateNo,
+});
       fetchMarks(
 parsed.studentId,
 parsed.semesterNumber,
@@ -113,26 +123,20 @@ Query.equal(
 
 const doc = res.documents[0];
 
-setStudent((prev) => ({
-
+setStudent(prev => ({
   ...prev,
-
   percentage: doc.percentage,
-
   grade: doc.grade,
-
-  marksheetNo: doc.marksheetNo,
-
+  marksheetNo: doc.marksheetNo || prev.certificateNo,
   semesterNumber: doc.semesterNumber,
-
 }));
-
+  
 const subjects =
-typeof doc.marksArray==="string"
+typeof doc.marksArray === "string"
+    ? JSON.parse(doc.marksArray || "[]")
+    : (doc.marksArray || []);
 
-?JSON.parse(doc.marksArray)
-
-:doc.marksArray;
+    console.log("Semester Marks:", subjects);
 
 const finalMarks = subjects.map((s) => ({
   subject: s.subject,
@@ -159,26 +163,43 @@ const finalMarks = subjects.map((s) => ({
   // ===============================
   // ✅ DOWNLOAD
   // ===============================
-  const handleDownload = async () => {
-    try {
-      const node = printRef.current;
-      const rect = node.getBoundingClientRect();
+ const handleDownload = async () => {
+  try {
+    const node = printRef.current;
+    if (!node) return;
 
-      const dataUrl = await htmlToImage.toPng(node, {
-        pixelRatio: 3,
-        width: rect.width,
-        height: rect.height
-      });
+    // Wait until all images are loaded
+    const images = node.querySelectorAll("img");
 
-      const link = document.createElement("a");
-      link.download = `${student.studentName}_marksheet.png`;
-      link.href = dataUrl;
-      link.click();
+    await Promise.all(
+      Array.from(images).map((img) => {
+        if (img.complete) return Promise.resolve();
 
-    } catch (err) {
-      console.log(err);
-    }
-  };
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
+    const dataUrl = await htmlToImage.toPng(node, {
+      cacheBust: true,
+      pixelRatio: 4,
+      backgroundColor: "#ffffff",
+      skipFonts: false,
+      imagePlaceholder:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WvJr3QAAAAASUVORK5CYII=",
+    });
+
+    const link = document.createElement("a");
+    link.download = `${student.studentName}_Semester_Marksheet.png`;
+    link.href = dataUrl;
+    link.click();
+
+  } catch (err) {
+    console.error("Download Error:", err);
+  }
+};
 
   if (!student) return <div>Loading...</div>;
 
@@ -194,6 +215,19 @@ const finalMarks = subjects.map((s) => ({
 student.percentage ||
 0;
 
+
+const objectiveTotal = marksArray.reduce(
+  (sum,m)=>sum+Number(m.objective||0),
+0);
+
+const practicalTotal = marksArray.reduce(
+  (sum,m)=>sum+Number(m.practical||0),
+0);
+
+const objectiveOutOf = marksArray.length*50;
+const practicalOutOf = marksArray.length*50;
+const totalOutOf = marksArray.length*100;
+
   return (
     <div className="p-10 bg-white">
 
@@ -204,102 +238,251 @@ student.percentage ||
         Download Image
       </button>
 
-      <div ref={printRef} style={{
-        width: "900px",
-        height: "1200px",
-        position: "relative"
-      }}>
+    <div
+  ref={printRef}
+  style={{
+    width: "900px",
+    minHeight: "1200px",
+    position: "relative",
+    background: "#fff",
+    overflow: "hidden"
+  }}
+>
 
         {/* TEMPLATE */}
-        <img src="/semimark.png" className="absolute w-full h-full" />
+        <img src="/multiplemarksheet.png" className="absolute w-full h-full" />
+
         {student?.logo && (
-  <img
-    src={student.logo}
-    className="absolute top-[20px] left-[380px] w-[120px]"
-  />
+  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+        src={student.logo}
+        className="w-full h-full object-cover rounded-full"
+    />
+</div>
 )}
 
-        {/* LEFT SIDE */}
-        <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>
-        <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
-        <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
-        <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
-        <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
+      <div className="absolute top-[310px] left-[330px]">{student.studentName}</div>
+        <div className="absolute top-[330px] left-[330px]">{student.fatherName}</div>
+        <div className="absolute top-[352px] left-[330px]">{student.surname}</div>
+        <div className="absolute top-[374px] left-[330px]">{student.motherName}</div>
+        <div className="absolute top-[395px] left-[330px] font-bold">{student.course}</div>
+        <div className="absolute top-[417px] left-[330px] font-bold">{student.instituteName}</div>
 
-        {/* RIGHT SIDE */}
-        <div className="absolute top-[325px] left-[680px]">{courseData?.duration || "N/A"}</div>
-        <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
-        <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
+        {/* ===============================
+            RIGHT SIDE (FIXED)
+        =============================== */}
+    
+{/* RIGHT */}
+{/* <div className="absolute top-[315px] left-[680px] text-[13px]">
+  {student.coursePeriod || student.duration || "1 Year"}
+</div> */}
+
+<div className="absolute top-[334px] left-[680px]">
+  {student.marksheetNo || student.certificateNo}
+</div>
+<div className="absolute top-[355px] left-[680px]">
+  {
+student.dob
+? new Date(student.dob) 
+    .toLocaleDateString("en-GB")
+    .replace(/\//g,"-")
+: ""
+}
+</div>
+
+<div className="absolute top-[378px] left-[680px] text-[13px]">
+  {student.coursePeriod || student.duration}
+</div>
 
         {/* SUBJECT TABLE */}
-        {marksArray.map((m, index) => {
 
-          const baseTop = 560;
 
-          const topPosition =
-            baseTop +
-            marksArray
-              .slice(0, index)
-              .reduce((acc, item) => {
-                const lines = Math.ceil(item.subject.length / 40);
-                return acc + lines * 10 + 15;
-              }, 0);
+          
 
-          return (
-            <div key={index}>
+           <div
+  style={{
+    position: "absolute",
+    top: 540,
+    left: 150,
+    width: "650px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "7px",
+  }}
+>
+  {marksArray.map((m,index)=>(
+   <div
+      key={index}
+      style={{
+        display: "grid",
+      gridTemplateColumns: "280px 60px 60px 60px 60px 70px 70px",
+        alignItems: "start",
+      minHeight: "20px",
+      }}
+    >
+      {/* SUBJECT */}
+      <div
+        style={{
+        fontSize: "14px",
+lineHeight: "15px",
+          wordBreak: "break-word",
+          whiteSpace: "normal",
+          paddingRight: "10px",
+        }}
+      >
+        {index + 1}) {m.subject}
+      </div>
 
-              <div style={{
-                position: "absolute",
-                top: topPosition,
-                left: 150,
-                width: "420px"
-              }}>
-                {index + 1}) {m.subject} (Sem {m.semester})
-              </div>
+      {/* OBJECTIVE OUT OF */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        50
+      </div>
 
-              <div style={{ position: "absolute", top: topPosition, left: 580 }}>
-                100
-              </div>
+      {/* OBJECTIVE SCORE */}
+      <div
+        style={{
+          textAlign: "center",
+        }}
+      >
+        {m.objective}
+      </div>
 
-              <div style={{ position: "absolute", top: topPosition, left: 650 }}>
-                {m.objective}
-              </div>
+      {/* PRACTICAL OUT OF */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        50
+      </div>
 
-              <div style={{ position: "absolute", top: topPosition, left: 710 }}>
-                {m.practical}
-              </div>
+      {/* PRACTICAL SCORE */}
+      <div
+        style={{
+          textAlign: "center",
+        }}
+      >
+        {m.practical}
+      </div>
 
-              <div style={{ position: "absolute", top: topPosition, left: 780 }}>
-                {m.total}
-              </div>
+      {/* TOTAL OUT OF */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        100
+      </div>
 
-            </div>
-          );
-        })}
+      {/* TOTAL SCORE */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        {Number(m.objective) + Number(m.practical)}
+      </div>
+    </div>
+  ))}
+</div>
 
-        {/* TOTAL */}
-        <div className="absolute bottom-[290px] left-[775px] font-bold">
-          {total}
-        </div>
+
+     {/* ===============================
+            TOTAL
+        =============================== */}
+  <div
+  style={{
+    position: "absolute",
+    top: 867, // Adjust to match your TOTAL box
+    left: 150,
+    width: "650px",
+    display: "grid",
+    gridTemplateColumns:
+      "280px 60px 60px 60px 60px 70px 70px",
+    fontWeight: "bold",
+    fontSize: "18px",
+  }}
+>
+  <div></div>
+
+  <div style={{ textAlign: "center" }}>
+    {objectiveOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {objectiveTotal}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {practicalOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {practicalTotal}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {totalOutOf}
+  </div>
+
+  <div style={{ textAlign: "center" }}>
+    {total}
+  </div>
+</div> 
+
 
         {/* PERCENTAGE */}
-        <div className="absolute bottom-[289px] left-[350px] font-bold">
-          Percentage: {student.percentage}%
+        <div className="absolute bottom-[260px] left-[350px] font-bold">
+          Percentage: {percentage}%
         </div>
 
         {/* GRADE */}
-        <div className="absolute bottom-[289px] left-[250px] font-bold">
+      <div className="absolute bottom-[260px] left-[250px] font-bold">
           Grade: {student.grade}
         </div>
+        <div className="absolute bottom-[260px] left-[600px] font-bold">
+  Total:  {total}/{totalOutOf}
+</div>
+        {/* ===============================
+            SIGNATURE
+        =============================== */}
+        {student?.franchiseSignature && (
+
+<img
+  id="sign-img"
+  src={student.franchiseSignature}
+  crossOrigin="anonymous"
+  loading="eager"
+  decoding="sync"
+  className="absolute bottom-[95px] left-[100px] w-[100px]"
+/>
+        )}
+
+        {/* OWNER NAME */}
+        {student?.ownerName && (
+          <div className="absolute bottom-[60px] left-[100px] text-sm">
+            <div className="font-semibold">{student.ownerName}</div>
+            <div className="text-xs text-gray-600 font font-bold">
+              Controller Of Examination
+            </div>
+          </div>
+        )}
 
         {/* QR */}
-        {qrCode && (
-          <img
-            src={qrCode}
-            className="absolute top-[240px] right-[50px] w-[110px]"
-          />
-        )}
+      {qrCode && (
+  <img
+    src={qrCode}
+    className="absolute  top-[240px] right-[80px] w-[90px] bg-white p-1"
+  />
+)}
 
       </div>
     </div>

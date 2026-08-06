@@ -83,7 +83,7 @@ export default function InternshipCertificate() {
   } catch (error) {
 
     console.log(error)
-
+  
   }
 }
 

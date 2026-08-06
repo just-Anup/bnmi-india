@@ -797,7 +797,11 @@
           certificateApplied: true,
 
           approvedDate:
-            new Date().toISOString()
+            new Date().toISOString(),
+            certificateNo,
+marksheetNo: certificateNo,
+percentage: Math.round(avg.percentage),
+grade: avg.grade
 
         }
 
@@ -850,9 +854,9 @@
           franchiseRes.documents[0] || {};
 
       // 4. Certificate Number
-      const certificateNo =
-      cert.certificateNo ??
-      `CERT-${Date.now()}`;
+    const certificateNo =
+  cert.certificateNo ||
+  `CERT-${Date.now()}`;
 
       // 5. Issue Date
       const issueDate =
@@ -875,108 +879,91 @@
           DATABASE_ID,
           CERT_COLLECTION,
           id,
-          {
+  {
+    status: "approved",
 
-              status: "approved",
+    // ===========================
+    // Certificate Details
+    // ===========================
+    certificateNo,
+    marksheetNo: certificateNo,
+    issueDate,
+    verifyUrl,
 
-              certificateNo,
-              issueDate,
-              verifyUrl,
+    // ===========================
+    // Result
+    // ===========================
+    marks: Math.round(avg.percentage),
+    percentage: Math.round(avg.percentage),
+    grade: avg.grade,
 
-              marks: Math.round(avg.percentage),
-              grade: avg.grade,
+    overallPercentage: Math.round(avg.percentage),
+    overallGrade: avg.grade,
 
-              overallPercentage: Math.round(avg.percentage),
-              overallGrade: avg.grade,
+    approvedSemesters: avg.approvedSemesters
+        .map(Number)
+        .join(","),
 
-  approvedSemesters:
-      avg.approvedSemesters
-          .map(Number)
-          .join(","),
+    // ===========================
+    // Student Details
+    // ===========================
+    studentId: cert.studentId,
+    studentName: studentData.studentName || "",
+    fatherName: studentData.fatherName || "",
+    motherName: studentData.motherName || "",
+    surname: studentData.surname || "",
+    relationType: studentData.relationType || "",
+    dob: studentData.dob || "",
 
-              studentName:
-                  studentData.studentName,
+    // ===========================
+    // Course Details
+    // ===========================
+    instituteName: studentData.instituteName || "",
+    course: studentData.courseName || "",
+    courseType: studentData.courseType || "",
+    courseCode: studentData.courseCode || "",
+    courseId: studentData.courseId || "",
 
-              fatherName:
-                  studentData.fatherName,
+    duration: studentData.courseDuration || "",
+    coursePeriod: studentData.coursePeriod || "",
 
-              motherName:
-                  studentData.motherName,
+    semesterNumber: Number(cert.semesterNumber),
 
-              surname:
-                  studentData.surname,
+    // ===========================
+    // Subjects
+    // ===========================
+    subjects: studentData.subjects || "",
+    selectedSubjectIds: studentData.selectedSubjectIds || "",
 
-              relationType:
-                  studentData.relationType,
+    // ===========================
+    // Media
+    // ===========================
+    photoId: studentData.photoId || "",
+    signatureId: studentData.signatureId || "",
 
-              dob:
-                  studentData.dob,
+    // ===========================
+    // Franchise
+    // ===========================
+    franchiseEmail: studentData.franchiseEmail || "",
+    logo: franchise.logo || "",
+    ownerName:
+        franchise.ownerName ||
+        franchise.owner ||
+        "",
+    franchiseSignature: franchise.signature || "",
+    city: franchise.city || "",
 
-              instituteName:
-                  studentData.instituteName,
+    // ===========================
+    // Certificate Options
+    // ===========================
+    showFatherInCertificate:
+        studentData.showFatherInCertificate,
 
-              course:
-                  studentData.courseName,
+    showMotherInCertificate:
+        studentData.showMotherInCertificate,
 
-              courseType:
-                  studentData.courseType,
-
-              courseCode:
-                  studentData.courseCode,
-
-              courseId:
-                  studentData.courseId,
-
-              duration:
-                  studentData.courseDuration,
-
-              coursePeriod:
-                  studentData.coursePeriod,
-
-              photoId:
-                  studentData.photoId,
-
-              signatureId:
-                  studentData.signatureId,
-
-              logo:
-                  franchise.logo || "",
-
-              ownerName:
-                  franchise.ownerName ||
-                  franchise.owner ||
-                  "",
-
-              city:
-                  franchise.city || "",
-
-              franchiseSignature:
-                  franchise.signature || "",
-
-              franchiseEmail:
-                  studentData.franchiseEmail,
-
-              semesterNumber:
-      Number(cert.semesterNumber),
-
-              subjects:
-                  studentData.subjects,
-
-              selectedSubjectIds:
-                  studentData.selectedSubjectIds,
-
-              showFatherInCertificate:
-                  studentData.showFatherInCertificate,
-
-              showMotherInCertificate:
-                  studentData.showMotherInCertificate,
-
-              lastUpdated:
-                  new Date().toISOString()
-
-                  
-
-          }
+    lastUpdated: new Date().toISOString()
+}
           
       );
 
