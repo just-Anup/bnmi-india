@@ -137,48 +137,77 @@ const downloadCertificate = async () => {
 
   const fetchCertificate = async () => {
 
-    try {
+  try {
 
-      const res =
+    const res =
+      await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [
+          Query.equal(
+            "certificateNo",
+            params.certificateNo
+          )
+        ]
+      )
+
+    if (res.documents.length === 0) {
+
+      alert("Certificate not found")
+
+      return
+
+    }
+
+    const doc = res.documents[0]
+
+    // =====================================
+    // GET FRANCHISE LOGO
+    // =====================================
+
+    if (doc.franchiseEmail) {
+
+      const franchiseRes =
         await databases.listDocuments(
           DATABASE_ID,
-          COLLECTION_ID,
+          "franchise_approved",
           [
             Query.equal(
-              'certificateNo',
-              params.certificateNo
+              "email",
+              doc.franchiseEmail
             )
           ]
         )
 
-      if (
-        res.documents.length === 0
-      ) {
-        alert(
-          'Certificate not found'
-        )
-        return
+      if (franchiseRes.documents.length > 0) {
+
+        doc.logo =
+          franchiseRes.documents[0].logo || ""
+
       }
-
-      setCertificate(
-        res.documents[0]
-      )
-
-    } catch (error) {
-
-      console.log(error)
-
-      alert(
-        'Failed to load certificate'
-      )
-
-    } finally {
-
-      setLoading(false)
 
     }
 
+    setCertificate(doc)
+
+  } catch (error) {
+
+    console.log(
+      "CERTIFICATE LOAD ERROR:",
+      error
+    )
+
+    alert(
+      "Failed to load certificate"
+    )
+
+  } finally {
+
+    setLoading(false)
+
   }
+
+}
 
   if (loading) {
     return (
@@ -236,6 +265,22 @@ const downloadCertificate = async () => {
               className="absolute inset-0 w-full h-full"
             />
 
+{/* FRANCHISE LOGO */}
+{certificate.logo && (
+  <img
+    src={certificate.logo}
+    alt="Franchise Logo"
+    className="absolute object-contain"
+    style={{
+      top: "60px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      width: "190px",
+      height: "110px",
+      zIndex: 10
+    }}
+  />
+)}
             {/* STUDENT NAME */}
             <div
               className="absolute"

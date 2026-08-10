@@ -124,9 +124,7 @@ const fetchCertificate = async () => {
         ]
       )
 
-    if (
-      res.documents.length === 0
-    ) {
+    if (res.documents.length === 0) {
 
       alert("Marksheet Not Found")
 
@@ -134,8 +132,38 @@ const fetchCertificate = async () => {
 
     }
 
-    const doc =
-      res.documents[0]
+    const doc = res.documents[0]
+
+    // =====================================
+    // GET FRANCHISE LOGO
+    // =====================================
+
+    if (doc.franchiseEmail) {
+
+      const franchiseRes =
+        await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal(
+              "email",
+              doc.franchiseEmail
+            )
+          ]
+        )
+
+      if (franchiseRes.documents.length > 0) {
+
+        doc.logo =
+          franchiseRes.documents[0].logo || ""
+
+      }
+
+    }
+
+    // =====================================
+    // TOTAL MARKS
+    // =====================================
 
     doc.totalMarks =
       Number(doc.objectiveMarks || 0) +
@@ -147,7 +175,7 @@ const fetchCertificate = async () => {
 
   catch (err) {
 
-    console.log(err)
+    console.log("MARKSHEET LOAD ERROR:", err)
 
     alert("Failed to Load")
 
@@ -237,6 +265,23 @@ return (
             alt=""
             className="absolute inset-0 w-full h-full"
           />
+
+{/* FRANCHISE LOGO */}
+{certificate.logo && (
+  <img
+    src={certificate.logo}
+    alt="Franchise Logo"
+    className="absolute object-contain"
+    style={{
+      top: "70px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      width: "180px",
+      height: "100px",
+      zIndex: 10
+    }}
+  />
+)}
 
           {/* ========================= */}
           {/* STUDENT NAME */}
