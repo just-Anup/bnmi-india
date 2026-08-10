@@ -270,14 +270,15 @@ const downloadCertificate = async () => {
   <img
     src={certificate.logo}
     alt="Franchise Logo"
-    className="absolute object-contain"
+    className="absolute object-contain rounded-full"
     style={{
-      top: "60px",
+      top: "45px",
       left: "50%",
       transform: "translateX(-50%)",
-      width: "190px",
-      height: "110px",
-      zIndex: 10
+      width: "210px",
+      height: "130px",
+      zIndex: 10,
+      
     }}
   />
 )}
@@ -315,10 +316,11 @@ const downloadCertificate = async () => {
               style={{
                 top: '697px',
                 left: '300px',
-                width: '850px'
+                width: '850px',
+                
               }}
             >
-              <h2 className="text-2xl text-center font-bold">
+              <h2 className="text-3xl text-center text-red-600 font-bold">
                 {certificate.instituteName}
               </h2>
             </div>

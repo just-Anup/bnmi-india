@@ -370,7 +370,7 @@ const handleStudentVerify = async () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
 
-          <p><b>Admission Date:</b> {student.admissionDate}</p>
+          <p><b>Admission Date:</b> {student.issueDate}</p>
           <p><b>Duration:</b> {student.duration || "6 Months"}</p>
 
           <p><b>Certificate No:</b> {student.certificateNo}</p>
