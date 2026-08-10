@@ -31,7 +31,8 @@ export default function CourseCMS() {
     "CERTIFICATE COURSE",
     "CERTIFICATION",
     "PRE-VOCATIONAL COURSE",
-    "PERSONAL"
+    "PERSONAL",
+  "HIGHER DIPLOMA",
   ]
 
   const editCourse = (course) => {

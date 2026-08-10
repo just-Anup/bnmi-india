@@ -603,11 +603,12 @@ fetchMarks(cert.studentId, finalData);
                   }}
                 >
 
-                {marksArray.map((s, i) => (
+{marksArray.map((s, i) => (
 
   <div key={i}>
 
     {(s.subject || "")
+      .replace(/\\n/g, "\n")
       .split("\n")
       .filter(line => line.trim() !== "")
       .map((line, j) => (

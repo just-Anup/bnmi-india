@@ -495,7 +495,11 @@
           marks: finalMarks,
           grade: finalGrade,
           course: studentData.courseName || "",
-          duration: studentData.duration || "",
+          duration:
+  cert.duration ||
+  studentData.duration ||
+  studentData.courseDuration ||
+  "",
           signatureId: studentData.signatureId || "",
 
           fatherName: studentData.fatherName || "",
@@ -754,60 +758,51 @@
 
     };
 
-    const approveSemesterResult = async (
-      studentId,
-      semester
-    ) => {
+const approveSemesterResult = async (
+  studentId,
+  semester
+) => {
 
-      const res =
-        await databases.listDocuments(
-          DATABASE_ID,
-          "exam_results",
-          [
-            Query.equal(
-              "studentId",
-              studentId
-            ),
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    "exam_results",
+    [
+      Query.equal(
+        "studentId",
+        studentId
+      ),
 
-            Query.equal(
-              "semesterNumber",
-              Number(semester)
-            ),
+      Query.equal(
+        "semesterNumber",
+        Number(semester)
+      ),
 
-            Query.limit(1)
-          ]
-        );
+      Query.limit(1)
+    ]
+  );
 
-      if (!res.documents.length)
-        return;
+  if (!res.documents.length) {
+    throw new Error(
+      `Result not found for Semester ${semester}`
+    );
+  }
 
-      await databases.updateDocument(
+  const result = res.documents[0];
 
-        DATABASE_ID,
+  await databases.updateDocument(
+    DATABASE_ID,
+    "exam_results",
+    result.$id,
+    {
+      resultStatus: "Approved",
+      status: "approved",
+      certificateApplied: true,
+      approvedDate: new Date().toISOString()
+    }
+  );
 
-        "exam_results",
-
-        res.documents[0].$id,
-
-        {
-
-          resultStatus: "Approved",
-
-          status: "approved",
-          certificateApplied: true,
-
-          approvedDate:
-            new Date().toISOString(),
-            certificateNo,
-marksheetNo: certificateNo,
-percentage: Math.round(avg.percentage),
-grade: avg.grade
-
-        }
-
-      );
-
-    };
+  return result;
+};
 
 
 
@@ -852,6 +847,7 @@ grade: avg.grade
 
       const franchise =
           franchiseRes.documents[0] || {};
+          
 
       // 4. Certificate Number
     const certificateNo =
@@ -864,6 +860,188 @@ grade: avg.grade
   new Date()
     .toLocaleDateString("en-GB")
     .replace(/\//g, "-");
+
+    // ======================================
+// FETCH SEMESTER COURSE DURATION
+// ======================================
+
+// ======================================
+// FETCH SEMESTER COURSE DURATION
+// ======================================
+
+let rawDuration =
+  studentData.courseDuration ||
+  "";
+
+try {
+  const courseCode =
+    studentData.courseCode;
+
+  if (courseCode) {
+    const courseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_semester_courses",
+        [
+          Query.equal(
+            "courseCode",
+            courseCode
+          ),
+          Query.limit(1)
+        ]
+      );
+
+    if (courseRes.documents.length > 0) {
+      rawDuration =
+        courseRes.documents[0].duration ||
+        rawDuration;
+    }
+  }
+
+  // Fallback by course name
+  if (!rawDuration) {
+    const courseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_semester_courses",
+        [
+          Query.equal(
+            "courseName",
+            studentData.courseName
+          ),
+          Query.limit(1)
+        ]
+      );
+
+    if (courseRes.documents.length > 0) {
+      rawDuration =
+        courseRes.documents[0].duration ||
+        "";
+    }
+  }
+
+} catch (durationError) {
+  console.error(
+    "SEMESTER DURATION ERROR:",
+    durationError
+  );
+}
+
+// ======================================
+// GENERATE COURSE PERIOD
+// ======================================
+// ======================================
+// GENERATE COURSE PERIOD
+// ======================================
+
+let finalDuration = "";
+
+if (rawDuration) {
+  const today = new Date();
+
+  const end = new Date(today);
+  const start = new Date(today);
+
+  const text =
+    String(rawDuration).toLowerCase();
+
+  // YEAR
+  if (text.includes("year")) {
+    const years =
+      parseInt(text) || 1;
+
+    start.setFullYear(
+      start.getFullYear() - years
+    );
+  }
+
+  // MONTH
+  else if (text.includes("month")) {
+    const months =
+      parseInt(text) || 1;
+
+    start.setMonth(
+      start.getMonth() - months
+    );
+  }
+
+  // DAYS
+  else if (text.includes("day")) {
+    const days =
+      parseInt(text) || 1;
+
+    start.setDate(
+      start.getDate() - days
+    );
+  }
+
+  // Keep the same date logic
+  start.setDate(
+    start.getDate() + 1
+  );
+
+  const formatDate = (date) =>
+    date.toLocaleDateString(
+      "en-GB",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
+
+  finalDuration =
+    `${formatDate(start)} To ${formatDate(end)}`;
+}
+
+console.log(
+  "SEMESTER RAW DURATION:",
+  rawDuration
+);
+
+console.log(
+  "SEMESTER COURSE PERIOD:",
+  finalDuration
+);
+    // ======================================
+// UPDATE APPROVED SEMESTER RESULT
+// ======================================
+
+const semesterResultRes =
+  await databases.listDocuments(
+    DATABASE_ID,
+    "exam_results",
+    [
+      Query.equal(
+        "studentId",
+        cert.studentId
+      ),
+
+      Query.equal(
+        "semesterNumber",
+        Number(cert.semesterNumber)
+      ),
+
+      Query.limit(1)
+    ]
+  );
+
+if (semesterResultRes.documents.length > 0) {
+
+  await databases.updateDocument(
+    DATABASE_ID,
+    "exam_results",
+    semesterResultRes.documents[0].$id,
+    {
+      certificateNo: certificateNo,
+      marksheetNo: certificateNo,
+      percentage: Math.round(avg.percentage),
+      grade: avg.grade
+    }
+  );
+
+}
+
 
       // 6. Verification URL
       const verifyUrl =
@@ -924,9 +1102,8 @@ grade: avg.grade
     courseCode: studentData.courseCode || "",
     courseId: studentData.courseId || "",
 
-    duration: studentData.courseDuration || "",
-    coursePeriod: studentData.coursePeriod || "",
-
+    duration: rawDuration || "",
+coursePeriod: finalDuration || "",
     semesterNumber: Number(cert.semesterNumber),
 
     // ===========================

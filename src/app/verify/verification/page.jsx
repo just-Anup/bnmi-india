@@ -27,34 +27,56 @@ const [franchiseData, setFranchiseData] = useState(null)
 const [showModal, setShowModal] = useState(false)
 
   // 🔵 ATC VERIFY (UNCHANGED)
-  const handleATCSearch = async () => {
+const handleATCSearch = async () => {
 
-    if (!atc) return alert("Enter ATC Code")
+  // Normalize whatever user enters
+  const cleanATC = atc
+    .trim()
+    .replace(/\s+/g, "")
+    .toUpperCase();
 
-    setLoading(true)
+  if (!cleanATC) {
+    return alert("Enter ATC Code");
+  }
 
-    try {
+  setLoading(true);
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("atcCode", atc)]
-      )
+  try {
 
-      if (!res.documents.length) {
-        alert("Invalid ATC Code ❌")
-        setFranchise(null)
-      } else {
-        setFranchise(res.documents[0])
-        setStudent(null)
-      }
+    console.log("Original ATC:", JSON.stringify(atc));
+    console.log("Clean ATC:", JSON.stringify(cleanATC));
 
-    } catch {
-      alert("Search failed")
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [
+        Query.equal("atcCode", cleanATC)
+      ]
+    );
+
+    if (!res.documents.length) {
+
+      alert("Invalid ATC Code ❌");
+      setFranchise(null);
+
+    } else {
+
+      setFranchise(res.documents[0]);
+      setStudent(null);
+
     }
 
-    setLoading(false)
+  } catch (error) {
+
+    console.error("ATC SEARCH ERROR:", error);
+    alert("Search failed");
+
+  } finally {
+
+    setLoading(false);
+
   }
+};
 
   // 🟢 STUDENT VERIFY (ONLY THIS UPDATED)
 const handleStudentVerify = async () => {
@@ -247,13 +269,17 @@ const handleStudentVerify = async () => {
 
             <div className="space-y-4">
 
-              <input
-                type="text"
-                placeholder="Enter ATC Code"
-                value={atc}
-                onChange={(e)=>setAtc(e.target.value)}
-                className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+             <input
+  type="text"
+  placeholder="Enter ATC Code"
+  value={atc}
+  onChange={(e) => setAtc(e.target.value.toUpperCase())}
+  autoCapitalize="characters"
+  autoCorrect="off"
+  spellCheck={false}
+  inputMode="text"
+  className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+/>
 
               <button
                 onClick={handleATCSearch}

@@ -218,13 +218,23 @@ try {
       DATABASE_ID,
       "certificates",
       cert.documents[0].$id,
-      {
-        relationType: form.relationType,
-        fatherName: form.fatherName,
-        motherName: form.motherName,
-        showFatherInCertificate: form.showFatherInCertificate,
-        showMotherInCertificate: form.showMotherInCertificate
-      }
+    {
+    studentName: form.studentName,
+    surname: form.surname,
+    relationType: form.relationType,
+    fatherName: form.fatherName,
+    motherName: form.motherName,
+
+    photoId: photoId,
+    signatureId: signatureId,
+
+    dob: form.dob,
+    courseName: form.courseName,
+    subjects: form.subjects,
+
+    showFatherInCertificate: form.showFatherInCertificate,
+    showMotherInCertificate: form.showMotherInCertificate
+}
     );
   }
 } catch (err) {

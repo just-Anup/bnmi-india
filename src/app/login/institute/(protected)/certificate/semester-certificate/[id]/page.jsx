@@ -559,7 +559,7 @@ try {
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
           {photoUrl && (
-            <img src={photoUrl} className="w-full h-full object-cover" />
+            <img src={photoUrl} className="w-full h-full " />
           )}
         </div>
 

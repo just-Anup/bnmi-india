@@ -139,24 +139,47 @@ await databases.listDocuments(
 
 if (existingCert.documents.length > 0) {
 
-    // Update existing certificate
+    // ==========================================
+    // EXISTING CERTIFICATE
+    // Re-use the same certificate for next semester
+    // ==========================================
+
     await databases.updateDocument(
         DATABASE_ID,
         CERT_COLLECTION,
         existingCert.documents[0].$id,
-      {
-    semesterNumber: Number(student.semesterNumber),
+        {
+            // New semester waiting for approval
+            semesterNumber: Number(student.semesterNumber),
 
-    totalMarks: student.totalMarks || 0,
+            // New semester marks
+            totalMarks: student.totalMarks || 0,
+            percentage: student.percentage || 0,
+            marks: student.percentage || 0,
+            grade: student.grade || "",
 
-    percentage: student.percentage || 0,
+            // Keep overall value until admin approves
+            overallPercentage:
+                existingCert.documents[0].overallPercentage || 0,
 
-    marks: student.percentage || 0,
+            overallGrade:
+                existingCert.documents[0].overallGrade || "",
 
-    grade: student.grade || "",
+            // 🔥 THIS IS THE IMPORTANT FIX
+            status: "pending",
 
-    overallPercentage: student.percentage || 0
-}
+            // Keep previous approved semesters
+            approvedSemesters:
+                existingCert.documents[0].approvedSemesters || "",
+
+            // Don't create a new certificate number
+            certificateNo:
+                existingCert.documents[0].certificateNo || "",
+
+            // Keep existing issue date
+            issueDate:
+                existingCert.documents[0].issueDate || ""
+        }
     );
 
 } else {
