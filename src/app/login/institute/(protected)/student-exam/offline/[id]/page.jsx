@@ -110,23 +110,125 @@ export default function ResultPage() {
 // SUBJECT LOADING
 // ==========================================
 let subjectList = [];
-
 // ==========================================
 // SINGLE COURSE
 // ==========================================
-// Single-course subjects are stored separately
-// in "course_subjects", so DO NOT use res.subjects
-// for single courses.
+// IMPORTANT:
+// Only treat the student as a normal SINGLE course
+// if the course actually exists in courses_single.
+//
+// This prevents BEAUTY courses from being affected.
 // ==========================================
 if (res.courseType === "single") {
 
+  let normalSingleCourse = null;
+
   try {
 
-    let courseId = res.courseId;
+    // ------------------------------------------
+    // FIRST: Find the course in courses_single
+    // ------------------------------------------
+    if (res.courseCode) {
 
-    // If admission does not contain courseId,
-    // find the single course using courseCode.
-    if (!courseId && res.courseCode) {
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_single",
+        [
+          Query.equal("courseCode", res.courseCode),
+          Query.limit(1)
+        ]
+      );
+
+      if (courseRes.documents.length > 0) {
+        normalSingleCourse = courseRes.documents[0];
+      }
+    }
+
+    // ------------------------------------------
+    // FALLBACK: Find by course name
+    // ------------------------------------------
+    if (!normalSingleCourse && res.courseName) {
+
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_single",
+        [
+          Query.equal("courseName", res.courseName),
+          Query.limit(1)
+        ]
+      );
+
+      if (courseRes.documents.length > 0) {
+        normalSingleCourse = courseRes.documents[0];
+      }
+    }
+
+  } catch (singleCourseError) {
+
+    console.error(
+      "SINGLE COURSE LOOKUP ERROR:",
+      singleCourseError
+    );
+
+  }
+
+  // ==========================================
+  // NORMAL SINGLE COURSE
+  // ==========================================
+  if (normalSingleCourse) {
+
+    try {
+
+      const subjectRes = await databases.listDocuments(
+        DATABASE_ID,
+        "course_subjects",
+        [
+          Query.equal("courseId", normalSingleCourse.$id),
+          Query.limit(1)
+        ]
+      );
+
+      if (subjectRes.documents.length > 0) {
+
+        const subjectName =
+          subjectRes.documents[0].subjectName?.trim();
+
+        if (subjectName) {
+          subjectList = [subjectName];
+        }
+
+      }
+
+    } catch (singleSubjectError) {
+
+      console.error(
+        "SINGLE COURSE SUBJECT ERROR:",
+        singleSubjectError
+      );
+
+    }
+
+  }
+}
+
+
+  // ==========================================
+// BEAUTY COURSE
+// ==========================================
+// BEAUTY WORKS SAME AS SINGLE COURSE
+// Get the Beauty course from beauty_courses_single
+// Then get ONE subject from beauty_courses_subjects
+// ==========================================
+else if (res.courseType === "beauty") {
+
+  let beautyCourse = null;
+
+  try {
+
+    // ------------------------------------------
+    // FIRST: Find Beauty course using courseCode
+    // ------------------------------------------
+    if (res.courseCode) {
 
       const courseQueries = [
         Query.equal("courseCode", res.courseCode),
@@ -141,17 +243,20 @@ if (res.courseType === "single") {
 
       const courseRes = await databases.listDocuments(
         DATABASE_ID,
-        "courses_single",
+        "beauty_courses_single",
         courseQueries
       );
 
       if (courseRes.documents.length > 0) {
-        courseId = courseRes.documents[0].$id;
+        beautyCourse = courseRes.documents[0];
       }
     }
 
-    // Fallback: find course using course name
-    if (!courseId && res.courseName) {
+
+    // ------------------------------------------
+    // FALLBACK: Find Beauty course using name
+    // ------------------------------------------
+    if (!beautyCourse && res.courseName) {
 
       const courseQueries = [
         Query.equal("courseName", res.courseName),
@@ -166,20 +271,23 @@ if (res.courseType === "single") {
 
       const courseRes = await databases.listDocuments(
         DATABASE_ID,
-        "courses_single",
+        "beauty_courses_single",
         courseQueries
       );
 
       if (courseRes.documents.length > 0) {
-        courseId = courseRes.documents[0].$id;
+        beautyCourse = courseRes.documents[0];
       }
     }
 
-    // Now get the subject assigned to this single course
-    if (courseId) {
+
+    // ------------------------------------------
+    // NOW GET BEAUTY SUBJECT
+    // ------------------------------------------
+    if (beautyCourse) {
 
       const subjectQueries = [
-        Query.equal("courseId", courseId),
+        Query.equal("courseId", beautyCourse.$id),
         Query.limit(1)
       ];
 
@@ -191,7 +299,7 @@ if (res.courseType === "single") {
 
       const subjectRes = await databases.listDocuments(
         DATABASE_ID,
-        "course_subjects",
+        "beauty_courses_subjects",
         subjectQueries
       );
 
@@ -201,46 +309,20 @@ if (res.courseType === "single") {
           subjectRes.documents[0].subjectName?.trim();
 
         if (subjectName) {
+          // SAME AS SINGLE COURSE
           subjectList = [subjectName];
         }
+
       }
+
     }
 
-  } catch (singleSubjectError) {
+  } catch (beautyError) {
 
     console.error(
-      "SINGLE COURSE SUBJECT ERROR:",
-      singleSubjectError
+      "BEAUTY COURSE SUBJECT ERROR:",
+      beautyError
     );
-
-  }
-
-}
-
-// ==========================================
-// BEAUTY COURSE
-// ==========================================
-// KEEP BEAUTY LOGIC SEPARATE
-// ==========================================
-else if (res.courseType === "beauty") {
-
-  if (res.subjects) {
-
-    if (res.subjects.includes("\n")) {
-
-      subjectList = res.subjects
-        .split(/\r?\n/)
-        .map(s => s.trim())
-        .filter(Boolean);
-
-    } else {
-
-      subjectList = res.subjects
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
-
-    }
 
   }
 
