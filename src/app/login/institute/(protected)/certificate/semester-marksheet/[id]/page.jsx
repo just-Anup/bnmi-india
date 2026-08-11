@@ -324,9 +324,7 @@ try {
   admission.coursePeriod ||
   admission.duration ||
   "",
-        // -----------------------------
-        // Images / signatures
-        // -----------------------------
+
 
         logo:
           certificate?.logo ||

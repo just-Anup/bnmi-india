@@ -729,7 +729,7 @@ const grade = getGrade(percentage);
       value={student.fatherName || ""}
       onChange={(e) =>
         handleChange("fatherName", e.target.value)
-      }
+      } 
       placeholder="Father Name"
       className="border p-3 rounded"
     />
@@ -758,9 +758,9 @@ const grade = getGrade(percentage);
       type="text"
       value={student.duration || ""}
       onChange={(e) =>
-        handleChange("duration", e.target.value)
+        handleChange("duration", e.target.value) 
       }
-      placeholder="Course Period"
+      placeholder="Course Period" 
       className="border p-3 rounded"
     />
 
