@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { databases } from "@/lib/appwrite";
+import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
@@ -16,11 +16,23 @@ export default function PrintMarksheetMultiple() {
 
   const { id } = useParams();
 
-  const [student, setStudent] = useState(null);
-  const [marksArray, setMarksArray] = useState([]);
-  const [qrCode, setQrCode] = useState("");
-  const [courseData, setCourseData] = useState(null);
-  
+const [student, setStudent] = useState(null);
+const [marksArray, setMarksArray] = useState([]);
+const [qrCode, setQrCode] = useState("");
+const [courseData, setCourseData] = useState(null);
+
+// ===============================
+// SUBJECT EDIT
+// ===============================
+const [editingSubjects, setEditingSubjects] = useState(false);
+const [savingSubjects, setSavingSubjects] = useState(false);
+
+// ===============================
+// ADMIN CHECK
+// ===============================
+const [isAdmin, setIsAdmin] = useState(false);
+const [loadingUser, setLoadingUser] = useState(true);
+
 const printRef = useRef();
 
   
@@ -40,20 +52,219 @@ const printRef = useRef();
   (a, b) => new Date(a.$createdAt) - new Date(b.$createdAt)
 );
 
-      const finalMarks = docs.map((m) => ({
-        subject: m.subject,
-        objective: Number(m.objective || 0),
-        practical: Number(m.practical || 0),
-        total: Number(m.total || 0),
-      }));
+    const finalMarks = docs.map((m) => ({
+  $id: m.$id,
+  subject: m.subject,
+  objective: Number(m.objective || 0),
+  practical: Number(m.practical || 0),
+  total: Number(m.total || 0),
+}));
 
-      setMarksArray(finalMarks);
+setMarksArray(finalMarks);
 
     } catch (err) {
       console.log("FETCH ERROR:", err);
     }
   };
 
+// ===============================
+// ADMIN CHECK
+// ===============================
+useEffect(() => {
+
+  const checkAdmin = async () => {
+
+    try {
+
+      const user = await account.get();
+
+      if (user.email === "bnmiindia@gmail.com") {
+        setIsAdmin(true);
+      }
+
+    } catch (err) {
+
+      console.log("ADMIN CHECK ERROR:", err);
+
+    } finally {
+
+      setLoadingUser(false);
+
+    }
+
+  };
+
+  checkAdmin();
+
+}, []);
+
+
+  // ===============================
+// UPDATE SUBJECT NAME IN UI
+// ===============================
+const updateSubjectName = (index, value) => {
+
+  setMarksArray((prev) => {
+
+    const updated = [...prev];
+
+    updated[index] = {
+      ...updated[index],
+      subject: value,
+    };
+
+    return updated;
+  });
+
+};
+
+
+// ===============================
+// SAVE SUBJECT CHANGES
+// ===============================
+const saveSubjectChanges = async () => {
+
+  // ==========================================
+  // ADMIN ONLY
+  // ==========================================
+  if (!isAdmin) {
+    alert("Only admin can edit subjects.");
+    return;
+  }
+
+  if (savingSubjects) return;
+
+  try {
+    setSavingSubjects(true);
+
+    if (!marksArray.length) {
+      alert("No subjects found.");
+      return;
+    }
+
+    // Check empty subjects
+    const hasEmptySubject = marksArray.some(
+      (m) => !m.subject?.trim()
+    );
+
+    if (hasEmptySubject) {
+      alert("Subject name cannot be empty.");
+      return;
+    }
+
+
+    // ==========================================
+    // UPDATE student_subject_results
+    // ==========================================
+
+    for (const mark of marksArray) {
+
+      if (!mark.$id) {
+        console.log(
+          "Missing document ID for:",
+          mark.subject
+        );
+        continue;
+      }
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        "student_subject_results",
+        mark.$id,
+        {
+          subject: mark.subject.trim(),
+        }
+      );
+
+    }
+
+
+    // ==========================================
+    // ALSO UPDATE exam_results
+    // ==========================================
+
+    if (student?.studentId) {
+
+      const resultRes =
+        await databases.listDocuments(
+          DATABASE_ID,
+          "exam_results",
+          [
+            Query.equal(
+              "studentId",
+              student.studentId
+            ),
+            Query.limit(1),
+          ]
+        );
+
+
+      if (resultRes.documents.length > 0) {
+
+        const result =
+          resultRes.documents[0];
+
+
+        const updatedMarksArray =
+          marksArray.map((m) => ({
+            subject: m.subject.trim(),
+
+            objective:
+              Number(m.objective || 0),
+
+            practical:
+              Number(m.practical || 0),
+
+            total:
+              Number(m.objective || 0) +
+              Number(m.practical || 0),
+          }));
+
+
+        await databases.updateDocument(
+          DATABASE_ID,
+          "exam_results",
+          result.$id,
+          {
+            subjects: marksArray
+              .map((m) => m.subject.trim())
+              .join(", "),
+
+            marksArray:
+              JSON.stringify(
+                updatedMarksArray
+              ),
+          }
+        );
+
+      }
+
+    }
+
+
+    setEditingSubjects(false);
+
+    alert("Subjects updated successfully.");
+
+  } catch (err) {
+
+    console.error(
+      "SUBJECT UPDATE ERROR:",
+      err
+    );
+
+    alert(
+      err?.message ||
+      "Failed to update subjects."
+    );
+
+  } finally {
+
+    setSavingSubjects(false);
+
+  }
+
+};
 
 useEffect(() => {
 
@@ -461,6 +672,59 @@ const totalOutOf = marksArray.length * 100;
         Download Image
       </button>
 
+{/* ========================================== */}
+{/* ADMIN ONLY SUBJECT EDIT */}
+{/* ========================================== */}
+
+{isAdmin && !loadingUser && (
+
+  <div className="mb-6 flex gap-3">
+
+    {!editingSubjects ? (
+
+      <button
+        onClick={() => setEditingSubjects(true)}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
+      >
+        Edit Subjects
+      </button>
+
+    ) : (
+
+      <>
+        <button
+          onClick={() => {
+            setEditingSubjects(false);
+
+            // Reload original subjects
+            fetchMarks(student.studentId);
+          }}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={saveSubjectChanges}
+          disabled={savingSubjects}
+          className={`px-6 py-2 rounded text-white ${
+            savingSubjects
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {savingSubjects
+            ? "Saving..."
+            : "Save Subject Changes"}
+        </button>
+      </>
+
+    )}
+
+  </div>
+
+)}
+
   <div
   ref={printRef}
   style={{
@@ -555,18 +819,40 @@ student.dob
       minHeight: "20px",
       }}
     >
-      {/* SUBJECT */}
-      <div
-        style={{
-        fontSize: "14px",
-lineHeight: "15px",
-          wordBreak: "break-word",
-          whiteSpace: "normal",
-          paddingRight: "10px",
-        }}
-      >
-        {index + 1}) {m.subject}
-      </div>
+    {/* SUBJECT */}
+<div
+  style={{
+    fontSize: "14px",
+    lineHeight: "15px",
+    wordBreak: "break-word",
+    whiteSpace: "normal",
+    paddingRight: "10px",
+  }}
+>
+
+  {editingSubjects ? (
+
+    <input
+      type="text"
+      value={m.subject || ""}
+      onChange={(e) =>
+        updateSubjectName(
+          index,
+          e.target.value
+        )
+      }
+      className="border border-gray-400 px-2 py-1 w-full bg-white text-black rounded"
+    />
+
+  ) : (
+
+    <>
+      {index + 1}) {m.subject}
+    </>
+
+  )}
+
+</div>
 
       {/* OBJECTIVE OUT OF */}
       <div

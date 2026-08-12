@@ -15,9 +15,21 @@ export default function PrintMarksheet() {
 
     const { id } = useParams();
 
-  const [student, setStudent] = useState(null);
-  const [marksArray, setMarksArray] = useState([]);
-  const [qrCode, setQrCode] = useState("");
+ const [student, setStudent] = useState(null);
+const [marksArray, setMarksArray] = useState([]);
+const [qrCode, setQrCode] = useState("");
+
+// ===============================
+// SUBJECT EDIT
+// ===============================
+const [editingSubjects, setEditingSubjects] = useState(false);
+const [savingSubjects, setSavingSubjects] = useState(false);
+
+// ===============================
+// ADMIN CHECK
+// ===============================
+const [isAdmin, setIsAdmin] = useState(false);
+const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
   
@@ -193,6 +205,37 @@ const finalData = {
 }, [id]);
 
 
+// ===============================
+// ADMIN CHECK
+// ===============================
+useEffect(() => {
+
+  const checkAdmin = async () => {
+
+    try {
+
+      const user = await account.get();
+
+      if (user.email === "bnmiindia@gmail.com") {
+        setIsAdmin(true);
+      }
+
+    } catch (err) {
+
+      console.log("ADMIN CHECK ERROR:", err);
+
+    } finally {
+
+      setLoadingUser(false);
+
+    }
+
+  };
+
+  checkAdmin();
+
+}, []);
+
   useEffect(() => {
   const loadImages = async () => {
     if (!student) return;
@@ -256,15 +299,20 @@ const finalData = {
       );
 
       if (res.documents.length > 0) {
-        const resultDoc = res.documents[0];
 
-        let parsedMarks = [];
+const resultDoc = res.documents[0];
 
-        if (resultDoc.marksArray) {
-          parsedMarks = JSON.parse(resultDoc.marksArray);
-        }
+let parsedMarks = [];
 
-        setMarksArray(parsedMarks);
+if (resultDoc.marksArray) {
+
+  parsedMarks = JSON.parse(
+    resultDoc.marksArray
+  );
+
+}
+
+setMarksArray(parsedMarks);
       }
     } catch (err) {
       console.log("MARK FETCH ERROR:", err);
@@ -274,6 +322,235 @@ const finalData = {
       }
     }
   };
+
+
+  // ==========================================
+// UPDATE SUBJECT NAME IN UI
+// ==========================================
+const updateSubjectName = (index, value) => {
+
+  setMarksArray((prev) => {
+
+    const updated = [...prev];
+
+    updated[index] = {
+      ...updated[index],
+      subject: value,
+    };
+
+    return updated;
+
+  });
+
+};
+
+
+// ==========================================
+// SAVE SUBJECT CHANGES
+// ==========================================
+const saveSubjectChanges = async () => {
+
+  // ADMIN ONLY
+  if (!isAdmin) {
+
+    alert("Only admin can edit subjects.");
+
+    return;
+  }
+
+  if (savingSubjects) return;
+
+  try {
+
+    setSavingSubjects(true);
+
+
+    if (!marksArray.length) {
+
+      alert("No subjects found.");
+
+      return;
+    }
+
+
+    // Check empty subjects
+    const hasEmptySubject = marksArray.some(
+      (m) => !m.subject?.trim()
+    );
+
+    if (hasEmptySubject) {
+
+      alert("Subject name cannot be empty.");
+
+      return;
+    }
+
+
+    // ==========================================
+    // FIND EXAM RESULT
+    // ==========================================
+
+    const resultRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "exam_results",
+        [
+          Query.equal(
+            "studentId",
+            student.studentId
+          ),
+          Query.limit(1),
+        ]
+      );
+
+
+    if (resultRes.documents.length === 0) {
+
+      alert("Exam result not found.");
+
+      return;
+    }
+
+
+    const resultDoc =
+      resultRes.documents[0];
+
+
+    // ==========================================
+    // PREPARE UPDATED MARKS
+    // ==========================================
+
+    const updatedMarksArray =
+      marksArray.map((m) => ({
+
+        subject:
+          m.subject.trim(),
+
+        objective:
+          Number(m.objective || 0),
+
+        practical:
+          Number(m.practical || 0),
+
+        total:
+          Number(m.objective || 0) +
+          Number(m.practical || 0),
+
+      }));
+
+
+    // ==========================================
+    // UPDATE EXAM RESULTS
+    // ==========================================
+
+    await databases.updateDocument(
+
+      DATABASE_ID,
+
+      "exam_results",
+
+      resultDoc.$id,
+
+      {
+
+        subjects:
+          updatedMarksArray
+            .map((m) => m.subject)
+            .join(", "),
+
+        marksArray:
+          JSON.stringify(
+            updatedMarksArray
+          ),
+
+      }
+
+    );
+
+
+    // ==========================================
+    // UPDATE STUDENT SUBJECT RESULTS
+    // ==========================================
+
+    const subjectRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [
+          Query.equal(
+            "studentId",
+            student.studentId
+          ),
+          Query.limit(500),
+        ]
+      );
+
+
+    // Update existing subject documents
+    // according to their order
+
+    for (
+      let i = 0;
+      i < updatedMarksArray.length;
+      i++
+    ) {
+
+      const subjectDoc =
+        subjectRes.documents[i];
+
+      if (!subjectDoc) continue;
+
+
+      await databases.updateDocument(
+
+        DATABASE_ID,
+
+        "student_subject_results",
+
+        subjectDoc.$id,
+
+        {
+
+          subject:
+            updatedMarksArray[i].subject,
+
+        }
+
+      );
+
+    }
+
+
+    // Update local state
+    setMarksArray(updatedMarksArray);
+
+    setEditingSubjects(false);
+
+    alert(
+      "Subjects updated successfully."
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "SUBJECT UPDATE ERROR:",
+      err
+    );
+
+    alert(
+      err?.message ||
+      "Failed to update subjects."
+    );
+
+  } finally {
+
+    setSavingSubjects(false);
+
+  }
+
+};
+
 
   const handleDownload = async () => {
     try {
@@ -336,6 +613,67 @@ const rect = node.getBoundingClientRect();
       >
         Download Image
       </button>
+
+      {/* ========================================== */}
+{/* ADMIN ONLY SUBJECT EDIT */}
+{/* ========================================== */}
+
+{isAdmin && !loadingUser && (
+
+  <div className="mb-6 flex gap-3">
+
+    {!editingSubjects ? (
+
+      <button
+        onClick={() =>
+          setEditingSubjects(true)
+        }
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
+      >
+        Edit Subjects
+      </button>
+
+    ) : (
+
+      <>
+
+        <button
+          onClick={() => {
+
+            setEditingSubjects(false);
+
+            fetchMarks(
+              student.studentId
+            );
+
+          }}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          onClick={saveSubjectChanges}
+          disabled={savingSubjects}
+          className={`px-6 py-2 rounded text-white ${
+            savingSubjects
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {savingSubjects
+            ? "Saving..."
+            : "Save Subject Changes"}
+        </button>
+
+      </>
+
+    )}
+
+  </div>
+
+)}
 
   <div
   ref={printRef}
@@ -407,19 +745,42 @@ const rect = node.getBoundingClientRect();
     whiteSpace: "normal",
   }}
 >
- {m.subject
-  ?.split("\n")
-  .filter(line => line.trim() !== "")
-  .map((line, i) => (
-    <div
-      key={i}
-      style={{
-        marginBottom: "6px"
-      }}
-    >
-      {i + 1}. {line.trim()}
-    </div>
-))}
+{editingSubjects ? (
+
+  <textarea
+    value={m.subject || ""}
+    onChange={(e) =>
+      updateSubjectName(
+        index,
+        e.target.value
+      )
+    }
+    className="border border-gray-400 px-2 py-1 w-full bg-white text-black rounded"
+    rows={3}
+  />
+
+) : (
+
+  m.subject
+    ?.split("\n")
+    .filter(
+      (line) =>
+        line.trim() !== ""
+    )
+    .map((line, i) => (
+
+      <div
+        key={i}
+        style={{
+          marginBottom: "6px"
+        }}
+      >
+        {i + 1}. {line.trim()}
+      </div>
+
+    ))
+
+)}
 </div>
             <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
               {m.objective}
