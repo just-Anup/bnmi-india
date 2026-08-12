@@ -20,6 +20,7 @@ export default function PrintMarksheetMultiple() {
   const [marksArray, setMarksArray] = useState([]);
   const [qrCode, setQrCode] = useState("");
   const [courseData, setCourseData] = useState(null);
+  
 const printRef = useRef();
 
   

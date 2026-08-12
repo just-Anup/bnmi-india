@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { databases } from "@/lib/appwrite"
 import { useRouter } from "next/navigation"
+import { Query } from "appwrite"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
@@ -15,6 +16,7 @@ export default function CourierWalletPage() {
     const res = await databases.listDocuments(
       DATABASE_ID,
       "franchise_approved"
+      [ Query.limit(100), Query.orderDesc("lastCourierRecharge") ]
     )
     setData(res.documents)
   }

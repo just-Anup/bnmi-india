@@ -396,7 +396,7 @@ const rect = node.getBoundingClientRect();
           <div key={index}>
           <div
   style={{
-    top: 570 + index * 120,
+    top: 550 + index * 120,
     left: 135,
     width: "465px",
     position: "absolute",

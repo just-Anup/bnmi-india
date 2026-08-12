@@ -24,7 +24,10 @@ export default function CourierWalletPage() {
     const res = await databases.listDocuments(
       DATABASE_ID,
       "franchise_approved",
-      [Query.equal("email", user.email)]
+      [Query.equal("email", user.email),
+        Query.limit(200),
+      ]
+
     )
 
     const franchise = res.documents[0]
@@ -36,7 +39,9 @@ export default function CourierWalletPage() {
     const txn = await databases.listDocuments(
       DATABASE_ID,
       "courier_transactions",
-      [Query.equal("franchiseId", franchise.$id)]
+      [Query.equal("franchiseId", franchise.$id)
+        , Query.limit(200),
+      ]
     )
 
     setTransactions(txn.documents)
