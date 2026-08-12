@@ -18,7 +18,7 @@ const fetchData = async () => {
     DATABASE_ID,
     "franchise_approved",
     [
-      Query.limit(100),
+      Query.limit(200),
       Query.orderDesc("lastCourierRecharge")
     ]
   )
