@@ -9,21 +9,34 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
 export default function CourierWalletPage() {
 
-  const [data, setData] = useState([])
-  const router = useRouter()
+ const [data, setData] = useState([])
+const [search, setSearch] = useState("")
+const router = useRouter()
 
-  const fetchData = async () => {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved"
-      [ Query.limit(100), Query.orderDesc("lastCourierRecharge") ]
-    )
-    setData(res.documents)
-  }
+const fetchData = async () => {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [
+      Query.limit(100),
+      Query.orderDesc("lastCourierRecharge")
+    ]
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const filteredData = search.trim()
+    ? res.documents.filter((item) =>
+        item.instituteName
+          ?.toLowerCase()
+          .includes(search.trim().toLowerCase())
+      )
+    : res.documents
+
+  setData(filteredData)
+}
+
+useEffect(() => {
+  fetchData()
+}, [search])
 
   return (
 
@@ -39,6 +52,15 @@ export default function CourierWalletPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div className="mb-6">
+  <input
+    type="text"
+    placeholder="Search franchise name..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full md:w-96 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+  />
+</div>
 
         <table className="w-full text-sm">
 
