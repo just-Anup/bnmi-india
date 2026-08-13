@@ -25,7 +25,7 @@ const fetchData = async () => {
 
   const filteredData = search.trim()
     ? res.documents.filter((item) =>
-        item.instituteName
+        item.instituteName 
           ?.toLowerCase()
           .includes(search.trim().toLowerCase())
       )

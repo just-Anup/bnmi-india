@@ -11,6 +11,8 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function PrintMarksheet() {
 
+const { id } = useParams();
+
 const [student, setStudent] = useState(null);
 const [marksArray, setMarksArray] = useState([]);
 const [qrCode, setQrCode] = useState("");
