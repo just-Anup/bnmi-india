@@ -203,7 +203,7 @@ export default function EditStudent() {
         }
       );
 
-      // Update certificate also
+// Update certificate also
 try {
   const cert = await databases.listDocuments(
     DATABASE_ID,
@@ -218,29 +218,37 @@ try {
       DATABASE_ID,
       "certificates",
       cert.documents[0].$id,
-    {
-    studentName: form.studentName,
-    surname: form.surname,
-    relationType: form.relationType,
-    fatherName: form.fatherName,
-    motherName: form.motherName,
+      {
+        studentName: form.studentName || "",
+        surname: form.surname || "",
+        relationType: form.relationType || "",
 
-    photoId: photoId,
-    signatureId: signatureId,
+        fatherName: form.fatherName || "",
+        motherName: form.motherName || "",
 
-    dob: form.dob,
-    courseName: form.courseName,
-    subjects: form.subjects,
+        photoId: photoId || "",
+        signatureId: signatureId || "",
 
-    showFatherInCertificate: form.showFatherInCertificate,
-    showMotherInCertificate: form.showMotherInCertificate
-}
+        dob: form.dob || "",
+        city: form.city || "",
+
+        // Certificate collection field is "course"
+        // while Student Admission field is "courseName"
+        course: form.courseName || "",
+
+        subjects: form.subjects || "",
+
+        showFatherInCertificate:
+          form.showFatherInCertificate || false,
+
+        showMotherInCertificate:
+          form.showMotherInCertificate || false
+      }
     );
   }
 } catch (err) {
   console.log("Certificate update failed", err);
 }
-
       alert("Student Updated Successfully");
 
       router.push("/login/institute/manage-student/admission");
