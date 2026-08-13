@@ -203,107 +203,111 @@ fetchMarks(cert.studentId, finalData);
   }, [student]);
 
   const fetchMarks = async (studentId, studentData) => {
+  try {
 
-    try {
+    // ==========================================
+    // GET MARKS FROM EXAM_RESULTS
+    // ==========================================
 
-      if (studentData?.courseType === "multiple") {
-
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          "student_subject_results",
-          [Query.equal("studentId", studentId)]
-        );
-
-        const docs = res.documents || [];
-
-      const sorted = [...docs].sort(
-  (a, b) => new Date(a.$createdAt) - new Date(b.$createdAt)
+    const resultRes = await databases.listDocuments(
+  DATABASE_ID,
+  "exam_results",
+  [
+    Query.equal("studentId", studentId),
+    Query.orderDesc("$createdAt"),
+    Query.limit(100),
+  ]
 );
 
-        const finalMarks = sorted.map((m) => ({
-          subject: m.subject,
-          objective: Number(m.objective || 0),
-          practical: Number(m.practical || 0),
-          total: Number(m.total || 0),
-        }));
+    if (resultRes.documents.length === 0) {
+      console.log("No exam result found for:", studentId);
+      setMarksArray([]);
+      return;
+    }
 
-        setMarksArray(finalMarks);
+    // ==========================================
+    // FIND THE CORRECT RESULT
+    // ==========================================
 
-      } else {
+    let resultDoc = resultRes.documents[0];
 
-        const resultRes = await databases.listDocuments(
-          DATABASE_ID,
-          "student_subject_results",
-          [Query.equal("studentId", studentId)]
+    // For normal single/beauty courses there should
+    // normally be one result. For semester courses,
+    // keep the existing semester result separate.
+    if (studentData?.courseType === "semester") {
+
+      resultDoc =
+        resultRes.documents.find(
+          (doc) =>
+            Number(doc.semesterNumber) ===
+            Number(studentData.currentSemester || 1)
+        ) || resultDoc;
+    }
+
+    // ==========================================
+    // READ MARKS ARRAY
+    // ==========================================
+
+    let parsedMarks = [];
+
+    if (resultDoc.marksArray) {
+
+      try {
+
+        parsedMarks =
+          typeof resultDoc.marksArray === "string"
+            ? JSON.parse(resultDoc.marksArray)
+            : resultDoc.marksArray;
+
+      } catch (parseError) {
+
+        console.error(
+          "MARKS ARRAY PARSE ERROR:",
+          parseError
         );
 
-        let subjectList = [];
-
-        if (resultRes.documents.length > 0) {
-
-          subjectList =
-            resultRes.documents[0].subjects
-              ?.split(",")
-              .map((s) => s.trim()) || [];
-        }
-
-        const marksRes = await databases.listDocuments(
-          DATABASE_ID,
-          "exam_subject_marks",
-          [Query.equal("studentId", studentId)]
-        );
-
-        let marksDocs = marksRes.documents || [];
-
-        if (marksDocs.length === 0) {
-
-          const fallbackRes = await databases.listDocuments(
-            DATABASE_ID,
-            "student_subject_results",
-            [Query.equal("studentId", studentId)]
-          );
-
-          const fallbackDocs = fallbackRes.documents || [];
-
-          const finalMarks = fallbackDocs.map((m) => ({
-            subject: m.subject,
-            objective: Number(m.objective || 0),
-            practical: Number(m.practical || 0),
-            total: Number(m.total || 0),
-          }));
-
-          setMarksArray(finalMarks);
-
-        } else {
-
-          const finalMarks = subjectList.map((sub, index) => {
-
-            const mark = marksDocs[index];
-
-            return {
-              subject: sub,
-              objective: Number(mark?.theory || 0),
-              practical: Number(mark?.practical || 0),
-              total:
-                Number(mark?.theory || 0) +
-                Number(mark?.practical || 0),
-            };
-          });
-
-          setMarksArray(finalMarks);
-        }
-      }
-
-    } catch (err) {
-
-      console.log("MARK FETCH ERROR:", err);
-
-      if (studentData?.marksArray) {
-        setMarksArray(studentData.marksArray);
+        parsedMarks = [];
       }
     }
-  };
 
+    // ==========================================
+    // CONVERT TO MARKSHEET FORMAT
+    // ==========================================
+
+    const finalMarks = parsedMarks.map((m) => ({
+      subject: m.subject || "",
+      objective: Number(
+        m.objective ?? m.theory ?? 0
+      ),
+      practical: Number(
+        m.practical ?? 0
+      ),
+      total: Number(
+        m.total ??
+        (
+          Number(m.objective ?? m.theory ?? 0) +
+          Number(m.practical ?? 0)
+        )
+      ),
+    }));
+
+    console.log(
+      "MARKSHEET MARKS FROM EXAM_RESULTS:",
+      finalMarks
+    );
+
+    setMarksArray(finalMarks);
+
+  } catch (err) {
+
+    console.error(
+      "MARK FETCH ERROR:",
+      err
+    );
+
+    setMarksArray([]);
+  }
+};
 
   // ==========================================
 // ADMIN CHECK
@@ -989,30 +993,22 @@ student.duration ||
 
 ) : (
 
-  marksArray.map((s, i) => (
+(m.subject || "")
+  .replace(/\\n/g, "\n")
+  .split("\n")
+  .filter(
+    (line) =>
+      line.trim() !== ""
+  )
+  .map((line, j) => (
 
-    <div key={i}>
-
-      {(s.subject || "")
-        .replace(/\\n/g, "\n")
-        .split("\n")
-        .filter(
-          (line) =>
-            line.trim() !== ""
-        )
-        .map((line, j) => (
-
-          <div
-            key={j}
-            style={{
-              marginBottom: "8px",
-            }}
-          >
-            {j + 1}. {line.trim()}
-          </div>
-
-        ))}
-
+    <div
+      key={j}
+      style={{
+        marginBottom: "8px",
+      }}
+    >
+      {j + 1}. {line.trim()}
     </div>
 
   ))
