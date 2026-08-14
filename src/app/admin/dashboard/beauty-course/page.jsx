@@ -8,327 +8,397 @@ const COLLECTION_ID = "beauty_courses_master"
 
 export default function BeautyCMS() {
 
-// ================= STATES =================
-const [courses, setCourses] = useState([])
-const [awards, setAwards] = useState([])
+  // ================= STATES =================
+  const [courses, setCourses] = useState([])
+  const [awards, setAwards] = useState([])
+  const [editingId, setEditingId] = useState(null)
 
-const [form, setForm] = useState({
-courseCode: '',
-award: '',
-courseTitle: '',
-duration: '',
-examFees: ''
-})
+  const [form, setForm] = useState({
+    courseCode: '',
+    award: '',
+    courseTitle: '',
+    duration: '',
+    examFees: ''
+  })
 
-const [newAward, setNewAward] = useState("")
-const [showAddAward, setShowAddAward] = useState(false)
+  const [newAward, setNewAward] = useState("")
+  const [showAddAward, setShowAddAward] = useState(false)
 
-// ================= DEFAULT AWARDS =================
-const defaultAwards = [
-"CERTIFICATE","DIPLOMA","ADVANCE CERTIFICATE","ADVANCE DIPLOMA",
-"MASTER DIPLOMA","CERTIFICATE IN POST GRADUATE DIPLOMA",
-"PROFESSIONAL DIPLOMA","ALL INDIA CERTIFICATE","MASTER CERTIFICATE",
-"CERTIFICATE BASIC DIPLOMA","ADVANCE","CERTIFICATE IN PROFESSIONAL DIPLOMA",
-"POST GRADUATE","POST GRADUATE DIPLOMA","BASIC","CERTIFICATE COURSE",
-"CERTIFICATION","PRE-VOCATIONAL COURSE","PERSONAL"
-]
-
-// ================= MERGE =================
-const allAwards = [...defaultAwards, ...awards.map(a => a.name)]
-const uniqueAwards = [...new Set(allAwards)]
-
-// ================= FETCH =================
-const fetchCourses = async () => {
-try {
-const res = await databases.listDocuments(
-DATABASE_ID,
-COLLECTION_ID,
- [
-    Query.orderDesc('courseCode'),
-    Query.limit(300) // 🔥 increase limit
+  // ================= DEFAULT AWARDS =================
+  const defaultAwards = [
+    "CERTIFICATE", "DIPLOMA", "ADVANCE CERTIFICATE", "ADVANCE DIPLOMA",
+    "MASTER DIPLOMA", "CERTIFICATE IN POST GRADUATE DIPLOMA",
+    "PROFESSIONAL DIPLOMA", "ALL INDIA CERTIFICATE", "MASTER CERTIFICATE",
+    "CERTIFICATE BASIC DIPLOMA", "ADVANCE", "CERTIFICATE IN PROFESSIONAL DIPLOMA",
+    "POST GRADUATE", "POST GRADUATE DIPLOMA", "BASIC", "CERTIFICATE COURSE",
+    "CERTIFICATION", "PRE-VOCATIONAL COURSE", "PERSONAL"
   ]
-)
 
-// ✅ SAFE DATA
-const clean = (res.documents || []).filter(c => c && c.$id)
+  // ================= MERGE =================
+  const allAwards = [...defaultAwards, ...awards.map(a => a.name)]
+  const uniqueAwards = [...new Set(allAwards)]
 
-setCourses(clean)
+  // ================= FETCH =================
+  const fetchCourses = async () => {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [
+          Query.orderDesc('courseCode'),
+          Query.limit(300) // 🔥 increase limit
+        ]
+      )
 
-} catch (err) {
-console.log(err)
-setCourses([])
-}
-}
+      // ✅ SAFE DATA
+      const clean = (res.documents || []).filter(c => c && c.$id)
 
-const fetchAwards = async () => {
-try {
-const res = await databases.listDocuments(
-DATABASE_ID,
-"awards_master"
-)
-setAwards(res.documents || [])
-} catch (err) {
-console.log(err)
-}
-}
+      setCourses(clean)
 
-useEffect(() => {
-fetchCourses()
-fetchAwards()
-}, [])
+    } catch (err) {
+      console.log(err)
+      setCourses([])
+    }
+  }
 
-// ================= HANDLER =================
-const handleChange = (e) => {
-setForm({
-...form,
-[e.target.name]: e.target.value
-})
-}
+  const fetchAwards = async () => {
+    try {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "awards_master"
+      )
+      setAwards(res.documents || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
-// ================= ADD AWARD =================
-const addNewAward = async () => {
+  useEffect(() => {
+    fetchCourses()
+    fetchAwards()
+  }, [])
 
-if (!newAward) return alert("Enter award")
 
-try {
+  // ================= EDIT COURSE =================
+  const editCourse = (course) => {
 
-await databases.createDocument(
-DATABASE_ID,
-"awards_master",
-ID.unique(),
-{ name: newAward }
-)
+    setForm({
+      courseCode: course.courseCode || '',
+      award: course.award || '',
+      courseTitle: course.courseName
+        ? course.courseName.replace(`${course.award} IN `, '')
+        : '',
+      duration: course.duration || '',
+      examFees: course.examFees || ''
+    })
 
-setNewAward("")
-setShowAddAward(false)
-fetchAwards()
+    setEditingId(course.$id)
 
-} catch (err) {
-console.log(err)
-alert(err.message)
-}
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
 
-}
 
-// ================= ADD COURSE =================
-const addCourse = async () => {
+  // ================= HANDLER =================
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    })
+  }
 
-try {
+  // ================= ADD AWARD =================
+  const addNewAward = async () => {
 
-if (!form.courseCode || !form.courseTitle || !form.award || !form.duration) {
-alert("Fill all fields")
-return
-}
+    if (!newAward) return alert("Enter award")
 
-const courseName = `${form.award} IN ${form.courseTitle}`
+    try {
 
-await databases.createDocument(
-DATABASE_ID,
-COLLECTION_ID,
-ID.unique(),
-{
-courseCode: form.courseCode,
-courseName,
-duration: form.duration,
-award: form.award,
-examFees: Number(form.examFees),
-status: "Active"
-}
-)
+      await databases.createDocument(
+        DATABASE_ID,
+        "awards_master",
+        ID.unique(),
+        { name: newAward }
+      )
 
-alert("Course Added")
+      setNewAward("")
+      setShowAddAward(false)
+      fetchAwards()
 
-setForm({
-courseCode: '',
-award: '',
-courseTitle: '',
-duration: '',
-examFees: ''
-})
+    } catch (err) {
+      console.log(err)
+      alert(err.message)
+    }
 
-fetchCourses()
+  }
 
-} catch (err) {
-console.log(err)
-alert(err.message)
-}
+  // ================= ADD COURSE =================
+  // ================= ADD / UPDATE COURSE =================
+  const addCourse = async () => {
 
-}
+    try {
 
-// ================= DELETE =================
-const deleteCourse = async (id) => {
+      if (
+        !form.courseCode ||
+        !form.courseTitle ||
+        !form.award ||
+        !form.duration
+      ) {
+        alert("Fill all fields")
+        return
+      }
 
-if (!id) return
+      const courseName = `${form.award} IN ${form.courseTitle}`
 
-await databases.deleteDocument(
-DATABASE_ID,
-COLLECTION_ID,
-id
-)
+      // ================= UPDATE =================
+      if (editingId) {
 
-fetchCourses()
-}
+        await databases.updateDocument(
+          DATABASE_ID,
+          COLLECTION_ID,
+          editingId,
+          {
+            courseCode: form.courseCode,
+            courseName,
+            duration: form.duration,
+            award: form.award,
+            examFees: Number(form.examFees)
+          }
+        )
 
-// ================= UI =================
-return (
+        alert("Beauty Course Updated Successfully")
 
-<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-10">
+        setEditingId(null)
 
-<div className="max-w-4xl mx-auto">
+      }
 
-<h2 className="text-3xl font-bold mb-6 text-gray-800">
-Beauty Course CMS
-</h2>
+      // ================= ADD =================
+      else {
 
-{/* FORM */}
-<div className="bg-white shadow-xl rounded-xl p-6 mb-8">
+        await databases.createDocument(
+          DATABASE_ID,
+          COLLECTION_ID,
+          ID.unique(),
+          {
+            courseCode: form.courseCode,
+            courseName,
+            duration: form.duration,
+            award: form.award,
+            examFees: Number(form.examFees),
+            status: "Active"
+          }
+        )
 
-<div className="grid grid-cols-2 gap-4">
+        alert("Beauty Course Added Successfully")
+      }
 
-<input
-name="courseCode"
-placeholder="Course Code"
-value={form.courseCode}
-onChange={handleChange}
-className="border p-3 rounded"
-/>
+      // RESET FORM
+      setForm({
+        courseCode: '',
+        award: '',
+        courseTitle: '',
+        duration: '',
+        examFees: ''
+      })
 
-<select
-name="award"
-value={form.award}
-onChange={(e)=>{
-if(e.target.value==="ADD_NEW"){
-setShowAddAward(true)
-}else{
-handleChange(e)
-}
-}}
-className="border p-3 rounded"
->
-<option value="">--select award--</option>
+      fetchCourses()
 
-{uniqueAwards.map((a,i)=>(
-<option key={i} value={a}>{a}</option>
-))}
+    } catch (err) {
 
-<option value="ADD_NEW">+ Add New Award</option>
+      console.log(err)
+      alert(err.message)
 
-</select>
+    }
+  }
+  // ================= DELETE =================
+  const deleteCourse = async (id) => {
 
-<input
-name="courseTitle"
-placeholder="Course Name"
-value={form.courseTitle}
-onChange={handleChange}
-className="border p-3 rounded"
-/>
+    if (!id) return
 
-<input
-name="duration"
-placeholder="Duration"
-value={form.duration}
-onChange={handleChange}
-className="border p-3 rounded"
-/>
+    await databases.deleteDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      id
+    )
 
-<input
-type="number"
-name="examFees"
-placeholder="Exam Fees"
-value={form.examFees}
-onChange={handleChange}
-className="border p-3 rounded col-span-2"
-/>
+    fetchCourses()
+  }
 
-</div>
+  // ================= UI =================
+  return (
 
-{/* ADD AWARD */}
-{showAddAward && (
-<div className="mt-4 flex gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 p-10">
 
-<input
-placeholder="New Award"
-value={newAward}
-onChange={(e)=>setNewAward(e.target.value)}
-className="border p-2 rounded w-full"
-/>
+      <div className="max-w-4xl mx-auto">
 
-<button
-onClick={addNewAward}
-className="bg-green-600 text-white px-4 rounded"
->
-Save
-</button>
+        <h2 className="text-3xl font-bold mb-6 text-gray-800">
+          Beauty Course CMS
+        </h2>
 
-</div>
-)}
+        {/* FORM */}
+        <div className="bg-white shadow-xl rounded-xl p-6 mb-8">
 
-<button
-onClick={addCourse}
-className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg"
->
-Add Course
-</button>
+          <div className="grid grid-cols-2 gap-4">
 
-</div>
+            <input
+              name="courseCode"
+              placeholder="Course Code"
+              value={form.courseCode}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
 
-{/* LIST */}
-<div className="bg-white shadow-xl rounded-xl p-6">
+            <select
+              name="award"
+              value={form.award}
+              onChange={(e) => {
+                if (e.target.value === "ADD_NEW") {
+                  setShowAddAward(true)
+                } else {
+                  handleChange(e)
+                }
+              }}
+              className="border p-3 rounded"
+            >
+              <option value="">--select award--</option>
 
-<h3 className="font-semibold mb-4">
-All Courses
-</h3>
+              {uniqueAwards.map((a, i) => (
+                <option key={i} value={a}>{a}</option>
+              ))}
 
-<table className="w-full border">
+              <option value="ADD_NEW">+ Add New Award</option>
 
-<thead className="bg-gray-100">
-<tr>
-<th className="p-2 border">Code</th>
-<th className="p-2 border">Name</th>
-<th className="p-2 border">Duration</th>
-<th className="p-2 border">Action</th>
-</tr>
-</thead>
+            </select>
 
-<tbody>
+            <input
+              name="courseTitle"
+              placeholder="Course Name"
+              value={form.courseTitle}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
 
-{courses.length > 0 ? (
+            <input
+              name="duration"
+              placeholder="Duration"
+              value={form.duration}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
 
-courses.map((c)=>(
-<tr key={c.$id}>
-<td className="p-2 border">{c.courseCode}</td>
-<td className="p-2 border">{c.courseName}</td>
-<td className="p-2 border">{c.duration}</td>
+            <input
+              type="number"
+              name="examFees"
+              placeholder="Exam Fees"
+              value={form.examFees}
+              onChange={handleChange}
+              className="border p-3 rounded col-span-2"
+            />
 
-<td className="p-2 border">
-<button
-onClick={()=>deleteCourse(c.$id)}
-className="bg-red-500 text-white px-3 py-1 rounded"
->
-Delete
-</button>
+          </div>
+
+          {/* ADD AWARD */}
+          {showAddAward && (
+            <div className="mt-4 flex gap-2">
+
+              <input
+                placeholder="New Award"
+                value={newAward}
+                onChange={(e) => setNewAward(e.target.value)}
+                className="border p-2 rounded w-full"
+              />
+
+              <button
+                onClick={addNewAward}
+                className="bg-green-600 text-white px-4 rounded"
+              >
+                Save
+              </button>
+
+            </div>
+          )}
+
+          <button
+            onClick={addCourse}
+            className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg"
+          >
+            {editingId ? "Update Course" : "Add Course"}
+          </button>
+
+        </div>
+
+        {/* LIST */}
+        <div className="bg-white shadow-xl rounded-xl p-6">
+
+          <h3 className="font-semibold mb-4">
+            All Courses
+          </h3>
+
+          <table className="w-full border">
+
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 border">Code</th>
+                <th className="p-2 border">Name</th>
+                <th className="p-2 border">Duration</th>
+                <th className="p-2 border">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {courses.length > 0 ? (
+
+                courses.map((c) => (
+                  <tr key={c.$id}>
+                    <td className="p-2 border">{c.courseCode}</td>
+                    <td className="p-2 border">{c.courseName}</td>
+                    <td className="p-2 border">{c.duration}</td>
+
+                 <td className="p-2 border">
+
+  <div className="flex gap-2 justify-center">
+
+    <button
+      onClick={() => editCourse(c)}
+      className="bg-blue-500 text-white px-3 py-1 rounded"
+    >
+      Edit
+    </button>
+
+    <button
+      onClick={() => deleteCourse(c.$id)}
+      className="bg-red-500 text-white px-3 py-1 rounded"
+    >
+      Delete
+    </button>
+
+  </div>
+
 </td>
-</tr>
-))
+                  </tr>
+                ))
 
-) : (
-<tr>
-<td colSpan="4" className="text-center p-4">
-No courses
-</td>
-</tr>
-)}
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center p-4">
+                    No courses
+                  </td>
+                </tr>
+              )}
 
-</tbody>
+            </tbody>
 
-</table>
+          </table>
 
-</div>
+        </div>
 
-</div>
+      </div>
 
-</div>
+    </div>
 
-)
+  )
 
 }
