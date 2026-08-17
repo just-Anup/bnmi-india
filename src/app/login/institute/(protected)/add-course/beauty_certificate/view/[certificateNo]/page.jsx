@@ -381,7 +381,7 @@ const downloadCertificate = async () => {
             <div
               className="absolute text-center"
               style={{
-                bottom: '180px',
+                bottom: '150px',
                 left: '380px',
                 width: '180px'
               }}
@@ -393,7 +393,7 @@ const downloadCertificate = async () => {
             <div
               className="absolute text-center"
               style={{
-                bottom: '180px',
+                bottom: '150px',
                 left: '640px',
                 width: '180px'
               }}
@@ -405,7 +405,7 @@ const downloadCertificate = async () => {
             <div
               className="absolute text-center"
               style={{
-                bottom: '180px',
+                bottom: '150px',
                 right: '375px',
                 width: '220px'
               }}
