@@ -15,56 +15,56 @@ const COLLECTION_ID = 'franchise_requests'
 /* ---------------- STATE + CITY LIST ---------------- */
 
 const statesAndCities = {
-  Assam: ['Guwahati', 'Dibrugarh', 'Silchar', 'Jorhat'],
+  Assam: ['GUWAHATI', 'DIBRUGARH', 'SILCHAR', 'JORHAT'],
   'Arunachal Pradesh': [
-    'Itanagar',
-    'Tawang',
-    'Pasighat',
+    'ITANAGAR',
+    'TAWANG',
+    'PASIGHAT',
   ],
-  Meghalaya: ['Shillong', 'Tura'],
-  Nagaland: ['Kohima', 'Dimapur'],
-  Manipur: ['Imphal'],
-  Mizoram: ['Aizawl'],
-  Tripura: ['Agartala'],
+  Meghalaya: ['SHILLONG', 'TURA'],
+  Nagaland: ['KOHIMA', 'DIMAPUR'],
+  Manipur: ['IMPHAL'],
+  Mizoram: ['AIZAWL'],
+  Tripura: ['AGARTALA'],
   'West Bengal': [
-    'Kolkata',
-    'Siliguri',
-    'Durgapur',
+    'KOLKATA',
+    'SILIGURI',
+    'DURGAPUR',
   ],
-  Bihar: ['Patna', 'Gaya', 'Muzaffarpur'],
+  Bihar: ['PATNA', 'GAYA', 'MUZAFFARPUR'],
   'Uttar Pradesh': [
-    'Lucknow',
-    'Kanpur',
-    'Varanasi',
+    'LUCKNOW',
+    'KANPUR',
+    'VARANASI',
   ],
-  Delhi: ['New Delhi'],
-  Maharashtra: ['Mumbai', 'Pune', 'Nagpur'],
-  Karnataka: ['Bangalore', 'Mysore'],
+  Delhi: ['NEW DELHI'],
+  Maharashtra: ['MUMBAI', 'PUNE', 'NAGPUR'],
+  Karnataka: ['BANGALORE', 'MYSORE'],
   'Tamil Nadu': [
-    'Chennai',
-    'Coimbatore',
-    'Madurai',
+    'CHENNAI',
+    'COIMBATORE',
+    'MADURAI',
   ],
-  Chattisgarh:['Dilaspur'],
-  Kerala: ['Kochi', 'Trivandrum'],
-  Rajasthan: ['Jaipur', 'Udaipur', 'Jodhpur'],
-  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara'],
-  Punjab: ['Ludhiana', 'Jalandhar', 'Bathinda'],
-  Haryana: ['Chandigarh'],
-  Himachal: ['Shimla'],
-  Chhattisgarh: ['Raipur', 'Bhilai', 'Durg'],
-  Odisha: ['Bhubaneswar', 'Cuttack'],
-  Jharkhand: ['Ranchi', 'Jamshedpur'],
-  Uttarakhand: ['Dehradun', 'Haridwar'],
-  'jammu & kashmir': ['Srinagar', 'Jammu'],
-  'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior'],
-  Goa: ['Panaji'],
+  Chattisgarh:['DILASPUR'],
+  Kerala: ['KOCHI', 'TRIVANDRUM'],
+  Rajasthan: ['JAIPUR', 'UDAIPUR', 'JODHPUR'],
+  Gujarat: ['AHMEDABAD', 'SURAT', 'VADODARA'],
+  Punjab: ['LUDHIANA', 'JALANDHAR', 'BATHINDA'],
+  Haryana: ['CHANDIGARH'],
+  Himachal: ['SHIMLA'],
+  Chhattisgarh: ['RAIPUR', 'BHILAI', 'DURG'],
+  Odisha: ['BHUBANESWAR', 'CUTTACK'],
+  Jharkhand: ['RANCHI', 'JAMSHEDPUR'],
+  Uttarakhand: ['DEHRADUN', 'HARIDWAR'],
+  'jammu & kashmir': ['SRINAGAR', 'JAMMU'],
+  'Madhya Pradesh': ['INDORE', 'BHOPAL', 'GWALIOR'],
+  Goa: ['PANAJI'],
   'Andhra Pradesh': [
-    'Vijayawada',
-    'Visakhapatnam',
-    'Guntur',
+    'VIJAYAWADA',
+    'VISAKHAPATNAM',
+    'GUNTUR',
   ],
-  Telangana: ['Hyderabad', 'Secunderabad', 'Warangal'],
+  Telangana: ['HYDERABAD', 'SECUNDERABAD', 'WARANGAL'],
 }
 
 /* ---------------- SAFE ATC GENERATOR ---------------- */
@@ -124,9 +124,15 @@ export default function FranchiseSignup() {
       state,
       city: '',
     }))
+    setCustomCity('')
 
     setCities(statesAndCities[state] || [])
   }
+
+  const normalizeUpperCase = (value) =>
+    typeof value === 'string'
+      ? value.trim().toUpperCase()
+      : ''
 
   /* ---------------- SIGNUP ---------------- */
 
@@ -143,10 +149,12 @@ export default function FranchiseSignup() {
       return
     }
 
-    if (
-      form.city === 'Other' &&
-      !customCity
-    ) {
+    const finalCity =
+      form.city === 'Other'
+        ? normalizeUpperCase(customCity)
+        : normalizeUpperCase(form.city)
+
+    if (form.city === 'Other' && !finalCity) {
       alert('Please enter your city ❌')
       return
     }
@@ -174,10 +182,7 @@ export default function FranchiseSignup() {
         {
           ...form,
 
-          city:
-            form.city === 'Other'
-              ? customCity
-              : form.city,
+          city: finalCity,
 
           franchiseEmail: form.email,
 
@@ -467,12 +472,16 @@ export default function FranchiseSignup() {
             style={{
               textTransform: 'uppercase',
             }}
-            onChange={(e) =>
+            onChange={(e) => {
+              const selectedCity = e.target.value
               setForm({
                 ...form,
-                city: e.target.value,
+                city: selectedCity,
               })
-            }
+              if (selectedCity !== 'Other') {
+                setCustomCity('')
+              }
+            }}
           >
             <option value="">
               Select City
@@ -503,7 +512,9 @@ export default function FranchiseSignup() {
               value={customCity}
               onChange={(e) =>
                 setCustomCity(
-                  e.target.value.toUpperCase()
+                  normalizeUpperCase(
+                    e.target.value
+                  )
                 )
               }
             />
