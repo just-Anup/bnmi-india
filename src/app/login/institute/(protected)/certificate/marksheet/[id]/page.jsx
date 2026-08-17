@@ -262,11 +262,11 @@ fetchMarks(cert.studentId, finalData);
       } catch (parseError) {
 
         console.error(
-          "MARKS ARRAY PARSE ERROR:",
+          "MARKS ARRAY PARSE ERROR:", 
           parseError
         );
 
-        parsedMarks = [];
+        parsedMarks = []; 
       }
     }
 
@@ -445,23 +445,14 @@ const saveSubjectChanges = async () => {
 
     for (const examDoc of examRes.documents) {
 
-      await databases.updateDocument(
-        DATABASE_ID,
-        "exam_results",
-        examDoc.$id,
-        {
-          subjects:
-            updatedMarksArray
-              .map((m) => m.subject)
-              .join(", "),
-
-          marksArray:
-            JSON.stringify(
-              updatedMarksArray
-            ),
-        }
-      );
-
+     await databases.updateDocument(
+  DATABASE_ID,
+  "exam_results",
+  examDoc.$id,
+  {
+    marksArray: JSON.stringify(updatedMarksArray),
+  }
+);
     }
 
 
@@ -519,24 +510,7 @@ const saveSubjectChanges = async () => {
 
     }
 
-    // ==========================================
-// UPDATE SUBJECTS FIELD
-// ==========================================
 
-if (sortedSubjectDocs.length > 0) {
-
-  await databases.updateDocument(
-    DATABASE_ID,
-    "student_subject_results",
-    sortedSubjectDocs[0].$id,
-    {
-      subjects: updatedMarksArray
-        .map((m) => m.subject)
-        .join(", "),
-    }
-  );
-
-}
 
     // ==========================================
     // 3. UPDATE LOCAL STATE
