@@ -16,7 +16,8 @@ import {
   UserPlus,
   Wallet,
   ClipboardCheck,
-  Layers
+  Layers,
+  FileText
 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { useRouter } from "next/navigation";
@@ -223,6 +224,332 @@ if (!node) {
   }
 };
 
+const handleAdmissionFormDownload = async () => {
+  try {
+    if (!franchiseData) {
+      alert("Franchise information not found.");
+      return;
+    }
+
+    // =====================================================
+    // GET FRANCHISE LOGO
+    // =====================================================
+
+    let franchiseLogo =
+      franchiseData.logo ||
+      franchiseData.franchiseLogo ||
+      franchiseData.logoUrl ||
+      franchiseData.instituteLogo;
+
+    if (!franchiseLogo) {
+      alert("Franchise logo not found.");
+      return;
+    }
+
+    // =====================================================
+    // IF LOGO IS AN OBJECT
+    // =====================================================
+
+    if (typeof franchiseLogo === "object") {
+      franchiseLogo =
+        franchiseLogo.url ||
+        franchiseLogo.href ||
+        franchiseLogo.fileUrl ||
+        franchiseLogo.preview ||
+        null;
+    }
+
+    if (!franchiseLogo) {
+      alert("Invalid franchise logo.");
+      return;
+    }
+
+    console.log(
+      "FRANCHISE LOGO:",
+      franchiseLogo
+    );
+
+    // =====================================================
+    // LOAD IMAGE HELPER
+    // =====================================================
+
+    const loadImage = (src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          reject(
+            new Error(
+              `Unable to load image: ${src}`
+            )
+          );
+        };
+
+        img.src = src;
+      });
+    };
+
+    // =====================================================
+    // LOAD ORIGINAL ADMISSION FORM
+    // =====================================================
+
+    const formImage = await loadImage(
+      "/admi.png"
+    );
+
+    console.log(
+      "ADMISSION FORM LOADED:",
+      formImage.naturalWidth,
+      formImage.naturalHeight
+    );
+
+    // =====================================================
+    // LOAD FRANCHISE LOGO THROUGH OUR API
+    // =====================================================
+
+    const logoProxyUrl =
+      `/api/franchise-logo?url=${encodeURIComponent(
+        franchiseLogo
+      )}`;
+
+    console.log(
+      "LOGO PROXY:",
+      logoProxyUrl
+    );
+
+    const logoImage =
+      await loadImage(logoProxyUrl);
+
+    console.log(
+      "FRANCHISE LOGO LOADED:",
+      logoImage.naturalWidth,
+      logoImage.naturalHeight
+    );
+
+    // =====================================================
+    // CREATE CANVAS
+    // =====================================================
+
+    const canvas =
+      document.createElement("canvas");
+
+    // Keep ORIGINAL admission form dimensions
+    canvas.width =
+      formImage.naturalWidth;
+
+    canvas.height =
+      formImage.naturalHeight;
+
+    const ctx =
+      canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error(
+        "Canvas is not supported."
+      );
+    }
+
+    // =====================================================
+    // DRAW ORIGINAL ADMISSION FORM
+    // =====================================================
+
+    ctx.drawImage(
+      formImage,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+// =====================================================
+// FRANCHISE LOGO - ROUND DESIGN
+// =====================================================
+
+// Circle diameter
+const logoSize = 180;
+
+// Position - TOP CENTER
+const logoX =
+  (canvas.width - logoSize) / 2;
+
+// Move logo higher/lower here
+const logoY = 85;
+
+// =====================================================
+// DRAW WHITE CIRCULAR BACKGROUND
+// =====================================================
+
+const centerX =
+  logoX + logoSize / 2;
+
+const centerY =
+  logoY + logoSize / 2;
+
+const radius =
+  logoSize / 2;
+
+// White circular background
+ctx.beginPath();
+
+ctx.arc(
+  centerX,
+  centerY,
+  radius,
+  0,
+  Math.PI * 2
+);
+
+ctx.fillStyle = "#ffffff";
+
+ctx.fill();
+
+// =====================================================
+// ROUND GOLD BORDER
+// =====================================================
+
+ctx.beginPath();
+
+ctx.arc(
+  centerX,
+  centerY,
+  radius - 3,
+  0,
+  Math.PI * 2
+);
+
+ctx.lineWidth = 6;
+
+ctx.strokeStyle = "#C9A24B";
+
+ctx.stroke();
+
+// =====================================================
+// CLIP LOGO INTO CIRCLE
+// =====================================================
+
+ctx.save();
+
+ctx.beginPath();
+
+ctx.arc(
+  centerX,
+  centerY,
+  radius - 7,
+  0,
+  Math.PI * 2
+);
+
+ctx.clip();
+
+// =====================================================
+// FIT LOGO INSIDE CIRCLE
+// =====================================================
+
+const padding = 12;
+
+const availableSize =
+  logoSize - padding * 2;
+
+let logoWidth =
+  logoImage.naturalWidth;
+
+let logoHeight =
+  logoImage.naturalHeight;
+
+const scale =
+  Math.min(
+    availableSize / logoWidth,
+    availableSize / logoHeight
+  );
+
+logoWidth *= scale;
+logoHeight *= scale;
+
+// Center the actual logo
+const logoDrawX =
+  centerX - logoWidth / 2;
+
+const logoDrawY =
+  centerY - logoHeight / 2;
+
+// Draw logo
+ctx.drawImage(
+  logoImage,
+  logoDrawX,
+  logoDrawY,
+  logoWidth,
+  logoHeight
+);
+
+ctx.restore();
+    // =====================================================
+    // CREATE PNG
+    // =====================================================
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          alert(
+            "Unable to create admission form."
+          );
+          return;
+        }
+
+        const downloadUrl =
+          URL.createObjectURL(blob);
+
+        const link =
+          document.createElement("a");
+
+        const franchiseName =
+          franchiseData.instituteName ||
+          franchiseData.name ||
+          "Franchise";
+
+        const safeName =
+          franchiseName
+            .toString()
+            .replace(
+              /[^a-zA-Z0-9]/g,
+              "_"
+            );
+
+        link.download =
+          `${safeName}_Admission_Form.png`;
+
+        link.href = downloadUrl;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+          URL.revokeObjectURL(
+            downloadUrl
+          );
+        }, 1000);
+      },
+      "image/png"
+    );
+
+  } catch (error) {
+    console.error(
+      "ADMISSION FORM DOWNLOAD ERROR:",
+      error
+    );
+
+    alert(
+      "Unable to download admission form."
+    );
+  }
+};
+
   return (
 <div className="p-3 sm:p-6 space-y-6">
       {/* 🔥 TOP ACTION BUTTONS */}
@@ -271,6 +598,13 @@ if (!node) {
             router.push("/login/institute/manage-attendance/batch")
           }
         />
+
+        <ActionButton
+  icon={<FileText size={18} />}
+  label="Admission Form"
+  color="bg-blue-600"
+  onClick={handleAdmissionFormDownload}
+/>
 
         {/* ✅ ID CARD BUTTON */}
        <ActionButton
