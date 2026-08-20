@@ -238,6 +238,7 @@ if (res.courseType === "single") {
 }
 
       }
+      
 
     }
 
