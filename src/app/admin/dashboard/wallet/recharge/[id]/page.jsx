@@ -109,9 +109,9 @@ if (type === "deduct") {
         }
       )
 
-      alert("Recharge Successful")
-      localStorage.removeItem("bnmi-wallet-cache");
-      router.push("/admin/dashboard/wallet")
+     alert("Recharge Successful")
+router.replace("/admin/dashboard/wallet")
+router.refresh()
 
     } catch (err) {
       console.error(err)

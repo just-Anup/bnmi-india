@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation"
 import { Query } from "appwrite"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const CACHE_KEY = "bnmi-wallet-cache";
 
-const CACHE_TIME = 60 * 60 * 1000;
+
 
 
 export default function WalletPage() {
@@ -52,50 +51,17 @@ export default function WalletPage() {
 
       setData(allDocuments)
       setFilteredData(allDocuments)
-      localStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({
-
-          data: allDocuments,
-
-          time: Date.now()
-
-        })
-      );
+   
 
     } catch (err) {
       console.error(err)
     }
   }
 
-  useEffect(() => {
+useEffect(() => {
+  fetchData();
+}, []);
 
-    const cache =
-      localStorage.getItem(CACHE_KEY);
-
-    if (cache) {
-
-      const parsed = JSON.parse(cache);
-
-      if (
-        Date.now() - parsed.time < CACHE_TIME
-      ) {
-
-        console.log("Wallet Cache Loaded");
-
-        setData(parsed.data);
-
-        setFilteredData(parsed.data);
-
-        return;
-
-      }
-
-    }
-
-    fetchData();
-
-  }, []);
   useEffect(() => {
 
     let filtered = [...data]
@@ -171,14 +137,7 @@ export default function WalletPage() {
             Franchise Wallet
           </h1>
           <button
-
-            onClick={() => {
-
-              localStorage.removeItem(CACHE_KEY);
-
-              fetchData();
-
-            }}
+onClick={fetchData}
 
             className="bg-blue-600 text-white px-4 py-2 rounded-lg"
 

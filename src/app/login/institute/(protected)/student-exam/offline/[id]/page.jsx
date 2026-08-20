@@ -119,16 +119,47 @@ let subjectList = [];
 //
 // This prevents BEAUTY courses from being affected.
 // ==========================================
+// ==========================================
+// SINGLE COURSE
+// ==========================================
 if (res.courseType === "single") {
 
   let normalSingleCourse = null;
 
   try {
 
-    // ------------------------------------------
-    // FIRST: Find the course in courses_single
-    // ------------------------------------------
-    if (res.courseCode) {
+    // ==========================================
+    // FIRST: USE courseId SAVED IN ADMISSION
+    // ==========================================
+    if (res.courseId) {
+
+      try {
+
+        const courseRes = await databases.getDocument(
+          DATABASE_ID,
+          "courses_single",
+          res.courseId
+        );
+
+        if (courseRes) {
+          normalSingleCourse = courseRes;
+        }
+
+      } catch (courseIdError) {
+
+        console.log(
+          "COURSE ID LOOKUP FAILED:",
+          courseIdError
+        );
+
+      }
+
+    }
+
+    // ==========================================
+    // FALLBACK: FIND BY COURSE CODE
+    // ==========================================
+    if (!normalSingleCourse && res.courseCode) {
 
       const courseRes = await databases.listDocuments(
         DATABASE_ID,
@@ -142,11 +173,12 @@ if (res.courseType === "single") {
       if (courseRes.documents.length > 0) {
         normalSingleCourse = courseRes.documents[0];
       }
+
     }
 
-    // ------------------------------------------
-    // FALLBACK: Find by course name
-    // ------------------------------------------
+    // ==========================================
+    // FALLBACK: FIND BY COURSE NAME
+    // ==========================================
     if (!normalSingleCourse && res.courseName) {
 
       const courseRes = await databases.listDocuments(
@@ -161,31 +193,34 @@ if (res.courseType === "single") {
       if (courseRes.documents.length > 0) {
         normalSingleCourse = courseRes.documents[0];
       }
+
     }
 
-  } catch (singleCourseError) {
-
-    console.error(
-      "SINGLE COURSE LOOKUP ERROR:",
-      singleCourseError
+    console.log(
+      "SINGLE COURSE FOUND:",
+      normalSingleCourse
     );
 
-  }
-
-  // ==========================================
-  // NORMAL SINGLE COURSE
-  // ==========================================
-  if (normalSingleCourse) {
-
-    try {
+    // ==========================================
+    // LOAD SUBJECTS
+    // ==========================================
+    if (normalSingleCourse) {
 
       const subjectRes = await databases.listDocuments(
         DATABASE_ID,
         "course_subjects",
         [
-          Query.equal("courseId", normalSingleCourse.$id),
+          Query.equal(
+            "courseId",
+            normalSingleCourse.$id
+          ),
           Query.limit(1)
         ]
+      );
+
+      console.log(
+        "SINGLE COURSE SUBJECT DOCUMENTS:",
+        subjectRes.documents
       );
 
       if (subjectRes.documents.length > 0) {
@@ -193,24 +228,33 @@ if (res.courseType === "single") {
         const subjectName =
           subjectRes.documents[0].subjectName?.trim();
 
-        if (subjectName) {
-          subjectList = [subjectName];
-        }
+       if (subjectName) {
+
+  // ==========================================
+  // SINGLE COURSE = ONE SUBJECT
+  // ==========================================
+  subjectList = [subjectName];
+
+}
 
       }
 
-    } catch (singleSubjectError) {
-
-      console.error(
-        "SINGLE COURSE SUBJECT ERROR:",
-        singleSubjectError
-      );
-
     }
+
+    console.log(
+      "FINAL SINGLE SUBJECT LIST:",
+      subjectList
+    );
+
+  } catch (singleCourseError) {
+
+    console.error(
+      "SINGLE COURSE SUBJECT ERROR:",
+      singleCourseError
+    );
 
   }
 }
-
 
   // ==========================================
 // BEAUTY COURSE

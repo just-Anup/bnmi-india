@@ -124,7 +124,7 @@ export default function FranchiseSignup() {
       state,
       city: '',
     }))
-    setCustomCity('')
+    setCustomCity('') 
 
     setCities(statesAndCities[state] || [])
   }
