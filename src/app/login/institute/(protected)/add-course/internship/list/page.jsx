@@ -22,12 +22,18 @@ export default function InternshipList() {
   const [search, setSearch] =
     useState('')
 
+
+  // =========================
+  // FETCH
+  // =========================
+
   const fetchCertificates = async () => {
 
     try {
 
       const user =
         await account.get()
+
 
       const res =
         await databases.listDocuments(
@@ -42,8 +48,9 @@ export default function InternshipList() {
           ]
         )
 
+
       setCertificates(
-        res.documents.reverse()
+        [...res.documents].reverse()
       )
 
     } catch (error) {
@@ -55,7 +62,9 @@ export default function InternshipList() {
       setLoading(false)
 
     }
+
   }
+
 
   useEffect(() => {
 
@@ -63,15 +72,23 @@ export default function InternshipList() {
 
   }, [])
 
+
+  // =========================
+  // DELETE
+  // =========================
+
   const deleteCertificate =
     async (id) => {
 
       const confirmDelete =
         confirm(
-          "Delete this certificate?"
+          "Delete this certificate and marksheet?"
         )
 
-      if (!confirmDelete) return
+      if (!confirmDelete) {
+        return
+      }
+
 
       try {
 
@@ -81,6 +98,7 @@ export default function InternshipList() {
           id
         )
 
+
         fetchCertificates()
 
       } catch (error) {
@@ -88,17 +106,49 @@ export default function InternshipList() {
         console.log(error)
 
         alert("Delete failed")
+
       }
+
     }
+
+
+  // =========================
+  // LOADING
+  // =========================
 
   if (loading) {
 
     return (
+
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
+
         Loading...
+
       </div>
+
     )
+
   }
+
+
+  // =========================
+  // FILTER
+  // =========================
+
+  const filteredCertificates =
+    certificates.filter(
+      (item) =>
+        item.studentName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    )
+
+
+  // =========================
+  // UI
+  // =========================
 
   return (
 
@@ -106,21 +156,37 @@ export default function InternshipList() {
 
       <div className="bg-[#121212] border border-gray-800 rounded-xl p-5">
 
+        {/* HEADER */}
+
         <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
 
-          <h2 className="text-2xl font-bold">
-            INTERNSHIP CERTIFICATE LIST
-          </h2>
+          <div>
+
+            <h2 className="text-2xl font-bold">
+              INTERNSHIP CERTIFICATE LIST
+            </h2>
+
+            <p className="text-gray-400 mt-1">
+              View certificates and marksheets
+            </p>
+
+          </div>
+
 
           <Link
             href="/login/institute/internship/add"
           >
-            <button className="bg-orange-500 hover:bg-orange-600 text-black px-5 py-2 rounded-lg font-semibold">
+
+            <button
+              className="bg-orange-500 hover:bg-orange-600 text-black px-5 py-2 rounded-lg font-semibold"
+            >
               Add Internship
             </button>
+
           </Link>
 
         </div>
+
 
         {/* SEARCH */}
 
@@ -129,19 +195,17 @@ export default function InternshipList() {
           placeholder="Search Student Name..."
           value={search}
           onChange={(e) =>
-            setSearch(
-              
-              e.target.value
-            )
+            setSearch(e.target.value)
           }
           className="w-full bg-black border border-gray-700 p-3 rounded-lg mb-6"
         />
+
 
         {/* TABLE */}
 
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[1100px] border-collapse">
+          <table className="w-full min-w-[1200px] border-collapse">
 
             <thead>
 
@@ -168,7 +232,7 @@ export default function InternshipList() {
                 </th>
 
                 <th className="p-3 border">
-                  Days
+                  Duration
                 </th>
 
                 <th className="p-3 border">
@@ -187,118 +251,159 @@ export default function InternshipList() {
 
             </thead>
 
+
             <tbody>
 
-              {certificates
-                .filter((item) =>
-                  item.studentName
-                    ?.toLowerCase()
-                    .includes(
-                      search.toLowerCase()
-                    )
-                )
-                .map(
-                  (
-                    item,
-                    index
-                  ) => (
+              {filteredCertificates.map(
+                (item, index) => (
 
-                    <tr
-                      key={item.$id}
-                      className="hover:bg-[#1a1a1a]"
-                    >
+                  <tr
+                    key={item.$id}
+                    className="hover:bg-[#1a1a1a]"
+                  >
 
-                      <td className="border p-3 text-center">
-                        {index + 1}
-                      </td>
+                    {/* SR */}
 
-                      <td className="border p-3 text-center">
+                    <td className="border p-3 text-center">
+                      {index + 1}
+                    </td>
 
-                        <img
-                          src={
-                            item.studentPhoto
-                          }
-                          alt=""
-                          className="w-14 h-14 object-cover rounded-full mx-auto border"
-                        />
 
-                      </td>
+                    {/* PHOTO */}
 
-                      <td className="border p-3">
-                        {
-                          item.studentName
+                    <td className="border p-3 text-center">
+
+                      <img
+                        src={
+                          item.studentPhoto
                         }
-                      </td>
+                        alt=""
+                        className="w-14 h-14 object-cover rounded-full mx-auto border border-gray-600"
+                      />
 
-                      <td className="border p-3">
-                        {
-                          item.internshipTitle
-                        }
-                      </td>
+                    </td>
 
-                      <td className="border p-3">
-                        {
-                          item.shift
-                        }
-                      </td>
 
-                      <td className="border p-3">
-                        {
-                          item.days
-                        }
-                      </td>
+                    {/* NAME */}
 
-                      <td className="border p-3">
-                        {
-                          item.issueDate
-                        }
-                      </td>
+                    <td className="border p-3">
 
-                      <td className="border p-3">
-                        {
-                          item.certificateNo
-                        }
-                      </td>
+                      {item.studentName}
 
-                      <td className="border p-3">
+                    </td>
 
-                        <div className="flex gap-2 flex-wrap">
 
-                          <Link
-                            href={`/login/institute/add-course/internship/view/${item.$id}`}
-                          >
-                            <button className="bg-green-500 hover:bg-green-600 text-black px-3 py-1 rounded">
-                              View
-                            </button>
-                          </Link>
+                    {/* INTERNSHIP */}
+
+                    <td className="border p-3">
+
+                      {item.internshipTitle}
+
+                    </td>
+
+
+                    {/* SHIFT */}
+
+                    <td className="border p-3">
+
+                      {item.shift}
+
+                    </td>
+
+
+                    {/* DURATION */}
+
+                    <td className="border p-3">
+
+                      {item.days}
+
+                    </td>
+
+
+                    {/* ISSUE DATE */}
+
+                    <td className="border p-3">
+
+                      {item.issueDate}
+
+                    </td>
+
+
+                    {/* CERTIFICATE NUMBER */}
+
+                    <td className="border p-3">
+
+                      {item.certificateNo}
+
+                    </td>
+
+
+                    {/* ACTION */}
+
+                    <td className="border p-3">
+
+                      <div className="flex gap-2 flex-wrap">
+
+                        {/* CERTIFICATE */}
+
+                        <Link
+                          href={`/login/institute/add-course/internship/view/${item.$id}`}
+                        >
 
                           <button
-                            onClick={() =>
-                              deleteCertificate(
-                                item.$id
-                              )
-                            }
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                            className="bg-green-500 hover:bg-green-600 text-black px-3 py-2 rounded"
                           >
-                            Delete
+                            Certificate
                           </button>
 
-                        </div>
+                        </Link>
 
-                      </td>
 
-                    </tr>
+                        {/* MARKSHEET */}
 
-                  )
-                )}
+                        <Link
+                          href={`/login/institute/add-course/internship/marksheet/${item.$id}`}
+                        >
 
-              {certificates.length === 0 && (
+                          <button
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded"
+                          >
+                            Marksheet
+                          </button>
+
+                        </Link>
+
+
+                        {/* DELETE */}
+
+                        <button
+                          onClick={() =>
+                            deleteCertificate(
+                              item.$id
+                            )
+                          }
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                )
+              )}
+
+
+              {filteredCertificates.length === 0 && (
 
                 <tr>
 
                   <td
                     colSpan="9"
-                    className="text-center p-10"
+                    className="text-center p-10 text-gray-400"
                   >
                     No Internship Certificates Found
                   </td>
@@ -316,5 +421,7 @@ export default function InternshipList() {
       </div>
 
     </div>
+
   )
+
 }
