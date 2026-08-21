@@ -30,7 +30,7 @@ export default function RechargePage({ params }) {
 const type = searchParams.get("type") || "add"
 
   useEffect(() => {
-    setEnable(masterPassword === "69695")
+    setEnable(masterPassword === "8011")
   }, [masterPassword])
 
   useEffect(() => {
