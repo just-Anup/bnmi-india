@@ -15,7 +15,9 @@ export default function WalletPage() {
   const [data, setData] = useState([])
   const [filteredData, setFilteredData] = useState([])
   const [search, setSearch] = useState("")
-  const [rechargeDate, setRechargeDate] = useState("")
+
+const [transactions, setTransactions] = useState([])
+const [transactionDate, setTransactionDate] = useState("")
 
   const router = useRouter()
 
@@ -58,72 +60,128 @@ export default function WalletPage() {
     }
   }
 
-useEffect(() => {
-  fetchData();
-}, []);
 
-  useEffect(() => {
+  const fetchTransactions = async () => {
+  try {
+    let allTransactions = []
+    let offset = 0
+    let hasMore = true
 
-    let filtered = [...data]
+    while (hasMore) {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "wallet_transactions",
+        [
+          Query.limit(100),
+          Query.offset(offset),
+          Query.orderDesc("$createdAt")
+        ]
+      )
 
-    // Search by franchise name
-    // Search by institute, mobile & email
-    if (search) {
+      allTransactions = [...allTransactions, ...res.documents]
 
-      const text = search.toLowerCase();
-
-      filtered = filtered.filter((item) =>
-
-        (item.instituteName || "")
-          .toLowerCase()
-          .includes(text)
-
-        ||
-
-        (item.mobile || "")
-          .toLowerCase()
-          .includes(text)
-
-        ||
-
-        (item.email || "")
-          .toLowerCase()
-          .includes(text)
-
-      );
-
+      if (res.documents.length < 100) {
+        hasMore = false
+      } else {
+        offset += 100
+      }
     }
 
-    // Search by recharge date
-    if (rechargeDate) {
+    setTransactions(allTransactions)
+    
 
-      filtered = filtered.filter((item) => {
+  } catch (err) {
+    console.error("Transaction fetch error:", err)
+  }
+}
 
-        if (!item.lastRecharge) return false
 
-        try {
+useEffect(() => {
+  fetchData()
+  fetchTransactions()
+}, [])
 
-          const dateValue =
-            typeof item.lastRecharge === "string"
-              ? item.lastRecharge
-              : String(item.lastRecharge)
 
-          const storedDate = dateValue.split("T")[0]
 
-          return storedDate === rechargeDate
 
-        } catch (error) {
 
+
+useEffect(() => {
+
+  let filtered = [...data]
+
+  // =========================
+  // SEARCH BY NAME / MOBILE / EMAIL
+  // =========================
+  if (search) {
+
+    const text = search.toLowerCase()
+
+    filtered = filtered.filter((item) =>
+      (item.instituteName || "")
+        .toLowerCase()
+        .includes(text)
+
+      ||
+
+      (item.mobile || "")
+        .toLowerCase()
+        .includes(text)
+
+      ||
+
+      (item.email || "")
+        .toLowerCase()
+        .includes(text)
+    )
+  }
+
+
+  // =========================
+  // SEARCH BY RECHARGE DATE
+  // =========================
+  if (transactionDate) {
+
+    // Get franchise IDs that had a RECHARGE on this date
+    const rechargeFranchiseIds = transactions
+      .filter((transaction) => {
+
+        // Only ADD / RECHARGE transactions
+        const type = String(transaction.type || "").toLowerCase()
+
+        if (type !== "add" && type !== "recharge") {
           return false
-
         }
 
+        const dateValue =
+          transaction.createdAt ||
+          transaction.$createdAt ||
+          transaction.date
+
+        if (!dateValue) return false
+
+        // Convert transaction date to local date
+        const transactionLocalDate =
+          new Date(dateValue).toLocaleDateString("en-CA")
+
+        return transactionLocalDate === transactionDate
+
       })
-    }
+      .map((transaction) => transaction.franchiseId)
 
-    setFilteredData(filtered)
+    // Remove duplicate franchise IDs
+    const uniqueFranchiseIds = new Set(rechargeFranchiseIds)
 
-  }, [search, rechargeDate, data])
+    // Show only franchises that were recharged on selected date
+    filtered = filtered.filter((franchise) =>
+      uniqueFranchiseIds.has(franchise.$id)
+    )
+  }
+
+
+  setFilteredData(filtered)
+
+}, [search, transactionDate, data, transactions])
 
   return (
 
@@ -137,7 +195,10 @@ useEffect(() => {
             Franchise Wallet
           </h1>
           <button
-onClick={fetchData}
+onClick={() => {
+  fetchData()
+  fetchTransactions()
+}}
 
             className="bg-blue-600 text-white px-4 py-2 rounded-lg"
 
@@ -161,24 +222,24 @@ onClick={fetchData}
             className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          <input
-            type="date"
-            value={rechargeDate}
-            onChange={(e) => setRechargeDate(e.target.value)}
-            className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
-          />
+         <input
+  type="date"
+  value={transactionDate}
+  onChange={(e) => setTransactionDate(e.target.value)}
+  className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
+/>
 
-          {(search || rechargeDate) && (
-            <button
-              onClick={() => {
-                setSearch("")
-                setRechargeDate("")
-              }}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              Clear
-            </button>
-          )}
+    {(search || transactionDate) && (
+  <button
+    onClick={() => {
+  setSearch("")
+  setTransactionDate("")
+}}
+    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+  >
+    Clear
+  </button>
+)}
 
         </div>
 
