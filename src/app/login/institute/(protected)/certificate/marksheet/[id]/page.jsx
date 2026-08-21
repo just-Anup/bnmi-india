@@ -866,7 +866,7 @@ student.duration ||
 
 ) : (
 
-  `${index + 1}) ${m.subject || ""}`
+  m.subject || ""
 
 )}
                 </div>
@@ -982,7 +982,7 @@ student.duration ||
         marginBottom: "8px",
       }}
     >
-      {j + 1}. {line.trim()}
+      {line.trim()}
     </div>
 
   ))

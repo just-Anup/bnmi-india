@@ -85,7 +85,7 @@ if (type === "deduct") {
 
       await databases.updateDocument(
         DATABASE_ID,
-        "franchise_approved",
+        "franchise_approved", 
         id,
         {
           wallet: newBalance.toFixed(2),
@@ -143,7 +143,7 @@ router.refresh()
         <input value="FRANCHISE" disabled className="border p-3" />
 
         <input
-          value={user.instituteName}
+          value={user.instituteName} 
           disabled
           className="border p-3"
         />
