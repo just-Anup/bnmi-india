@@ -24,7 +24,7 @@ export default function WebsiteLogin() {
 
       await account.createEmailPasswordSession(email, password)
 
-      if (email !== 'bnmiindia@gmail.com') {
+      if (email !== 'bnmiindia123@gmail.com') {
         alert('Not authorized as Website Manager')
         await account.deleteSession('current')
         setLoading(false)

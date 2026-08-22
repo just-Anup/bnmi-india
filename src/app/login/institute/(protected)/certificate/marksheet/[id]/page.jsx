@@ -320,7 +320,7 @@ useEffect(() => {
 
       const user = await account.get();
 
-      if (user.email === "bnmiindia@gmail.com") {
+      if (user.email === "bnmiindia123@gmail.com") {
         setIsAdmin(true);
       }
 

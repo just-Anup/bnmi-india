@@ -26,7 +26,7 @@ export default function InstituteLayout({ children }) {
         const user = await account.get()
         setUserEmail(user.email)
 
-        if (user.email === 'bnmiindia@gmail.com') {
+        if (user.email === 'bnmiindia123@gmail.com') {
           setLoading(false)
           return
         }

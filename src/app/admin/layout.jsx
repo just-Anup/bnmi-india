@@ -30,7 +30,7 @@ export default function AdminLayout({ children }) {
         // THEN CHECK APPWRITE SESSION
         const user = await account.get();
 
-        if (user.email !== "bnmiindia@gmail.com") {
+        if (user.email !== "bnmiindia123@gmail.com") {
 
           localStorage.removeItem("adminAuth");
 

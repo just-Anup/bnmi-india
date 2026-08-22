@@ -62,7 +62,7 @@ export default function InstituteLogin() {
     await account.createEmailPasswordSession(email, password);
 
     /* ---------------- ADMIN LOGIN ---------------- */
-    if (email === "bnmiindia@gmail.com") {
+    if (email === "bnmiindia123@gmail.com") {
 
       localStorage.setItem("adminAuth", "true");
 
