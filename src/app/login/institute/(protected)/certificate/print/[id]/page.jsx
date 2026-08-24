@@ -721,22 +721,20 @@ if (type !== "multiple") {
 
   const printPage = () => window.print();
 
- const getGrade = (percent) => {
-
+const getGrade = (percent) => {
   const m = Number(percent);
 
   if (m >= 85) return "A+";
   if (m >= 70) return "A";
   if (m >= 55) return "B";
   if (m >= 40) return "C";
+  if (m >= 35) return "D";
+  if (m >= 33) return "F";
 
   return "F";
-
 };
 
-const grade =
-student.grade ||
-getGrade(percentage);
+const grade = getGrade(percentage);
 
   return (
 
