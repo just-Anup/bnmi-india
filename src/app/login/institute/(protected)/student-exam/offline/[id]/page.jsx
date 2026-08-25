@@ -26,22 +26,29 @@ export default function ResultPage() {
     if (id) loadStudent();
   }, [id]);
 
-  useEffect(() => {
-    const initSemester = async () => {
-      if (
-        student?.courseType === "semester" &&
-        student?.courseCode &&
-        selectedSem
-      ) {
-        await loadSemesterSubjects(student.courseCode, selectedSem, student.franchiseEmail
-        );
-        await loadExistingResult(id, selectedSem);
-      }
-    };
+ useEffect(() => {
+  const initSemester = async () => {
+    if (
+      student?.courseType === "semester" &&
+      student?.courseCode &&
+      selectedSem
+    ) {
+      const semesterSubjects = await loadSemesterSubjects(
+        student.courseCode,
+        selectedSem,
+        student.franchiseEmail
+      );
 
-    initSemester();
-  }, [selectedSem, student, id]);
+      await loadExistingResult(
+        id,
+        selectedSem,
+        semesterSubjects
+      );
+    }
+  };
 
+  initSemester();
+}, [selectedSem, student, id]);
 
   const loadStudent = async () => {
     try {
@@ -431,65 +438,96 @@ setSubjects(subjectList);
     }
   };
 
-  const loadExistingResult = async (
-    studentId,
-    semester
-  ) => {
+const loadExistingResult = async (
+  studentId,
+  semester,
+  semesterSubjects = []
+) => {
+  try {
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      RESULT_COLLECTION,
+      [
+        Query.equal("studentId", studentId),
+        Query.equal(
+          "semesterNumber",
+          Number(semester)
+        ),
+        Query.limit(1)
+      ]
+    );
 
-    try {
+    // No existing result for this semester
+    if (!res.documents.length) {
+      const blankMarks = semesterSubjects.map((sub) => ({
+        subject: sub,
+        theory: "",
+        practical: "",
+        total: 0,
+      }));
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        RESULT_COLLECTION,
-        [
-          Query.equal("studentId", studentId),
-          Query.equal(
-            "semesterNumber",
-            Number(semester)
-          ),
-          Query.limit(1)
-        ]
+      setMarks(blankMarks);
+      return;
+    }
+
+    const result = res.documents[0];
+
+    let parsed =
+      typeof result.marksArray === "string"
+        ? JSON.parse(result.marksArray)
+        : result.marksArray;
+
+    // Make sure marksArray is valid
+    if (!Array.isArray(parsed)) {
+      parsed = [];
+    }
+
+    // Remove invalid entries
+    parsed = parsed.filter(
+      (m) => m && typeof m === "object"
+    );
+
+    // Match saved marks with current semester subjects
+    const restored = semesterSubjects.map((subject) => {
+      const existing = parsed.find(
+        (m) => m.subject === subject
       );
 
-      if (!res.documents.length) {
-
-        const blankMarks = subjects.map((sub) => ({
-          subject: sub,
+      // Subject has no saved marks yet
+      if (!existing) {
+        return {
+          subject,
           theory: "",
           practical: "",
           total: 0,
-        }));
-
-        setMarks(blankMarks);
-        return;
+        };
       }
 
-      const result = res.documents[0];
-
-      const parsed =
-        typeof result.marksArray === "string"
-          ? JSON.parse(result.marksArray)
-          : result.marksArray;
-
-      const restored = parsed.map((m) => ({
-        subject: m.subject,
-        theory: Number(m.objective || 0),
-        practical: Number(m.practical || 0),
-        total: Number(m.total || 0),
-      }));
-
-      setMarks(restored);
-
-    } catch (err) {
-
-      console.log(
-        "LOAD RESULT ERROR",
-        err
+      const theory = Number(
+        existing.objective || 0
       );
 
-    }
+      const practical = Number(
+        existing.practical || 0
+      );
 
-  };
+      return {
+        subject,
+        theory,
+        practical,
+        total: theory + practical,
+      };
+    });
+
+    setMarks(restored);
+
+  } catch (err) {
+    console.error(
+      "LOAD RESULT ERROR:",
+      err
+    );
+  }
+};
 
   const loadSemesterSubjects = async (
     courseCode,
@@ -533,15 +571,17 @@ setSubjects(subjectList);
 
       console.log("SEMESTER SUBJECTS:", subjectList);
 
-      const initialMarks = subjectList.map((sub) => ({
-        subject: sub,
-        theory: "",
-        practical: "",
-        total: 0,
-      }));
+ const initialMarks = subjectList.map((sub) => ({
+  subject: sub,
+  theory: "",
+  practical: "",
+  total: 0,
+}));
 
-      setSubjects(subjectList);
-      setMarks(initialMarks);
+setSubjects(subjectList);
+setMarks(initialMarks);
+
+return subjectList;
 
     } catch (err) {
       console.error(
