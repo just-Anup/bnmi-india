@@ -330,11 +330,10 @@ try {
           certificate?.logo ||
           admission.logo ||
           "",
-
-       franchiseSignature:
-  certificate?.franchiseSignature ||
+franchiseSignature:
   franchise?.signature ||
   franchise?.franchiseSignature ||
+  certificate?.franchiseSignature ||
   admission?.franchiseSignature ||
   admission?.signature ||
   "",

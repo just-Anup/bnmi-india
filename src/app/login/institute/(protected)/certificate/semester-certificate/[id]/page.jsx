@@ -70,13 +70,9 @@ if (needStudentData) {
 
 try {
 
-  const needFranchiseData =
-    !cert.logo ||
-    !cert.ownerName ||
-    !cert.franchiseSignature ||
-    !cert.city;
+ const needFranchiseData = true;
 
-  if (needFranchiseData) {
+if (needFranchiseData) {
 
     const franchiseEmail =
       cert.franchiseEmail ||
@@ -264,8 +260,8 @@ try {
     formattedIssueDate,
 
   logo:
+  franchiseData?.logo ||
     cert.logo ||
-    franchiseData?.logo ||
     "",
 
   ownerName:
@@ -276,8 +272,8 @@ try {
     "",
 
   franchiseSignature:
+  franchiseData?.signature ||
     cert.franchiseSignature ||
-    franchiseData?.signature ||
     "",
 
   city:
