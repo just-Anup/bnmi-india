@@ -112,6 +112,8 @@ export default function FranchiseSignup() {
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordInfo, setShowPasswordInfo] = useState(false)
+const [passwordWarningShown, setPasswordWarningShown] = useState(false)
 
   const [customCity, setCustomCity] =
     useState('')
@@ -308,13 +310,19 @@ export default function FranchiseSignup() {
             required
           />
 
-          {/* PASSWORD */}
- <div className="relative w-full">
+{/* PASSWORD */}
+<div className="relative w-full">
   <input
     type={showPassword ? "text" : "password"}
     placeholder="Password"
     className="input w-full pr-12"
     value={form.password}
+    onFocus={() => {
+      if (!passwordWarningShown) {
+        setShowPasswordInfo(true)
+        setPasswordWarningShown(true)
+      }
+    }}
     onChange={(e) =>
       setForm({
         ...form,
@@ -336,7 +344,6 @@ export default function FranchiseSignup() {
     )}
   </button>
 </div>
-
           {/* MOBILE */}
           <input
             placeholder="Mobile"
@@ -544,6 +551,66 @@ export default function FranchiseSignup() {
             : 'Create Account'}
         </button>
       </form>
+      {showPasswordInfo && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="w-full max-w-lg rounded-3xl bg-white p-7 text-gray-900 shadow-2xl">
+
+      <div className="text-center">
+
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-2xl">
+          🔐
+        </div>
+
+        <h3 className="text-2xl font-bold text-gray-900 mb-5">
+          Important Password Notice
+        </h3>
+
+        <div className="rounded-2xl bg-orange-50 border border-orange-200 p-5 text-left mb-5">
+          <p className="font-semibold text-orange-700 mb-2">
+            English
+          </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            Please generate and use a new password for logging in to this
+            portal. <strong>Do not use your Google/Gmail password.</strong>
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-blue-50 border border-blue-200 p-5 text-left mb-6">
+          <p className="font-semibold text-blue-700 mb-2">
+            हिंदी
+          </p>
+
+          <p className="text-gray-700 leading-relaxed">
+            कृपया इस पोर्टल में लॉगिन करने के लिए एक नया पासवर्ड बनाएं।
+            <strong> अपना Google/Gmail पासवर्ड यहां इस्तेमाल न करें।</strong>
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowPasswordInfo(false)}
+          className="
+            w-full
+            py-3
+            rounded-xl
+            font-semibold
+            text-white
+            bg-gradient-to-r
+            from-orange-400
+            to-pink-500
+            hover:opacity-90
+            transition
+            shadow-lg
+          "
+        >
+          I Understand / मैं समझ गया
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
