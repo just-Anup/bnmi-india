@@ -498,11 +498,32 @@ alert(
   }
 
 
-  const saveEdit = async () => {
+ const saveEdit = async () => {
 
-    try {
+  try {
 
-      let updatedData = { ...editData }
+   let updatedData = {
+  name: editData.name,
+  email: editData.email,
+  password: editData.password,
+  mobile: editData.mobile,
+  plan: editData.plan,
+  state: editData.state,
+  city: editData.city,
+  pincode: editData.pincode,
+  instituteName: editData.instituteName,
+  atcCode: editData.atcCode,
+  address: editData.address,
+  verificationDate: editData.verificationDate,
+  expireDate: editData.expireDate,
+}
+
+    // IMPORTANT:
+    // Wallet is managed separately from franchise editing.
+    // Prevent old wallet data from overwriting the latest balance.
+    delete updatedData.wallet
+    delete updatedData.courierWallet
+    delete updatedData.lastRecharge
 
       // -------- LOGO --------
       if (logoFile) {
