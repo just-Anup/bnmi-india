@@ -775,7 +775,7 @@ const rect = node.getBoundingClientRect();
           marginBottom: "6px"
         }}
       >
-        {i + 1}. {line.trim()}
+        {line.trim()}
       </div>
 
     ))
