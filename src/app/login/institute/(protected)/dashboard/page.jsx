@@ -486,6 +486,54 @@ ctx.drawImage(
 );
 
 ctx.restore();
+
+// =====================================================
+// INSTITUTE NAME
+// =====================================================
+
+const instituteName =
+  franchiseData.instituteName ||
+  franchiseData.name ||
+  "Institute";
+
+ctx.save();
+
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+let fontSize = 42;
+
+// Reduce font size for long institute names
+if (instituteName.length > 35) {
+  fontSize = 36;
+}
+
+if (instituteName.length > 50) {
+  fontSize = 30;
+}
+
+if (instituteName.length > 65) {
+  fontSize = 26;
+}
+
+ctx.font =
+  `bold ${fontSize}px Arial, sans-serif`;
+
+ctx.fillStyle = "#111827";
+
+// Position directly below logo
+const nameY =
+  logoY + logoSize + 25;
+
+ctx.fillText(
+  instituteName,
+  canvas.width / 2,
+  nameY
+);
+
+ctx.restore();
+
+
     // =====================================================
     // CREATE PNG
     // =====================================================
