@@ -498,170 +498,397 @@ alert(
   }
 
 
- const saveEdit = async () => {
-
+const saveEdit = async () => {
   try {
 
-   let updatedData = {
-  name: editData.name,
-  email: editData.email,
-  password: editData.password,
-  mobile: editData.mobile,
-  plan: editData.plan,
-  state: editData.state,
-  city: editData.city,
-  pincode: editData.pincode,
-  instituteName: editData.instituteName,
-  atcCode: editData.atcCode,
-  address: editData.address,
-  verificationDate: editData.verificationDate,
-  expireDate: editData.expireDate,
-}
+    let updatedData = {
+      name: editData.name,
+      email: editData.email,
+      password: editData.password,
+      mobile: editData.mobile,
+      plan: editData.plan,
+      state: editData.state,
+      city: editData.city,
+      pincode: editData.pincode,
+      instituteName: editData.instituteName,
+      atcCode: editData.atcCode,
+      address: editData.address,
+      verificationDate: editData.verificationDate,
+      expireDate: editData.expireDate,
+    };
 
     // IMPORTANT:
     // Wallet is managed separately from franchise editing.
-    // Prevent old wallet data from overwriting the latest balance.
-    delete updatedData.wallet
-    delete updatedData.courierWallet
-    delete updatedData.lastRecharge
+    // Prevent old wallet data from overwriting latest balance.
+    delete updatedData.wallet;
+    delete updatedData.courierWallet;
+    delete updatedData.lastRecharge;
 
-      // -------- LOGO --------
-      if (logoFile) {
+
+    // =====================================================
+    // LOGO
+    // =====================================================
+
+    let oldLogoFileId = null;
+
+    if (logoFile) {
+
+      try {
+
+        console.log("Uploading new logo:", logoFile);
+
+        // ---------------------------------------------
+        // 1. Get OLD logo file ID from existing URL
+        // ---------------------------------------------
+        if (editData.logo) {
+
+          try {
+
+            const oldLogoUrl = new URL(editData.logo);
+
+            const pathParts = oldLogoUrl.pathname.split("/");
+
+            const filesIndex = pathParts.indexOf("files");
+
+            if (filesIndex !== -1 && pathParts[filesIndex + 1]) {
+              oldLogoFileId = pathParts[filesIndex + 1];
+
+              console.log(
+                "Old logo file ID:",
+                oldLogoFileId
+              );
+            }
+
+          } catch (error) {
+
+            console.log(
+              "Could not extract old logo file ID:",
+              error
+            );
+
+          }
+
+        }
+
+
+        // ---------------------------------------------
+        // 2. Upload NEW logo
+        // ---------------------------------------------
+
         const res = await storage.createFile(
           BUCKET_ID,
           ID.unique(),
           logoFile
-        )
+        );
 
-        updatedData.logo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+        console.log(
+          "New logo uploaded:",
+          res.$id
+        );
+
+
+        // ---------------------------------------------
+        // 3. Create NEW logo URL
+        // ---------------------------------------------
+
+        const newLogoUrl =
+          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}&v=${Date.now()}`;
+
+
+        // ---------------------------------------------
+        // 4. Put NEW logo URL into database update
+        // ---------------------------------------------
+
+        updatedData.logo = newLogoUrl;
+
+
+        // ---------------------------------------------
+        // 5. Update database FIRST
+        // ---------------------------------------------
+
+        await databases.updateDocument(
+          DATABASE_ID,
+          "franchise_approved",
+          editing,
+          updatedData
+        );
+
+
+        // ---------------------------------------------
+        // 6. Database successfully updated
+        //    NOW delete OLD logo
+        // ---------------------------------------------
+
+        if (oldLogoFileId) {
+
+          try {
+
+            await storage.deleteFile(
+              BUCKET_ID,
+              oldLogoFileId
+            );
+
+            console.log(
+              "Old logo deleted:",
+              oldLogoFileId
+            );
+
+          } catch (deleteError) {
+
+            // Don't fail the entire update if
+            // old logo deletion fails.
+
+            console.error(
+              "OLD LOGO DELETE ERROR:",
+              deleteError
+            );
+
+          }
+
+        }
+
+      } catch (logoError) {
+
+        console.error(
+          "LOGO UPDATE ERROR:",
+          logoError
+        );
+
+        alert(
+          "Logo update failed: " +
+          (logoError?.message || "Unknown error")
+        );
+
+        return;
       }
 
+    } else {
 
-      // -------- CERTIFICATE LOGO --------
-if (certificateLogoFile) {
+      // =================================================
+      // NO NEW LOGO
+      // Just update normal franchise information
+      // =================================================
 
-  const res = await storage.createFile(
-    BUCKET_ID,
-    ID.unique(),
-    certificateLogoFile
-  )
-
-  updatedData.certificateLogo =
-    `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-}
-
-
-      // -------- OWNER PHOTO --------
-     if (photoFile) {
-  try {
-    console.log("Uploading owner photo:", photoFile);
-
-    const res = await storage.createFile(
-      BUCKET_ID,
-      ID.unique(),
-      photoFile
-    );
-
-    console.log("Upload Success:", res);
-
-    updatedData.ownerPhoto =
-      `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
-
-  } catch (error) {
-    console.error("PHOTO UPLOAD ERROR:", error);
-    alert(JSON.stringify(error, null, 2));
-    return;
-  }
-}
-
-      // -------- SIGNATURE --------
-      if (signatureFile) {
-        const res = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          signatureFile
-        )
-
-        updatedData.signature = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-      }
-
-      if (editData.newPlanName && editData.newPlanAmount) {
-
-  // ✅ Save new plan
-  await databases.createDocument(
-    DATABASE_ID,
-    "franchise_plans",
-    ID.unique(),
-    {
-      name: editData.newPlanName,
-      amount: Number(editData.newPlanAmount),
-    }
-  );
-
-  // ✅ Use it immediately
-  updatedData.plan = editData.newPlanName;
-}
-delete updatedData.newPlanName;
-delete updatedData.newPlanAmount;
-      // ✅ VERY IMPORTANT → REMOVE FILE OBJECTS
-      delete updatedData.logoFile
-      delete updatedData.certificateLogoFile
-
-      delete updatedData.photoFile
-      delete updatedData.signatureFile
-
-      // -------- UPDATE DOCUMENT --------
       await databases.updateDocument(
         DATABASE_ID,
         "franchise_approved",
-        editing, // make sure this is ID
+        editing,
         updatedData
-      )
-      
-      // ✅ UPDATE AUTH EMAIL
-if (editData.email && editData.userId) {
-
-  await fetch("/api/change-email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      userId: editData.userId,
-      email: editData.email
-    })
-  });
-
-}
-
-// ✅ UPDATE AUTH PASSWORD
-if (editData.password && editData.userId) {
-
-  await fetch("/api/change-password", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      userId: editData.userId,
-      newPassword: editData.password
-    })
-  });
-
-}
-      alert("Updated successfully")
-
-      setEditing(null)
-      fetchAll()
-
-    } catch (err) {
-
-      console.error("UPDATE ERROR:", err)
-
-      alert(err?.message || "Update failed")
+      );
 
     }
+
+
+    // =====================================================
+    // CERTIFICATE LOGO
+    // =====================================================
+
+    if (certificateLogoFile) {
+
+      const res = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        certificateLogoFile
+      );
+
+      updatedData.certificateLogo =
+        `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}&v=${Date.now()}`;
+
+    }
+
+
+    // =====================================================
+    // OWNER PHOTO
+    // =====================================================
+
+    if (photoFile) {
+
+      try {
+
+        console.log(
+          "Uploading owner photo:",
+          photoFile
+        );
+
+        const res = await storage.createFile(
+          BUCKET_ID,
+          ID.unique(),
+          photoFile
+        );
+
+        console.log(
+          "Photo upload success:",
+          res.$id
+        );
+
+        updatedData.ownerPhoto =
+          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}&v=${Date.now()}`;
+
+      } catch (error) {
+
+        console.error(
+          "PHOTO UPLOAD ERROR:",
+          error
+        );
+
+        alert(
+          JSON.stringify(error, null, 2)
+        );
+
+        return;
+      }
+
+    }
+
+
+    // =====================================================
+    // SIGNATURE
+    // =====================================================
+
+    if (signatureFile) {
+
+      const res = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        signatureFile
+      );
+
+      updatedData.signature =
+        `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}&v=${Date.now()}`;
+
+    }
+
+
+    // =====================================================
+    // CUSTOM PLAN
+    // =====================================================
+
+    if (
+      editData.newPlanName &&
+      editData.newPlanAmount
+    ) {
+
+      await databases.createDocument(
+        DATABASE_ID,
+        "franchise_plans",
+        ID.unique(),
+        {
+          name: editData.newPlanName,
+          amount: Number(editData.newPlanAmount),
+        }
+      );
+
+      updatedData.plan =
+        editData.newPlanName;
+    }
+
+
+    delete updatedData.newPlanName;
+    delete updatedData.newPlanAmount;
+
+
+    // =====================================================
+    // REMOVE FILE OBJECTS
+    // =====================================================
+
+    delete updatedData.logoFile;
+    delete updatedData.certificateLogoFile;
+    delete updatedData.photoFile;
+    delete updatedData.signatureFile;
+
+
+    // =====================================================
+    // IMPORTANT
+    // If logo was NOT changed, we already updated DB above.
+    // If other files/details were changed, update DB again
+    // with the latest values.
+    // =====================================================
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      editing,
+      updatedData
+    );
+
+
+    // =====================================================
+    // UPDATE AUTH EMAIL
+    // =====================================================
+
+    if (editData.email && editData.userId) {
+
+      await fetch("/api/change-email", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          userId: editData.userId,
+          email: editData.email
+        })
+      });
+
+    }
+
+
+    // =====================================================
+    // UPDATE AUTH PASSWORD
+    // =====================================================
+
+    if (editData.password && editData.userId) {
+
+      await fetch("/api/change-password", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          userId: editData.userId,
+          newPassword: editData.password
+        })
+      });
+
+    }
+
+
+    // =====================================================
+    // CLEAR CACHE
+    // =====================================================
+
+    localStorage.removeItem(CACHE_KEY);
+
+
+    alert("Updated successfully");
+
+
+    setEditing(null);
+
+
+    // Fetch latest database data
+    await fetchAll();
+
+
+  } catch (err) {
+
+    console.error(
+      "UPDATE ERROR:",
+      err
+    );
+
+    alert(
+      err?.message ||
+      "Update failed"
+    );
+
   }
+};
+
+
 
 const fixUser = async (req) => {
   try {
@@ -1173,6 +1400,8 @@ placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pinco
 
               <div>
                 <label className="text-sm font-medium">City</label>
+
+
                 <input
                   type="text"
                   value={editData.city || ""}
@@ -1381,7 +1610,7 @@ placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pinco
 
               {/* Address */}
               <div className="absolute top-[520px] w-full text-center text-sm px-20">
-                {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
+                {selectedFranchise?.address}  {selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
                 <div className="absolute bottom-[90px] left-[220px] font-bold">

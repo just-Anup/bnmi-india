@@ -47,62 +47,75 @@ useEffect(() => {
     let studentData = null;
 
 // Only fetch student if required fields are missing
-const needStudentData =
-  !cert.studentName ||
-  !cert.fatherName ||
-  !cert.motherName ||
-  !cert.photoId ||
-  !cert.signatureId ||
-  !cert.relationType ||
-  cert.showFatherInCertificate === undefined ||
-  cert.showMotherInCertificate === undefined ||
-  !cert.dob ||
-  !cert.courseType ||
-  !cert.subjects;
+// ✅ ALWAYS FETCH LATEST STUDENT DATA
+// This is important because admin may have changed
+// the student's photo/signature after the certificate
+// was originally created.
 
-if (needStudentData) {
-  studentData = await databases.getDocument(
-    DATABASE_ID,
-    "student_admissions",
-    cert.studentId
-  );
+if (cert.studentId) {
+  try {
+    studentData = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      cert.studentId
+    );
+
+    console.log("LATEST STUDENT DATA:", studentData);
+
+  } catch (studentError) {
+    console.error(
+      "STUDENT DATA FETCH ERROR:",
+      studentError
+    );
+  }
 }
-
       // ✅ FRANCHISE
      let franchiseData = null;
 
 try {
 
-  const needFranchiseData =
-    !cert.logo ||
-    !cert.ownerName ||
-    !cert.franchiseSignature ||
-    !cert.city;
+  // ✅ ALWAYS FETCH LATEST FRANCHISE DATA
+// This ensures the certificate uses the latest
+// logo/signature/details from franchise_approved.
 
-  if (needFranchiseData) {
+const franchiseEmail =
+  cert.franchiseEmail ||
+  studentData?.franchiseEmail;
 
-    const franchiseEmail =
-      cert.franchiseEmail ||
-      studentData?.franchiseEmail;
+if (franchiseEmail) {
 
-    if (franchiseEmail) {
+  try {
 
-      const franchiseRes =
-        await databases.listDocuments(
-          DATABASE_ID,
-          "franchise_approved",
-          [
-            Query.equal("email", franchiseEmail)
-          ]
-        );
+    const franchiseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal("email", franchiseEmail)
+        ]
+      );
 
-      if (franchiseRes.documents.length > 0) {
-        franchiseData = franchiseRes.documents[0];
-      }
+    if (franchiseRes.documents.length > 0) {
+
+      franchiseData = franchiseRes.documents[0];
+
+      console.log(
+        "LATEST FRANCHISE DATA:",
+        franchiseData
+      );
 
     }
 
+  } catch (franchiseError) {
+
+    console.error(
+      "FRANCHISE DATA FETCH ERROR:",
+      franchiseError
+    );
+
   }
+
+}
 
 } catch (err) {
 
@@ -255,8 +268,8 @@ try {
     qrCodeImage,
 
   logo:
+  franchiseData?.logo ||
     cert.logo ||
-    franchiseData?.logo ||
     "",
 
   ownerName:
@@ -267,18 +280,18 @@ try {
     "Controller",
 
   franchiseSignature:
+  franchiseData?.signature ||
     cert.franchiseSignature ||
-    franchiseData?.signature ||
     "",
 
   photoId:
+  studentData?.photoId ||
     cert.photoId ||
-    studentData?.photoId ||
     "",
 
   signatureId:
+  studentData?.signatureId ||
     cert.signatureId ||
-    studentData?.signatureId ||
     "",
 };
 
