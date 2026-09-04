@@ -270,18 +270,18 @@ const downloadCertificate = async () => {
   <img
     src={certificate.logo}
     alt="Franchise Logo"
-    className="absolute object-contain rounded-full"
+    className="absolute object-cover rounded-full"
     style={{
-      top: "45px",
+      top: "25px",
       left: "50%",
       transform: "translateX(-50%)",
-      width: "210px",
-      height: "130px",
+      width: "150px",
+      height: "150px",
       zIndex: 10,
-      
     }}
   />
 )}
+
             {/* STUDENT NAME */}
             <div
               className="absolute"
@@ -325,18 +325,19 @@ const downloadCertificate = async () => {
               </h2>
             </div>
 
-            {/* STUDENT PHOTO */}
-            <img
-              src={certificate.studentPhoto}
-              alt=""
-              className="absolute object-cover border"
-              style={{
-                top: '350px',
-                right: '70px',
-                width: '250px',
-                height: '300px'
-              }}
-            />
+           {/* STUDENT PHOTO */}
+<img
+  src={certificate.studentPhoto}
+  alt=""
+  className="absolute object-cover border"
+  style={{
+    top: "350px",
+    right: "70px",
+    width: "250px",
+    height: "300px",
+    borderRadius: "10%",
+  }}
+/>
 
             {/* STUDENT SIGNATURE */}
             <img
@@ -364,18 +365,19 @@ const downloadCertificate = async () => {
               }}
             />
 
-            {/* OWNER PHOTO */}
-            <img
-              src={certificate.ownerPhoto}
-              alt=""
-              className="absolute object-cover border"
-              style={{
-                top: '350px',
-                left: '70px',
-                width: '250px',
-                height: '300px'
-              }}
-            />
+          {/* OWNER PHOTO */}
+<img
+  src={certificate.ownerPhoto}
+  alt=""
+  className="absolute object-cover border"
+  style={{
+    top: "265px",
+    left: "40px",
+    width: "370px",
+    height: "410px",
+    borderRadius: "10%",
+  }}
+/>
 
             {/* DATE OF COMPLETION */}
             <div

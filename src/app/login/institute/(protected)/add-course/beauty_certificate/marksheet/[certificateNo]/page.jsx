@@ -322,7 +322,7 @@ return (
             className="absolute text-[19px] font-semibold text-center"
             style={{
               top: "350px",
-              left: "760px",
+              left: "660px",
               width: "520px"
             }}
           >
