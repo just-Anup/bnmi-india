@@ -243,548 +243,862 @@ export default function ReAdmission() {
   // COURSE SELECT
   // =========================================================
 
-  const handleCourseSelect = async (e) => {
-    try {
-      const courseId = e.target.value;
+const handleCourseSelect = async (e) => {
+  try {
+    const courseId = e.target.value;
 
-      if (!courseId) {
-        setForm((prev) => ({
-          ...prev,
-          course: "",
-          courseName: "",
-          courseDisplayName: "",
-          courseId: "",
-          courseCode: "",
-          courseType: "",
-          subjects: "",
-          selectedSubjectIds: "",
-          courseFees: "",
-          examFees: "",
-          totalFees: "",
-          balance: "",
-        }));
+    if (!courseId) {
+      setForm((prev) => ({
+        ...prev,
+        course: "",
+        courseName: "",
+        courseDisplayName: "",
+        courseId: "",
+        courseCode: "",
+        courseType: "",
+        subjects: "",
+        selectedSubjectIds: "",
+        courseFees: "",
+        examFees: "",
+        totalFees: "",
+        balance: "",
+      }));
 
-        return;
-      }
+      return;
+    }
 
-      const selected = allCourses.find(
-        (course) => course.$id === courseId
+    const selected = allCourses.find(
+      (course) => course.$id === courseId
+    );
+
+    if (!selected) {
+      console.error("COURSE NOT FOUND");
+      return;
+    }
+
+    console.log("SELECTED COURSE:", selected);
+
+    // =====================================================
+    // GET FRANCHISE PLAN
+    // SAME LOGIC AS NORMAL ADMISSION
+    // =====================================================
+
+    const user = await account.get();
+
+    const resPlan =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal(
+            "email",
+            user.email
+          ),
+        ]
       );
 
-      if (!selected) {
-        console.error("COURSE NOT FOUND");
-        return;
-      }
+    if (resPlan.documents.length === 0) {
+      throw new Error(
+        "Franchise information not found"
+      );
+    }
 
-      console.log("SELECTED COURSE:", selected);
+    const plan =
+      resPlan.documents[0]?.plan;
 
-      let subjectsText = "";
-      let selectedSubjectIds = "";
+    console.log(
+      "FRANCHISE PLAN:",
+      plan
+    );
 
-      // =====================================================
-      // SINGLE / BEAUTY SUBJECTS
-      // =====================================================
+    const planRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_plans",
+        [
+          Query.equal(
+            "name",
+            plan
+          ),
+        ]
+      );
 
-      if (
-        selected.courseType === "single" ||
+    if (planRes.documents.length === 0) {
+      throw new Error(
+        "Franchise exam fee plan not found"
+      );
+    }
+
+    // =====================================================
+    // IMPORTANT:
+    // EXAM FEE COMES FROM PLAN
+    // NOT FROM COURSE
+    // =====================================================
+
+    const dynamicExamFee =
+      Number(
+        planRes.documents[0]?.amount || 0
+      );
+
+    console.log(
+      "PLAN EXAM FEE:",
+      dynamicExamFee
+    );
+
+    // =====================================================
+    // LOAD SUBJECTS
+    // =====================================================
+
+    let subjectsText = "";
+    let selectedSubjectIds = "";
+
+    // =====================================================
+    // SINGLE / BEAUTY
+    // =====================================================
+
+    if (
+      selected.courseType === "single" ||
+      selected.courseType === "beauty"
+    ) {
+      const subjectCollection =
         selected.courseType === "beauty"
-      ) {
-        const subjectCollection =
-          selected.courseType === "beauty"
-            ? "beauty_courses_subjects"
-            : "course_subjects";
+          ? "beauty_courses_subjects"
+          : "course_subjects";
 
-        try {
-          const subjectRes = await databases.listDocuments(
+      try {
+        const subjectRes =
+          await databases.listDocuments(
             DATABASE_ID,
             subjectCollection,
-            [Query.equal("courseId", selected.$id)]
+            [
+              Query.equal(
+                "courseId",
+                selected.$id
+              ),
+            ]
           );
 
-          subjectsText = subjectRes.documents
-            .map((subject) => subject.subjectName)
+        subjectsText =
+          subjectRes.documents
+            .map(
+              (subject) =>
+                subject.subjectName
+            )
             .join(", ");
 
-          selectedSubjectIds = subjectRes.documents
-            .map((subject) => subject.$id)
+        selectedSubjectIds =
+          subjectRes.documents
+            .map(
+              (subject) =>
+                subject.$id
+            )
             .join("||");
-        } catch (subjectError) {
-          console.log(
-            "SUBJECT LOAD ERROR:",
-            subjectError
+      } catch (subjectError) {
+        console.log(
+          "SUBJECT LOAD ERROR:",
+          subjectError
+        );
+      }
+    }
+
+    // =====================================================
+    // MULTIPLE COURSE
+    // =====================================================
+
+    if (
+      selected.courseType === "multiple"
+    ) {
+      subjectsText =
+        selected.subjects || "";
+    }
+
+    // =====================================================
+    // SEMESTER COURSE
+    // =====================================================
+
+    if (
+      selected.courseType === "semester"
+    ) {
+      try {
+        const subjectRes =
+          await databases.listDocuments(
+            DATABASE_ID,
+            "franchise_semester_course_subjects",
+            [
+              Query.equal(
+                "courseCode",
+                selected.courseCode
+              ),
+
+              Query.equal(
+                "semesterNumber",
+                1
+              ),
+
+              Query.equal(
+                "franchiseEmail",
+                user.email
+              ),
+            ]
           );
-        }
-      }
 
-      // =====================================================
-      // MULTIPLE COURSE
-      // =====================================================
-
-      if (selected.courseType === "multiple") {
-        subjectsText = selected.subjects || "";
-      }
-
-      // =====================================================
-      // SEMESTER COURSE
-      // =====================================================
-
-      if (selected.courseType === "semester") {
-        try {
-          const subjectRes =
-            await databases.listDocuments(
-              DATABASE_ID,
-              "franchise_semester_course_subjects",
-              [
-                Query.equal(
-                  "courseCode",
-                  selected.courseCode
-                ),
-                Query.equal(
-                  "semesterNumber",
-                  1
-                ),
-                Query.equal(
-                  "franchiseEmail",
-                  (await account.get()).email
-                ),
-              ]
-            );
-
-          subjectsText = subjectRes.documents
-            .map((subject) => subject.subjectName)
+        subjectsText =
+          subjectRes.documents
+            .map(
+              (subject) =>
+                subject.subjectName
+            )
             .join(", ");
 
-          selectedSubjectIds = subjectRes.documents
-            .map((subject) => subject.subjectId)
+        selectedSubjectIds =
+          subjectRes.documents
+            .map(
+              (subject) =>
+                subject.subjectId
+            )
             .join("||");
-        } catch (semesterError) {
-          console.log(
-            "SEMESTER SUBJECT ERROR:",
-            semesterError
-          );
-        }
+      } catch (semesterError) {
+        console.log(
+          "SEMESTER SUBJECT ERROR:",
+          semesterError
+        );
       }
+    }
 
-      // =====================================================
-      // FEES
-      // =====================================================
+    // =====================================================
+    // COURSE FEE
+    // =====================================================
 
-      const courseFees = Number(
+    const courseFees =
+      Number(
         selected.courseFees || 0
       );
 
-      const examFees = Number(
-        selected.examFees || 0
-      );
+    // =====================================================
+    // TOTAL = COURSE FEE + PLAN EXAM FEE
+    // =====================================================
 
-      const totalFees =
-        courseFees + examFees;
+    const totalFees =
+      courseFees +
+      dynamicExamFee;
 
-      // =====================================================
-      // SET FORM
-      // =====================================================
+    // =====================================================
+    // SET FORM
+    // =====================================================
 
-      setForm((prev) => ({
-        ...prev,
+    setForm((prev) => ({
+      ...prev,
 
-        course: selected.courseName || selected.$id,
+      course:
+        selected.courseName ||
+        selected.$id,
 
-        courseName:
-          selected.courseName ||
-          selected.courseCode ||
-          "",
+      courseName:
+        selected.courseName ||
+        selected.courseCode ||
+        "",
 
-        courseDisplayName:
-          selected.courseName ||
-          selected.courseCode ||
-          "",
+      courseDisplayName:
+        selected.courseName ||
+        selected.courseCode ||
+        "",
 
-        courseId: selected.$id,
+      courseId:
+        selected.$id,
 
-        courseCode:
-          selected.courseCode || "",
+      courseCode:
+        selected.courseCode || "",
 
-        courseType:
-          selected.courseType || "single",
+      courseType:
+        selected.courseType ||
+        "single",
 
-        subjects: subjectsText,
+      subjects:
+        subjectsText,
 
+      selectedSubjectIds:
         selectedSubjectIds,
 
+      courseFees:
         courseFees,
 
-        examFees,
+      // ⭐ PLAN FEE
+      examFees:
+        dynamicExamFee,
 
+      totalFees:
         totalFees,
 
-        balance:
-          totalFees -
-          Number(prev.feesReceived || 0),
+      balance:
+        totalFees -
+        Number(
+          prev.feesReceived || 0
+        ),
 
-        batch:
-          prev.batch ||
-          selected.batch ||
-          "",
-      }));
-    } catch (error) {
-      console.error(
-        "COURSE SELECT ERROR:",
-        error
-      );
+      batch:
+        prev.batch ||
+        selected.batch ||
+        "",
+    }));
 
-      alert(
-        error?.message ||
-          "Unable to select course"
-      );
-    }
-  };
+  } catch (error) {
+    console.error(
+      "COURSE SELECT ERROR:",
+      error
+    );
+
+    alert(
+      error?.message ||
+        "Unable to select course"
+    );
+  }
+};
 
   // =========================================================
   // SUBMIT RE-ADMISSION
   // =========================================================
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (loading) return;
+  if (loading) return;
 
-    if (!selectedStudent) {
-      alert("Please select student");
-      return;
+  if (!selectedStudent) {
+    alert("Please select student");
+    return;
+  }
+
+  if (!form.courseId) {
+    alert("Please select course");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const user = await account.get();
+
+    // =====================================================
+    // GET FRANCHISE
+    // =====================================================
+
+    const franchiseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal(
+            "email",
+            user.email
+          ),
+        ]
+      );
+
+    if (
+      franchiseRes.documents.length === 0
+    ) {
+      throw new Error(
+        "Franchise not found"
+      );
     }
 
-    if (!form.courseId) {
-      alert("Please select course");
-      return;
-    }
+    const franchise =
+      franchiseRes.documents[0];
 
-    setLoading(true);
+    // =====================================================
+    // EXACT COURSE DUPLICATE CHECK
+    //
+    // SAME STUDENT + SAME COURSE CODE
+    // = ALREADY ADMITTED
+    //
+    // DIFFERENT COURSE CODE
+    // = ALLOW
+    // =====================================================
 
-    try {
-      const user = await account.get();
-
-      // =====================================================
-      // CHECK IF STUDENT ALREADY HAS THIS COURSE
-      // =====================================================
-
-      const existingAdmissions =
-        await databases.listDocuments(
-          DATABASE_ID,
-          COLLECTION_ID,
-          [
-            Query.equal(
-              "createdById",
-              user.$id
-            ),
-            Query.equal(
-              "mobile",
-              selectedStudent.mobile
-            ),
-            Query.equal(
-              "courseId",
-              form.courseId
-            ),
-            Query.limit(100),
-          ]
-        );
-
-      if (
-        existingAdmissions.documents.length > 0
-      ) {
-        alert(
-          "This student is already admitted to this course."
-        );
-
-        setLoading(false);
-        return;
-      }
-
-      // =====================================================
-      // FEES
-      // =====================================================
-
-      const courseFees =
-        Number(form.courseFees || 0);
-
-      const discount =
-        Number(form.discount || 0);
-
-      const totalFees =
-        Number(form.totalFees || 0);
-
-      const feesReceived =
-        Number(form.feesReceived || 0);
-
-      const balance =
-        totalFees - feesReceived;
-
-      // =====================================================
-      // ADMISSION DATE
-      // =====================================================
-
-      const admissionDate =
-        form.admissionDate ||
-        new Date()
-          .toISOString()
-          .split("T")[0];
-
-      // =====================================================
-      // CREATE NEW ADMISSION
-      //
-      // IMPORTANT:
-      // Same field naming structure as your
-      // normal Add Admission page.
-      // =====================================================
-
-      const finalData = {
-        // ---------------------------------------------------
-        // STUDENT INFORMATION
-        // ---------------------------------------------------
-
-        rollNumber:
-          selectedStudent.rollNumber || "",
-
-        abbreviation:
-          selectedStudent.abbreviation || "Mr.",
-
-        relationType:
-          selectedStudent.relationType || "S/O",
-
-        studentName:
-          selectedStudent.studentName || "",
-
-        surname:
-          selectedStudent.surname || "",
-
-        fatherName:
-          selectedStudent.fatherName || "",
-
-        motherName:
-          selectedStudent.motherName || "",
-
-        showFatherInCertificate:
-          selectedStudent.showFatherInCertificate ||
-          false,
-
-        showMotherInCertificate:
-          selectedStudent.showMotherInCertificate ||
-          false,
-
-        mobile:
-          selectedStudent.mobile || "",
-
-        altMobile:
-          selectedStudent.altMobile || "",
-
-        email:
-          selectedStudent.email || "",
-
-        dob:
-          selectedStudent.dob || "",
-
-        gender:
-          selectedStudent.gender || "",
-
-        state:
-          selectedStudent.state || "",
-
-        city:
-          selectedStudent.city || "",
-
-        postcode:
-          selectedStudent.postcode || "",
-
-        address:
-          selectedStudent.address || "",
-
-        aadhar:
-          selectedStudent.aadhar ||
-          selectedStudent.aadhaarNo ||
-          "",
-
-        qualification:
-          selectedStudent.qualification || "",
-
-        occupation:
-          selectedStudent.occupation || "",
-
-        // ---------------------------------------------------
-        // REUSE EXISTING PHOTO + SIGNATURE
-        // ---------------------------------------------------
-
-        photoId:
-          selectedStudent.photoId || "",
-
-        signatureId:
-          selectedStudent.signatureId || "",
-
-        // ---------------------------------------------------
-        // NEW COURSE
-        // ---------------------------------------------------
-
-        courseType:
-          form.courseType || "single",
-
-        courseName:
-          form.courseDisplayName ||
-          form.courseName ||
-          form.course,
-
-        courseId:
-          form.courseId,
-
-        courseCode:
-          form.courseCode || "",
-
-        courseDisplayName:
-          form.courseDisplayName ||
-          form.courseName ||
-          form.course,
-
-        subjects:
-          form.subjects || "",
-
-        selectedSubjectIds:
-          form.selectedSubjectIds || "",
-
-        // ---------------------------------------------------
-        // SEMESTER
-        // ---------------------------------------------------
-
-        currentSemester: 1,
-
-        completedSemester: 0,
-
-        totalSemesters:
-          Number(
-            selectedStudent.totalSemesters ||
-              0
+    const existingAdmissions =
+      await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [
+          Query.equal(
+            "createdById",
+            user.$id
           ),
 
-        courseStatus: "Active",
+          Query.equal(
+            "mobile",
+            selectedStudent.mobile
+          ),
 
-        // ---------------------------------------------------
-        // FEES
-        // ---------------------------------------------------
+          Query.limit(100),
+        ]
+      );
 
+    const alreadyAdmitted =
+      existingAdmissions.documents.some(
+        (admission) => {
+
+          const existingCourseCode =
+            String(
+              admission.courseCode ||
+              ""
+            )
+              .trim()
+              .toUpperCase();
+
+          const newCourseCode =
+            String(
+              form.courseCode ||
+              ""
+            )
+              .trim()
+              .toUpperCase();
+
+          return (
+            existingCourseCode !== "" &&
+            newCourseCode !== "" &&
+            existingCourseCode ===
+              newCourseCode
+          );
+        }
+      );
+
+    if (alreadyAdmitted) {
+      alert(
+        `This student is already admitted to ${form.courseDisplayName || form.courseName}.`
+      );
+
+      setLoading(false);
+      return;
+    }
+
+    // =====================================================
+    // FEES
+    // =====================================================
+
+    const courseFees =
+      Number(
+        form.courseFees || 0
+      );
+
+    const discount =
+      Number(
+        form.discount || 0
+      );
+
+    const examFees =
+      Number(
+        form.examFees || 0
+      );
+
+    const totalFees =
+      Math.max(
+        0,
+        courseFees -
+          discount +
+          examFees
+      );
+
+    const feesReceived =
+      Number(
+        form.feesReceived || 0
+      );
+
+    const balance =
+      totalFees -
+      feesReceived;
+
+    // =====================================================
+    // VALIDATE EXAM FEE
+    // =====================================================
+
+    if (examFees < 0) {
+      alert(
+        "Invalid exam fee"
+      );
+
+      setLoading(false);
+      return;
+    }
+
+    // =====================================================
+    // GET WALLET
+    // =====================================================
+
+    const currentWallet =
+      Number(
+        franchise.wallet || 0
+      );
+
+    // =====================================================
+    // CHECK WALLET
+    // =====================================================
+
+    if (
+      examFees > 0 &&
+      currentWallet < examFees
+    ) {
+      alert(
+        `Insufficient Wallet Balance. Required: ₹${examFees}, Available: ₹${currentWallet}`
+      );
+
+      setLoading(false);
+      return;
+    }
+
+    // =====================================================
+    // NEW WALLET BALANCE
+    // =====================================================
+
+    const newWallet =
+      currentWallet -
+      examFees;
+
+    // =====================================================
+    // ADMISSION DATE
+    // =====================================================
+
+    const admissionDate =
+      form.admissionDate ||
+      new Date()
+        .toISOString()
+        .split("T")[0];
+
+    // =====================================================
+    // CREATE NEW ADMISSION DATA
+    // =====================================================
+
+    const finalData = {
+
+      // ---------------------------------------------------
+      // STUDENT DETAILS
+      // ---------------------------------------------------
+
+      rollNumber:
+        selectedStudent.rollNumber ||
+        "",
+
+      abbreviation:
+        selectedStudent.abbreviation ||
+        "Mr.",
+
+      relationType:
+        selectedStudent.relationType ||
+        "S/O",
+
+      studentName:
+        selectedStudent.studentName ||
+        "",
+
+      surname:
+        selectedStudent.surname ||
+        "",
+
+      fatherName:
+        selectedStudent.fatherName ||
+        "",
+
+      motherName:
+        selectedStudent.motherName ||
+        "",
+
+      showFatherInCertificate:
+        selectedStudent.showFatherInCertificate ||
+        false,
+
+      showMotherInCertificate:
+        selectedStudent.showMotherInCertificate ||
+        false,
+
+      mobile:
+        selectedStudent.mobile ||
+        "",
+
+      altMobile:
+        selectedStudent.altMobile ||
+        "",
+
+      email:
+        selectedStudent.email ||
+        "",
+
+      dob:
+        selectedStudent.dob ||
+        "",
+
+      gender:
+        selectedStudent.gender ||
+        "",
+
+      state:
+        selectedStudent.state ||
+        "",
+
+      city:
+        selectedStudent.city ||
+        "",
+
+      postcode:
+        selectedStudent.postcode ||
+        "",
+
+      address:
+        selectedStudent.address ||
+        "",
+
+      aadhar:
+        selectedStudent.aadhar ||
+        selectedStudent.aadhaarNo ||
+        "",
+
+      qualification:
+        selectedStudent.qualification ||
+        "",
+
+      occupation:
+        selectedStudent.occupation ||
+        "",
+
+      // ---------------------------------------------------
+      // REUSE PHOTO + SIGNATURE
+      // ---------------------------------------------------
+
+      photoId:
+        selectedStudent.photoId ||
+        "",
+
+      signatureId:
+        selectedStudent.signatureId ||
+        "",
+
+      // ---------------------------------------------------
+      // COURSE
+      // ---------------------------------------------------
+
+      courseType:
+        form.courseType ||
+        "single",
+
+      courseName:
+        form.courseDisplayName ||
+        form.courseName ||
+        form.course,
+
+      courseId:
+        form.courseId,
+
+      courseCode:
+        form.courseCode ||
+        "",
+
+      courseDisplayName:
+        form.courseDisplayName ||
+        form.courseName ||
+        form.course,
+
+      subjects:
+        form.subjects ||
+        "",
+
+      selectedSubjectIds:
+        form.selectedSubjectIds ||
+        "",
+
+      // ---------------------------------------------------
+      // SEMESTER
+      // ---------------------------------------------------
+
+      currentSemester: 1,
+
+      completedSemester: 0,
+
+      totalSemesters:
+        Number(
+          selectedStudent.totalSemesters ||
+            0
+        ),
+
+      courseStatus:
+        "Active",
+
+      // ---------------------------------------------------
+      // FEES
+      // ---------------------------------------------------
+
+      courseFees:
         courseFees,
 
+      discount:
         discount,
 
+      totalFees:
         totalFees,
 
+      feesReceived:
         feesReceived,
 
+      balance:
         balance,
 
-        examFees:
-          Number(form.examFees || 0),
+      // ⭐ PLAN EXAM FEE
+      examFees:
+        examFees,
 
-        // ---------------------------------------------------
-        // OTHER DETAILS
-        // ---------------------------------------------------
+      // ---------------------------------------------------
+      // OTHER
+      // ---------------------------------------------------
 
-        batch:
-          form.batch ||
-          selectedStudent.batch ||
-          "",
+      batch:
+        form.batch ||
+        "",
 
+      admissionDate:
         admissionDate,
 
-        remark:
-          form.remarks || "",
+      remark:
+        form.remarks ||
+        "",
 
-        status: "Active",
+      status:
+        "Active",
 
-        // ---------------------------------------------------
-        // RE-ADMISSION TRACKING
-        // ---------------------------------------------------
+      installments:
+        JSON.stringify(
+          installments
+        ),
 
-        
+      // ---------------------------------------------------
+      // FRANCHISE
+      // ---------------------------------------------------
 
-        // ---------------------------------------------------
-        // INSTALLMENTS
-        // ---------------------------------------------------
+      franchiseEmail:
+        user.email,
 
-        installments:
-          JSON.stringify(installments),
+      franchiseId:
+        franchise.$id,
 
-        // ---------------------------------------------------
-        // FRANCHISE INFORMATION
-        // Same structure as Add Admission
-        // ---------------------------------------------------
+      instituteName:
+        franchise.instituteName ||
+        "",
 
-        franchiseEmail:
-          user.email,
+      createdById:
+        user.$id,
 
-        franchiseId:
-          selectedStudent.franchiseId ||
-          "",
+      createdByName:
+        franchise.instituteName ||
+        user.name ||
+        "",
 
-        instituteName:
-          selectedStudent.instituteName ||
-          "",
+      createdAt:
+        new Date().toISOString(),
+    };
 
-        createdById:
-          user.$id,
+    console.log(
+      "RE-ADMISSION DATA:",
+      finalData
+    );
 
-        createdByName:
-          selectedStudent.instituteName ||
-          user.name ||
-          "",
+    // =====================================================
+    // IMPORTANT:
+    // CREATE ADMISSION FIRST
+    // =====================================================
 
-        createdAt:
-          new Date().toISOString(),
-      };
-
-      console.log(
-        "CREATING RE-ADMISSION:",
+    const created =
+      await databases.createDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        ID.unique(),
         finalData
       );
 
-      // =====================================================
-      // CREATE DOCUMENT
-      // =====================================================
+    console.log(
+      "RE-ADMISSION CREATED:",
+      created
+    );
 
-      const created =
-        await databases.createDocument(
-          DATABASE_ID,
-          COLLECTION_ID,
-          ID.unique(),
-          finalData
-        );
+    // =====================================================
+    // DEDUCT EXAM FEE FROM WALLET
+    // =====================================================
 
-      console.log(
-        "RE-ADMISSION CREATED:",
-        created
+    if (examFees > 0) {
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        "franchise_approved",
+        franchise.$id,
+        {
+          wallet:
+            newWallet.toFixed(2),
+        }
       );
 
-      alert(
-        "Re-Admission Successful"
-      );
+      // ===================================================
+      // WALLET TRANSACTION
+      // ===================================================
 
-      // =====================================================
-      // GO BACK TO ADMISSION LIST
-      // =====================================================
+      await databases.createDocument(
+        DATABASE_ID,
+        "wallet_transactions",
+        ID.unique(),
+        {
+          franchiseId:
+            franchise.$id,
 
-      router.push(
-        "/login/institute/manage-student/admission"
-      );
-    } catch (error) {
-      console.error(
-        "RE-ADMISSION ERROR:",
-        error
-      );
+          amount:
+            examFees,
 
-      alert(
-        error?.message ||
-          "Re-Admission failed"
+          type:
+            "deduct",
+
+          reason:
+            "Student Re-Admission",
+
+          studentName:
+            selectedStudent.studentName,
+
+          courseName:
+            form.courseDisplayName ||
+            form.courseName,
+
+          remainingBalance:
+            newWallet.toFixed(2),
+
+          date:
+            new Date().toISOString(),
+        }
       );
-    } finally {
-      setLoading(false);
     }
-  };
 
+    // =====================================================
+    // SUCCESS
+    // =====================================================
+
+    alert(
+      `Re-Admission Successful\nExam Fee Deducted: ₹${examFees}`
+    );
+
+    router.push(
+      "/login/institute/manage-student/admission"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "RE-ADMISSION ERROR:",
+      error
+    );
+
+    alert(
+      error?.message ||
+        "Re-Admission failed"
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
   // =========================================================
   // UI
   // =========================================================
