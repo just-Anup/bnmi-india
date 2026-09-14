@@ -240,8 +240,8 @@ String(
   "",
 
           city:
+          franchiseData?.city ||
             cert.city ||
-            franchiseData?.city ||
             "",
 
           qrCode:
@@ -256,8 +256,8 @@ String(
             formattedIssueDate || "",
 
          logo:
-         cert.logo ||
          franchiseData?.logo ||
+         cert.logo ||
 "",
 
           ownerName:

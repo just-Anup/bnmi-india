@@ -268,8 +268,8 @@ const finalData = {
     "",
 
   city:
+  franchiseData?.city ||
     cert.city ||
-    franchiseData?.city ||
     franchiseData?.address ||
     "",
 
