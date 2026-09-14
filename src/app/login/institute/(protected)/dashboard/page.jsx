@@ -63,7 +63,7 @@ export default function Dashboard() {
         [
           Query.equal("createdById", user.$id),
           Query.orderDesc("createdAt"),
-          Query.limit(100),
+          Query.limit(500),
         ]
       );
 
