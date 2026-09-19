@@ -70,8 +70,8 @@ export default function ManageImagesPage() {
     { label: 'ID Card', key: 'idcardImage' },
     { label: 'Hall Ticket', key: 'hallticketImage' },
     { label: 'Fees Receipt', key: 'feesreceiptImage' },
-    { label: 'ATC Certificate', key: 'atccertificateImage' },
-    { label: 'Beauty Marksheet', key: 'typingmarksheetImage' }
+    // { label: 'ATC Certificate', key: 'atccertificateImage' },
+    // { label: 'Beauty Marksheet', key: 'typingmarksheetImage' }
   ]
 
   return (
