@@ -264,11 +264,11 @@ if (res.courseType === "single") {
   }
 }
 
-  // ==========================================
+// ==========================================
 // BEAUTY COURSE
 // ==========================================
 // BEAUTY WORKS SAME AS SINGLE COURSE
-// Get the Beauty course from beauty_courses_single
+// Get course from beauty_courses_single
 // Then get ONE subject from beauty_courses_subjects
 // ==========================================
 else if (res.courseType === "beauty") {
@@ -278,25 +278,17 @@ else if (res.courseType === "beauty") {
   try {
 
     // ------------------------------------------
-    // FIRST: Find Beauty course using courseCode
+    // FIRST: Find Beauty course by COURSE CODE
     // ------------------------------------------
     if (res.courseCode) {
 
-      const courseQueries = [
-        Query.equal("courseCode", res.courseCode),
-        Query.limit(1)
-      ];
-
-      if (res.franchiseEmail) {
-        courseQueries.push(
-          Query.equal("franchiseEmail", res.franchiseEmail)
-        );
-      }
-
       const courseRes = await databases.listDocuments(
         DATABASE_ID,
         "beauty_courses_single",
-        courseQueries
+        [
+          Query.equal("courseCode", res.courseCode),
+          Query.limit(1)
+        ]
       );
 
       if (courseRes.documents.length > 0) {
@@ -304,27 +296,18 @@ else if (res.courseType === "beauty") {
       }
     }
 
-
     // ------------------------------------------
-    // FALLBACK: Find Beauty course using name
+    // FALLBACK: Find Beauty course by COURSE NAME
     // ------------------------------------------
     if (!beautyCourse && res.courseName) {
 
-      const courseQueries = [
-        Query.equal("courseName", res.courseName),
-        Query.limit(1)
-      ];
-
-      if (res.franchiseEmail) {
-        courseQueries.push(
-          Query.equal("franchiseEmail", res.franchiseEmail)
-        );
-      }
-
       const courseRes = await databases.listDocuments(
         DATABASE_ID,
         "beauty_courses_single",
-        courseQueries
+        [
+          Query.equal("courseName", res.courseName),
+          Query.limit(1)
+        ]
       );
 
       if (courseRes.documents.length > 0) {
@@ -332,27 +315,25 @@ else if (res.courseType === "beauty") {
       }
     }
 
+    console.log("BEAUTY COURSE FOUND:", beautyCourse);
 
     // ------------------------------------------
     // NOW GET BEAUTY SUBJECT
     // ------------------------------------------
     if (beautyCourse) {
 
-      const subjectQueries = [
-        Query.equal("courseId", beautyCourse.$id),
-        Query.limit(1)
-      ];
-
-      if (res.franchiseEmail) {
-        subjectQueries.push(
-          Query.equal("franchiseEmail", res.franchiseEmail)
-        );
-      }
-
       const subjectRes = await databases.listDocuments(
         DATABASE_ID,
         "beauty_courses_subjects",
-        subjectQueries
+        [
+          Query.equal("courseId", beautyCourse.$id),
+          Query.limit(1)
+        ]
+      );
+
+      console.log(
+        "BEAUTY SUBJECT DOCUMENTS:",
+        subjectRes.documents
       );
 
       if (subjectRes.documents.length > 0) {
@@ -361,11 +342,28 @@ else if (res.courseType === "beauty") {
           subjectRes.documents[0].subjectName?.trim();
 
         if (subjectName) {
-          // SAME AS SINGLE COURSE
+          // BEAUTY COURSE = ONE SUBJECT
           subjectList = [subjectName];
         }
 
+      } else {
+
+        console.log(
+          "NO BEAUTY SUBJECT FOUND FOR COURSE:",
+          beautyCourse.$id
+        );
+
       }
+
+    } else {
+
+      console.log(
+        "NO BEAUTY COURSE FOUND:",
+        {
+          courseCode: res.courseCode,
+          courseName: res.courseName
+        }
+      );
 
     }
 
@@ -377,7 +375,6 @@ else if (res.courseType === "beauty") {
     );
 
   }
-
 }
 
 // ==========================================
