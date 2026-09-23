@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -26,15 +27,13 @@ export default function StagesSection() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!databases || !DATABASE_ID)
-          return;
+        if (!databases || !DATABASE_ID) return;
 
-        const res =
-          await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTION_ID,
-            [Query.limit(1)]
-          );
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID,
+          [Query.limit(1)]
+        );
 
         if (res.documents.length) {
           setData(res.documents[0]);
@@ -103,26 +102,62 @@ export default function StagesSection() {
       >
 
         {/* ================= IMAGE SIDE ================= */}
-        <div className="relative flex h-screen items-center justify-start">
+        <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 py-10">
 
           {/* GLOW */}
-          <div className="absolute left-10 h-[650px] w-[650px] rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-[140px]" />
+          <div className="absolute left-10 top-1/2 h-[650px] w-[650px] -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-[140px]" />
 
-          {/* CENTER IMAGE */}
+          {/* IMAGE 1 */}
           <motion.div
             whileHover={{
-              y: -10,
+              y: -8,
               scale: 1.02,
             }}
             transition={{
               duration: 0.4,
             }}
             className="
-              absolute
-              left-10
+              relative
               z-30
+              w-full
+              max-w-[680px]
               overflow-hidden
-              rounded-[48px]
+              rounded-[42px]
+              border
+              border-white/40
+              bg-white/30
+              shadow-[0_30px_120px_rgba(0,0,0,0.18)]
+              backdrop-blur-2xl
+            "
+          >
+            <img
+              src={data.aboutImageTop}
+              className="
+                h-[260px]
+                w-full
+                object-cover
+              "
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+          </motion.div>
+
+          {/* IMAGE 2 */}
+          <motion.div
+            whileHover={{
+              y: -8,
+              scale: 1.02,
+            }}
+            transition={{
+              duration: 0.4,
+            }}
+            className="
+              relative
+              z-30
+              w-full
+              max-w-[680px]
+              overflow-hidden
+              rounded-[42px]
               border
               border-white/40
               bg-white/30
@@ -133,8 +168,8 @@ export default function StagesSection() {
             <img
               src={data.aboutImageCenter}
               className="
-                h-[620px]
-                w-[400px]
+                h-[260px]
+                w-full
                 object-cover
               "
             />
@@ -142,76 +177,43 @@ export default function StagesSection() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
           </motion.div>
 
-          {/* TOP IMAGE */}
+          {/* IMAGE 3 */}
           <motion.div
             whileHover={{
-              y: -10,
-              rotate: 4,
+              y: -8,
+              scale: 1.02,
             }}
             transition={{
               duration: 0.4,
             }}
             className="
-              absolute
-              right-16
-              top-8
-              z-20
+              relative
+              z-30
+              w-full
+              max-w-[680px]
               overflow-hidden
-              rounded-[38px]
+              rounded-[42px]
               border
-              border-white/30
-              bg-white/20
-              shadow-[0_20px_80px_rgba(0,0,0,0.14)]
-              backdrop-blur-xl
-              rotate-6
-            "
-          >
-            <img
-              src={data.aboutImageTop}
-              className="
-                h-[290px]
-                w-[200px]
-                object-cover
-              "
-            />
-          </motion.div>
-
-          {/* BOTTOM IMAGE */}
-          <motion.div
-            whileHover={{
-              y: -10,
-              rotate: -4,
-            }}
-            transition={{
-              duration: 0.4,
-            }}
-             className="
-              absolute
-              right-16
-              top-90
-              z-20
-              overflow-hidden
-              rounded-[38px]
-              border
-              border-white/30
-              bg-white/20
-              shadow-[0_20px_80px_rgba(0,0,0,0.14)]
-              backdrop-blur-xl
-              rotate-6
+              border-white/40
+              bg-white/30
+              shadow-[0_30px_120px_rgba(0,0,0,0.18)]
+              backdrop-blur-2xl
             "
           >
             <img
               src={data.aboutImageBottom}
               className="
-                h-[290px]
-                w-[200px]
+                h-[260px]
+                w-full
                 object-cover
               "
             />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
           </motion.div>
 
           {/* FLOATING CARD */}
-          <motion.div
+          {/* <motion.div
             initial={{
               opacity: 0,
               y: 40,
@@ -250,7 +252,7 @@ export default function StagesSection() {
               <FiCheckCircle />
               Growing Every Day
             </div>
-          </motion.div>
+          </motion.div> */}
         </div>
 
         {/* ================= CONTENT ================= */}
@@ -292,7 +294,6 @@ export default function StagesSection() {
               text-[#0f172a]
             "
           >
-           
           </h2>
 
           {/* DESC */}
@@ -376,6 +377,7 @@ export default function StagesSection() {
               {data.visionContent}
             </p>
           </motion.div>
+
         </div>
       </div>
     </section>
