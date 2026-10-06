@@ -37,7 +37,7 @@ export async function POST(request) {
     }
 
     // ==========================================
-    // 2. RECHARGE + GST CALCULATION
+    // 2. CALCULATE RECHARGE + GST
     // ==========================================
 
     const rechargeAmount = Number(amount);
@@ -47,13 +47,15 @@ export async function POST(request) {
       (rechargeAmount * 0.18).toFixed(2)
     );
 
-    // Final amount customer has to pay
+    // Final amount customer pays
     const totalAmount = Number(
       (rechargeAmount + gstAmount).toFixed(2)
     );
 
-    // Convert final amount to paise
-    const amountInPaise = Math.round(totalAmount * 100);
+    // Convert ₹ to paise
+    const amountInPaise = Math.round(
+      totalAmount * 100
+    );
 
     // ==========================================
     // 3. CREATE RAZORPAY ORDER
