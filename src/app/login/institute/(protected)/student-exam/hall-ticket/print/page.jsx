@@ -26,6 +26,14 @@ export default function PrintHallTicket() {
 
   }, []);
 
+
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    const [year, month, day] = date.split("-");
+
+    return `${day}/${month}/${year.slice(-2)}`;
+  };
   const printPage = () => {
     window.print();
   };
@@ -168,15 +176,15 @@ export default function PrintHallTicket() {
               </div>
 
               {/* FRANCHISE LOGO */}
-         {franchise?.logo && (
-  <div className="absolute top-[5px] left-[350px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
-    <img
-      src={franchise.logo}
-      className="w-full h-full object-cover rounded-full"
-      alt="Institute Logo"
-    />
-  </div>
-)}
+              {franchise?.logo && (
+                <div className="absolute top-[5px] left-[350px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+                  <img
+                    src={franchise.logo}
+                    className="w-full h-full object-cover rounded-full"
+                    alt="Institute Logo"
+                  />
+                </div>
+              )}
 
               {/* FRANCHISE NAME */}
               <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
@@ -207,9 +215,9 @@ export default function PrintHallTicket() {
               </div>
               {/* ROLL NUMBER */}
 
-<div className="absolute top-[365px] right-[120px] text-lg font-semibold">
-    Roll No: {student.rollNumber || ""}
-</div>
+              <div className="absolute top-[365px] right-[120px] text-lg font-semibold">
+                Roll No: {student.rollNumber || ""}
+              </div>
 
               {/* FATHER NAME */}
               <div className="absolute top-[460px] left-[240px]">
@@ -228,7 +236,7 @@ export default function PrintHallTicket() {
 
               {/* USERNAME */}
               <div className="absolute top-[345px] left-[350px]">
-                                {student.studentName}
+                {student.studentName}
               </div>
 
               {/* PASSWORD */}
@@ -238,7 +246,7 @@ export default function PrintHallTicket() {
 
               {/* EXAM DATE */}
               <div className="absolute top-[415px] left-[470px]">
-                {exam.examDate}
+                {formatDate(exam.examDate)}
               </div>
 
               {/* EXAM TIME */}
@@ -285,12 +293,12 @@ export default function PrintHallTicket() {
 
               {/* EXTRA SIGNATURE */}
               {franchiseSign && (
-                 <div className="absolute bottom-[120px] right-[70px] w-[120px] h-[60px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
-                <img
-                  src={franchiseSign} className="w-full h-full object-cover "
-                  
-                />
-              </div>
+                <div className="absolute bottom-[120px] right-[70px] w-[120px] h-[60px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+                  <img
+                    src={franchiseSign} className="w-full h-full object-cover "
+
+                  />
+                </div>
               )}
 
               {/* FRANCHISE OWNER NAME */}
