@@ -1,20 +1,47 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
 export async function POST(request) {
   try {
+    // ============================================
+    // CHECK RAZORPAY ENVIRONMENT VARIABLES
+    // ============================================
+
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      console.error("RAZORPAY ENVIRONMENT VARIABLES ARE MISSING");
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Razorpay configuration is missing",
+        },
+        { status: 500 }
+      );
+    }
+
+    // ============================================
+    // CREATE RAZORPAY INSTANCE
+    // ============================================
+
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+
+    // ============================================
+    // READ REQUEST
+    // ============================================
+
     const body = await request.json();
 
     const { amount, franchiseId } = body;
 
-    // ==========================================
-    // 1. VALIDATION
-    // ==========================================
+    // ============================================
+    // VALIDATE FRANCHISE
+    // ============================================
 
     if (!franchiseId) {
       return NextResponse.json(
@@ -26,6 +53,10 @@ export async function POST(request) {
       );
     }
 
+    // ============================================
+    // VALIDATE AMOUNT
+    // ============================================
+
     if (!amount || Number(amount) <= 0) {
       return NextResponse.json(
         {
@@ -36,60 +67,81 @@ export async function POST(request) {
       );
     }
 
-    // ==========================================
-    // 2. CALCULATE RECHARGE + GST
-    // ==========================================
+    // ============================================
+    // RECHARGE AMOUNT
+    // ============================================
 
     const rechargeAmount = Number(amount);
 
-    // 18% GST
+    // ============================================
+    // GST 18%
+    // ============================================
+
     const gstAmount = Number(
       (rechargeAmount * 0.18).toFixed(2)
     );
 
-    // Final amount customer pays
+    // ============================================
+    // TOTAL CUSTOMER PAYMENT
+    // ============================================
+
     const totalAmount = Number(
       (rechargeAmount + gstAmount).toFixed(2)
     );
 
-    // Convert ₹ to paise
+    // ============================================
+    // CONVERT TO PAISE
+    // ============================================
+
     const amountInPaise = Math.round(
       totalAmount * 100
     );
 
-    // ==========================================
-    // 3. CREATE RAZORPAY ORDER
-    // ==========================================
+    // ============================================
+    // CREATE RAZORPAY ORDER
+    // ============================================
 
     const order = await razorpay.orders.create({
       amount: amountInPaise,
+
       currency: "INR",
+
       receipt: `BNMI_${Date.now()}`,
 
       notes: {
         franchiseId: franchiseId,
+
         purpose: "Franchise Wallet Recharge",
 
-        rechargeAmount: rechargeAmount.toString(),
-        gstAmount: gstAmount.toString(),
-        totalAmount: totalAmount.toString(),
+        rechargeAmount:
+          rechargeAmount.toString(),
+
+        gstAmount:
+          gstAmount.toString(),
+
+        totalAmount:
+          totalAmount.toString(),
       },
     });
 
-    // ==========================================
-    // 4. RESPONSE
-    // ==========================================
+    // ============================================
+    // RESPONSE
+    // ============================================
 
     return NextResponse.json({
       success: true,
 
       rechargeAmount,
+
       gstAmount,
+
       totalAmount,
 
       order: {
         id: order.id,
+
         amount: order.amount,
+
         currency: order.currency,
       },
     });
@@ -103,6 +155,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
+
         error:
           error?.error?.description ||
           error?.message ||
