@@ -394,18 +394,15 @@ export async function POST(request) {
     // 16. UPDATE FRANCHISE WALLET
     // =================================================
 
-    await databases.updateDocument(
-      DATABASE_ID,
-      FRANCHISE_COLLECTION,
-      franchiseId,
-      {
-        wallet: newWalletBalance,
-        lastRecharge: new Date().toLocaleDateString(
-          "en-GB"
-        ),
-      }
-    );
-
+await databases.updateDocument(
+  DATABASE_ID,
+  FRANCHISE_COLLECTION,
+  franchiseId,
+  {
+    wallet: newWalletBalance.toFixed(2),
+    lastRecharge: new Date().toLocaleDateString("en-GB"),
+  }
+);
     console.log(
       `Wallet credited ₹${rechargeAmount} to franchise ${franchiseId}`
     );
