@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { databases, account } from '@/lib/appwrite'
+import { databases, ID, account } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
@@ -13,6 +13,9 @@ export default function ListBeautyCourses() {
   const [courses, setCourses] = useState([])
   const [editCourse, setEditCourse] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
+
+  const [subjectDocId, setSubjectDocId] = useState(null);
+const [loadingSubject, setLoadingSubject] = useState(false);
 
   const [courseFees, setCourseFees] = useState('')
   const [minimumFees, setMinimumFees] = useState('')
@@ -100,47 +103,90 @@ export default function ListBeautyCourses() {
   }
 
   // ADD SUBJECT
-  const saveSubject = async () => {
+const saveSubject = async () => {
+  if (!selectedCourse) return;
 
-    if (!selectedCourse) return
+  if (!subject.trim()) {
+    alert("Enter subject name");
+    return;
+  }
 
-    if (!subject.trim()) {
-      alert("Enter subject name")
-      return
-    }
+  try {
+    const user = await account.get();
 
-    try {
-
-      const user = await account.get()
-
-      await databases.createDocument(
+    if (subjectDocId) {
+      // UPDATE EXISTING SUBJECT
+      await databases.updateDocument(
         DATABASE_ID,
         SUBJECT_COLLECTION,
-        'unique()',
+        subjectDocId,
+        {
+          subjectName: subject.toUpperCase()
+        }
+      );
+
+      alert("Subject Updated Successfully");
+
+    } else {
+      // CREATE NEW SUBJECT
+      const doc = await databases.createDocument(
+        DATABASE_ID,
+        SUBJECT_COLLECTION,
+        ID.unique(),
         {
           courseId: String(selectedCourse.$id),
-          subjectName: String(subject),
+          subjectName: String(subject).toUpperCase(),
           franchiseEmail: user.email
         }
-      )
+      );
 
-      alert("Subject Saved Successfully")
+      setSubjectDocId(doc.$id);
 
-      setSubject('')
-
-      const textarea = document.querySelector('textarea')
-
-      if (textarea) textarea.style.height = "auto"
-
-      setSelectedCourse(null)
-
-    } catch (error) {
-
-      console.error("Appwrite Error:", error)
-      alert(error.message)
-
+      alert("Subject Saved Successfully");
     }
+
+    setSubject("");
+    setSubjectDocId(null);
+    setSelectedCourse(null);
+
+  } catch (error) {
+    console.error("Appwrite Error:", error);
+    alert(error.message);
   }
+};
+
+const loadSubject = async (course) => {
+  try {
+    setLoadingSubject(true);
+
+    const user = await account.get();
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      SUBJECT_COLLECTION,
+      [
+        Query.equal("courseId", String(course.$id)),
+        Query.equal("franchiseEmail", user.email),
+        Query.limit(1)
+      ]
+    );
+
+    if (res.documents.length > 0) {
+      setSubject(res.documents[0].subjectName);
+      setSubjectDocId(res.documents[0].$id);
+    } else {
+      setSubject("");
+      setSubjectDocId(null);
+    }
+
+    setSelectedCourse(course);
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoadingSubject(false);
+  }
+};
 
   const handleInput = (e) => {
 
@@ -274,7 +320,7 @@ export default function ListBeautyCourses() {
                         </button>
 
                         <button
-                          onClick={() => setSelectedCourse(course)}
+onClick={() => loadSubject(course)}
                           className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
                         >
                           Add Subject
