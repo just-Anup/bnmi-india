@@ -1604,7 +1604,7 @@ placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pinco
               </div>
 
               {/* Owner Name */}
-              <div className="absolute top-[564px] w-full text-centerz font-semibold">
+              <div className="absolute top-[564px] w-full text-center font-semibold">
                 Applicant Name :  {selectedFranchise?.name}
               </div>
 
