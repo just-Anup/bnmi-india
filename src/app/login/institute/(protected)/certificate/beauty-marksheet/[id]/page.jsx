@@ -735,10 +735,10 @@ const rect = node.getBoundingClientRect();
   style={{
     top: 550 + index * 120,
     left: 135,
-    width: "465px",
+    width: "470px",
     position: "absolute",
     fontSize: "15px",
-    lineHeight: "1.5",
+    lineHeight: "1.3",
     wordBreak: "break-word",
     overflowWrap: "break-word",
     whiteSpace: "normal",
