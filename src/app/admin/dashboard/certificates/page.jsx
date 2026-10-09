@@ -364,7 +364,7 @@
 
           coursePeriod:
             cert.duration ||
-            studentData.duration ||
+            studentData.duration || 
             studentData.courseDuration ||
             ""
         };

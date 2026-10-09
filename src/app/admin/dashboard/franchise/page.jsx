@@ -1607,7 +1607,7 @@ placeholder="Search by institute, name, ATC/AMC code, mobile, state, city, pinco
               <div className="absolute top-[564px] w-full text-center font-semibold">
                 Applicant Name :  {selectedFranchise?.name}
               </div>
-
+                  
               {/* Address */}
               <div className="absolute top-[520px] w-full text-center text-sm px-20">
                 {selectedFranchise?.address}  {selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
