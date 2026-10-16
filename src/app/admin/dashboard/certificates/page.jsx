@@ -937,61 +937,40 @@ try {
 let finalDuration = "";
 
 if (rawDuration) {
-  const today = new Date();
+  
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
-  const end = new Date(today);
-  const start = new Date(today);
+const end = new Date(today);
+const start = new Date(today);
 
-  const text =
-    String(rawDuration).toLowerCase();
+const text = String(rawDuration || "").toLowerCase();
+const durationNumber = parseInt(text.match(/\d+/)?.[0] || "1", 10);
 
-  // YEAR
-  if (text.includes("year")) {
-    const years =
-      parseInt(text) || 1;
+// YEAR
+if (text.includes("year")) {
+  start.setFullYear(start.getFullYear() - durationNumber);
+}
 
-    start.setFullYear(
-      start.getFullYear() - years
-    );
-  }
+// MONTH
+else if (text.includes("month")) {
+  start.setMonth(start.getMonth() - durationNumber);
+}
 
-  // MONTH
-  else if (text.includes("month")) {
-    const months =
-      parseInt(text) || 1;
+// DAYS — inclusive course duration
+else if (text.includes("day")) {
+  start.setDate(start.getDate() - durationNumber + 1);
+}
 
-    start.setMonth(
-      start.getMonth() - months
-    );
-  }
+const formatDate = (date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-  // DAYS
-  else if (text.includes("day")) {
-    const days =
-      parseInt(text) || 1;
+finalDuration = `${formatDate(start)} To ${formatDate(end)}`;
 
-    start.setDate(
-      start.getDate() - days
-    );
-  }
-
-  // Keep the same date logic
-  start.setDate(
-    start.getDate() + 1
-  );
-
-  const formatDate = (date) =>
-    date.toLocaleDateString(
-      "en-GB",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
-
-  finalDuration =
-    `${formatDate(start)} To ${formatDate(end)}`;
 }
 
 console.log(

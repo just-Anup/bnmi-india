@@ -14,6 +14,39 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 
+function calculateCoursePeriod(durationText) {
+  if (!durationText) return "";
+
+  const text = String(durationText).toLowerCase();
+  const amount = parseInt(text.match(/\d+/)?.[0] || "1", 10);
+
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+
+  const start = new Date(end);
+
+  if (text.includes("day")) {
+    start.setDate(start.getDate() - amount + 1);
+  } else if (text.includes("month")) {
+    start.setMonth(start.getMonth() - amount);
+  } else if (text.includes("year")) {
+    start.setFullYear(start.getFullYear() - amount);
+  } else {
+    return "";
+  }
+
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  return `${formatDate(start)} To ${formatDate(end)}`;
+}
+
+
+
 export default function PrintCertificate() {
   const { id } = useParams();
 
@@ -74,13 +107,9 @@ export default function PrintCertificate() {
 
 try {
 
-  const needFranchiseData =
-    !cert.logo ||
-    !cert.ownerName ||
-    !cert.franchiseSignature ||
-    !cert.city;
+ const needFranchiseData = true;
 
-  if (needFranchiseData) {
+if (needFranchiseData) {
 
     const franchiseEmail =
       cert.franchiseEmail ||
@@ -221,10 +250,26 @@ String(
   studentData?.courseDuration ||
   "",
 
-          coursePeriod:
-  cert.coursePeriod ||
-  studentData?.coursePeriod ||
-  "",
+   coursePeriod:
+  String(
+    cert.duration ||
+    studentData?.duration ||
+    studentData?.courseDuration ||
+    ""
+  ).toLowerCase().includes("day")
+    ? calculateCoursePeriod(
+        cert.duration ||
+        studentData?.duration ||
+        studentData?.courseDuration
+      )
+    : cert.coursePeriod ||
+      studentData?.coursePeriod ||
+      calculateCoursePeriod(
+        cert.duration ||
+        studentData?.duration ||
+        studentData?.courseDuration
+      ) ||
+      "",
 
          marks:
   cert.marks ??
@@ -268,11 +313,13 @@ String(
             "Controller",
 
 
-         franchiseSignature:
-cert.franchiseSignature ||
-franchiseData?.signature ||
-franchiseData?.franchiseSignature ||
-"",
+     
+franchiseSignature:
+  franchiseData?.signature ||
+  franchiseData?.franchiseSignature ||
+  cert.franchiseSignature ||
+  "",
+
 
 photoId:
   cert.photoId ||
