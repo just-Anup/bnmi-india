@@ -928,7 +928,7 @@ student.duration ||
                   style={{
                     width: "470px",
                     padding: "6px 10px",
-                    fontSize: "15px",
+                    fontSize: "14px",
                     lineHeight: "1.7",
                     wordBreak: "break-word",
                     overflowWrap: "break-word",
