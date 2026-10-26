@@ -64,57 +64,44 @@ if (needStudentData) {
     cert.studentId
   );
 }
-      // ✅ FRANCHISE
+ 
+      // ✅ FRANCHISE — ALWAYS FETCH LATEST DATA
       let franchiseData = null;
 
       try {
+        let franchiseEmail =
+          cert.franchiseEmail ||
+          studentData?.franchiseEmail;
 
+        // Fetch admission data if the franchise email is missing
+        if (!franchiseEmail && cert.studentId) {
+          studentData = await databases.getDocument(
+            DATABASE_ID,
+            "student_admissions",
+            cert.studentId
+          );
 
-
-const needFranchiseData =
-  !cert.logo ||
-  !cert.ownerName ||
-  !cert.franchiseSignature ||
-  !cert.city;
-
-if (needFranchiseData) {
-
-  const franchiseEmail =
-    cert.franchiseEmail ||
-    studentData?.franchiseEmail;
-
-  if (franchiseEmail) {
-
-    const franchiseRes =
-      await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [
-          Query.equal("email", franchiseEmail)
-        ]
-      );
-
-    if (franchiseRes.documents.length > 0) {
-      franchiseData = franchiseRes.documents[0];
-    }
-
-  }
-}
-
-        if (franchiseRes.documents.length > 0) {
-
-          franchiseData =
-            franchiseRes.documents[0];
+          franchiseEmail = studentData?.franchiseEmail;
         }
 
+        if (franchiseEmail) {
+          const franchiseRes = await databases.listDocuments(
+            DATABASE_ID,
+            "franchise_approved",
+            [
+              Query.equal("email", franchiseEmail),
+              Query.limit(1),
+            ]
+          );
+
+          if (franchiseRes.documents.length > 0) {
+            franchiseData = franchiseRes.documents[0];
+          }
+        }
       } catch (err) {
-
-        console.log(
-          "FRANCHISE ERROR:",
-          err
-        );
-
+        console.error("FRANCHISE FETCH ERROR:", err);
       }
+
 
       // ✅ ISSUE DATE
       let formattedIssueDate = "";

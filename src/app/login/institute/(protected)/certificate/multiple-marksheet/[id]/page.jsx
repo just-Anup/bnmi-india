@@ -214,31 +214,32 @@ export default function PrintMarksheetMultiple() {
           return;
         }
 
-        let franchise = null;
+     
+let franchise = null;
 
-        const needFranchiseData =
-          !certificate.logo ||
-          !certificate.ownerName ||
-          !certificate.franchiseSignature ||
-          !certificate.city;
+try {
+  const franchiseEmail =
+    certificate.franchiseEmail ||
+    studentDoc?.franchiseEmail;
 
-        if (needFranchiseData) {
-          const franchiseEmail =
-            certificate.franchiseEmail ||
-            studentDoc?.franchiseEmail;
+  if (franchiseEmail) {
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [
+        Query.equal("email", franchiseEmail),
+        Query.limit(1),
+      ]
+    );
 
-          if (franchiseEmail) {
-            const franchiseRes = await databases.listDocuments(
-              DATABASE_ID,
-              "franchise_approved",
-              [Query.equal("email", franchiseEmail)]
-            );
+    if (franchiseRes.documents.length > 0) {
+      franchise = franchiseRes.documents[0];
+    }
+  }
+} catch (err) {
+  console.error("FRANCHISE FETCH ERROR:", err);
+}
 
-            if (franchiseRes.documents.length > 0) {
-              franchise = franchiseRes.documents[0];
-            }
-          }
-        }
 
         setStudent({
           ...(studentDoc || {}),
@@ -290,19 +291,21 @@ export default function PrintMarksheetMultiple() {
 
           certificateNo: certificate.certificateNo || "",
 
-          logo: certificate.logo || franchise?.logo || "",
+        
+logo: franchise?.logo || certificate.logo || "",
 
-          franchiseSignature:
-          franchise?.signature ||
-            certificate.franchiseSignature ||
-            "",
+franchiseSignature:
+  franchise?.signature ||
+  certificate.franchiseSignature ||
+  "",
 
-          ownerName:
-          franchise?.ownerName ||
-          franchise?.owner ||
-          franchise?.name ||
-          certificate.ownerName ||
-            "",
+ownerName:
+  franchise?.ownerName ||
+  franchise?.owner ||
+  franchise?.name ||
+  certificate.ownerName ||
+  "",
+
 
           city: certificate.city || franchise?.city || "",
         });
