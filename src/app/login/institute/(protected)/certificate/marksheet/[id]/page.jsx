@@ -552,51 +552,92 @@ const saveSubjectChanges = async () => {
     0
   );
 
-  
+ 
 const handleDownload = async () => {
-  try {
-    const node = printRef.current;
+  const node = printRef.current;
 
-    if (!node) {
-      alert("Marksheet is not ready.");
-      return;
+  if (!node) {
+    alert("Marksheet not found. Please refresh the page.");
+    return;
+  }
+
+  try {
+    // Wait until fonts are ready
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
     }
 
-    await document.fonts.ready;
+    // Wait for all marksheet images to finish loading
+    const images = Array.from(node.querySelectorAll("img"));
 
-    const rect = node.getBoundingClientRect();
+    await Promise.all(
+      images.map(async (img) => {
+        if (!img.complete) {
+          await new Promise((resolve) => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", resolve, { once: true });
+          });
+        }
 
-    const dataUrl = await htmlToImage.toPng(node, {
-      quality: 1,
-      pixelRatio: 3,
+        if (img.complete && img.naturalWidth > 0) {
+          try {
+            await img.decode();
+          } catch {
+            // Continue if the browser cannot decode an image
+          }
+        }
+      })
+    );
+
+    // Convert the marksheet into a PNG Blob
+    const blob = await htmlToImage.toBlob(node, {
+      backgroundColor: "#ffffff",
+      pixelRatio: 2,
       cacheBust: true,
-      width: rect.width,
-      height: rect.height,
+      width: node.scrollWidth,
+      height: node.scrollHeight,
+      canvasWidth: node.scrollWidth * 2,
+      canvasHeight: node.scrollHeight * 2,
       style: {
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        transform: "scale(1)",
+        transform: "none",
         transformOrigin: "top left",
-        overflow: "visible",
       },
     });
 
+    if (!blob || blob.size === 0) {
+      throw new Error(
+        "The PNG image could not be generated. Check whether any marksheet images are blocked."
+      );
+    }
+
+    // Create a temporary downloadable URL
+    const downloadUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `${student?.studentName || "Student"}_marksheet.png`;
-    link.href = dataUrl;
+
+    const safeName = (student?.studentName || "student")
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+      .trim();
+
+    link.href = downloadUrl;
+    link.download = `${safeName}_marksheet.png`;
+    link.style.display = "none";
 
     document.body.appendChild(link);
     link.click();
     link.remove();
+
+    // Release the temporary URL after the download starts
+    setTimeout(() => {
+      URL.revokeObjectURL(downloadUrl);
+    }, 1000);
   } catch (err) {
-    console.error("DOWNLOAD ERROR:", err);
+    console.error("MARKSHEET DOWNLOAD ERROR:", err);
 
     alert(
-      "Unable to download the marksheet. Please check the browser console."
+      "Unable to download the marksheet image. Please check the browser console for the exact error. If an external image is blocked, its image host must allow cross-origin access."
     );
   }
 };
-
 
   const toBase64 = async (url) => {
 
