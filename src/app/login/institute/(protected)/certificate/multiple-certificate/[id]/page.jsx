@@ -174,18 +174,18 @@ const finalData = {
   studentId: cert.studentId,
 
   studentName:
+  studentData?.studentName ||
     cert.studentName ||
-    studentData?.studentName ||
     "",
 
   fatherName:
+  studentData?.fatherName ||
     cert.fatherName ||
-    studentData?.fatherName ||
     "",
 
   motherName:
+  studentData?.motherName ||
     cert.motherName ||
-    studentData?.motherName ||
     "",
 
   surname:
@@ -194,8 +194,8 @@ const finalData = {
     "",
 
   relationType:
+  studentData?.relationType ||
     cert.relationType ||
-    studentData?.relationType ||
     "S/O",
 
   showFatherInCertificate:
@@ -251,36 +251,36 @@ const finalData = {
     formattedIssueDate,
 
   logo:
+  franchiseData?.logo ||
     cert.logo ||
-    franchiseData?.logo ||
     "",
 
   ownerName:
+  franchiseData?.ownerName ||
+  franchiseData?.owner ||
+  franchiseData?.name ||
     cert.ownerName ||
-    franchiseData?.ownerName ||
-    franchiseData?.owner ||
-    franchiseData?.name ||
     "",
 
   franchiseSignature:
+  franchiseData?.signature ||
     cert.franchiseSignature ||
-    franchiseData?.signature ||
     "",
 
   city:
   franchiseData?.city ||
+  franchiseData?.address ||
     cert.city ||
-    franchiseData?.address ||
     "",
 
   photoId:
+  studentData?.photoId ||
     cert.photoId ||
-    studentData?.photoId ||
     "",
 
   signatureId:
+  studentData?.signatureId ||
     cert.signatureId ||
-    studentData?.signatureId ||
     "",
 
   qrCode: qrCodeImage,

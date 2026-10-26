@@ -293,15 +293,15 @@ export default function PrintMarksheetMultiple() {
           logo: certificate.logo || franchise?.logo || "",
 
           franchiseSignature:
+          franchise?.signature ||
             certificate.franchiseSignature ||
-            franchise?.signature ||
             "",
 
           ownerName:
-            certificate.ownerName ||
-            franchise?.ownerName ||
-            franchise?.owner ||
-            franchise?.name ||
+          franchise?.ownerName ||
+          franchise?.owner ||
+          franchise?.name ||
+          certificate.ownerName ||
             "",
 
           city: certificate.city || franchise?.city || "",
