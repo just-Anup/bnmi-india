@@ -28,6 +28,7 @@ const [savingSubjects, setSavingSubjects] = useState(false);
 // ==========================================
 const [isAdmin, setIsAdmin] = useState(false);
 const [loadingUser, setLoadingUser] = useState(true);
+const [isDownloading, setIsDownloading] = useState(false);
 
 const printRef = useRef();
 
@@ -552,40 +553,96 @@ const saveSubjectChanges = async () => {
     0
   );
 
-  const handleDownload = async () => {
 
-    try {
 
-      const node = printRef.current;
-      const rect = node.getBoundingClientRect();
 
-      const dataUrl = await htmlToImage.toPng(node, {
-        quality: 1,
-        pixelRatio: 3,
-        cacheBust: true,
+const handleDownload = async () => {
+  const node = printRef.current;
 
-        width: rect.width,
-        height: rect.height,
+  if (!node) {
+    alert("Marksheet is not ready. Please refresh and try again.");
+    return;
+  }
 
-        style: {
-          width: rect.width + "px",
-          height: rect.height + "px",
-          transform: "scale(1)",
-          transformOrigin: "top left",
-          overflow: "visible"
-        }
-      });
+  if (isDownloading) return;
 
-      const link = document.createElement("a");
+  setIsDownloading(true);
 
-      link.download = `${student.studentName}_marksheet.png`;
-      link.href = dataUrl;
-      link.click();
-
-    } catch (err) {
-      console.log("DOWNLOAD ERROR:", err);
+  try {
+    // Wait for fonts to finish loading
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
     }
-  };
+
+    // Wait for images inside the marksheet
+    const images = Array.from(node.querySelectorAll("img"));
+
+    await Promise.all(
+      images.map(async (img) => {
+        if (!img.complete) {
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }
+
+        if (img.complete && img.naturalWidth > 0 && img.decode) {
+          await img.decode().catch(() => {});
+        }
+      })
+    );
+
+    // Convert marksheet to PNG
+    const blob = await htmlToImage.toBlob(node, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+      width: node.scrollWidth,
+      height: node.scrollHeight,
+      style: {
+        width: `${node.scrollWidth}px`,
+        height: `${node.scrollHeight}px`,
+        transform: "none",
+        overflow: "visible",
+      },
+    });
+
+    if (!blob) {
+      throw new Error(
+        "Could not generate the marksheet image."
+      );
+    }
+
+    // Create a temporary download URL
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    const safeName = (
+      student?.studentName || "Student"
+    ).replace(/[<>:"/\\|?*\x00-\x1F]/g, "_");
+
+    link.href = url;
+    link.download = `${safeName}_marksheet.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // Release the temporary URL after the download starts
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (err) {
+    console.error("MARKSHEET DOWNLOAD ERROR:", err);
+
+    alert(
+      `Unable to download the marksheet. ${
+        err?.message || "Please check the browser console."
+      }`
+    );
+  } finally {
+    setIsDownloading(false);
+  }
+};
+
 
   const toBase64 = async (url) => {
 
@@ -629,12 +686,18 @@ const saveSubjectChanges = async () => {
     <div className="p-10 bg-white">
 
       {/* DOWNLOAD */}
-      <button
-        onClick={handleDownload}
-        className="bg-green-600 text-white px-6 py-2 mb-6"
-      >
-        Download Image
-      </button>
+      
+<button
+  onClick={handleDownload}
+  disabled={isDownloading || !student}
+  className={`px-6 py-2 mb-6 rounded text-white ${
+    isDownloading
+      ? "bg-gray-500 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700"
+  }`}
+>
+  {isDownloading ? "Preparing Marksheet..." : "Download Image"}
+</button>
 
 
       {/* ========================================== */}
