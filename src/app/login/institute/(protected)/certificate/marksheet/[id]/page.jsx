@@ -552,40 +552,51 @@ const saveSubjectChanges = async () => {
     0
   );
 
-  const handleDownload = async () => {
+  
+const handleDownload = async () => {
+  try {
+    const node = printRef.current;
 
-    try {
-
-      const node = printRef.current;
-      const rect = node.getBoundingClientRect();
-
-      const dataUrl = await htmlToImage.toPng(node, {
-        quality: 1,
-        pixelRatio: 3,
-        cacheBust: true,
-
-        width: rect.width,
-        height: rect.height,
-
-        style: {
-          width: rect.width + "px",
-          height: rect.height + "px",
-          transform: "scale(1)",
-          transformOrigin: "top left",
-          overflow: "visible"
-        }
-      });
-
-      const link = document.createElement("a");
-
-      link.download = `${student.studentName}_marksheet.png`;
-      link.href = dataUrl;
-      link.click();
-
-    } catch (err) {
-      console.log("DOWNLOAD ERROR:", err);
+    if (!node) {
+      alert("Marksheet is not ready.");
+      return;
     }
-  };
+
+    await document.fonts.ready;
+
+    const rect = node.getBoundingClientRect();
+
+    const dataUrl = await htmlToImage.toPng(node, {
+      quality: 1,
+      pixelRatio: 3,
+      cacheBust: true,
+      width: rect.width,
+      height: rect.height,
+      style: {
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        transform: "scale(1)",
+        transformOrigin: "top left",
+        overflow: "visible",
+      },
+    });
+
+    const link = document.createElement("a");
+    link.download = `${student?.studentName || "Student"}_marksheet.png`;
+    link.href = dataUrl;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("DOWNLOAD ERROR:", err);
+
+    alert(
+      "Unable to download the marksheet. Please check the browser console."
+    );
+  }
+};
+
 
   const toBase64 = async (url) => {
 
