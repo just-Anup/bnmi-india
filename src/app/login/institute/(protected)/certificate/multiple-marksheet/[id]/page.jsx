@@ -215,12 +215,25 @@ export default function PrintMarksheetMultiple() {
         }
 
      
+
 let franchise = null;
 
 try {
-  const franchiseEmail =
+  let franchiseEmail =
     certificate.franchiseEmail ||
     studentDoc?.franchiseEmail;
+
+  // Fetch admission details if the franchise email is missing
+  if (!franchiseEmail && certificate.studentId) {
+    const admissionDoc = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      certificate.studentId
+    );
+
+    studentDoc = studentDoc || admissionDoc;
+    franchiseEmail = admissionDoc.franchiseEmail;
+  }
 
   if (franchiseEmail) {
     const franchiseRes = await databases.listDocuments(
@@ -1004,15 +1017,17 @@ ownerName:
         </div>
 
         {/* SIGNATURE */}
-        {student?.franchiseSignature && (
-          <img
-            id="sign-img"
-            src={student.franchiseSignature + "&mode=admin"}
-            crossOrigin="anonymous"
-            alt="Franchise signature"
-            className="absolute bottom-[95px] left-[100px] w-[100px]"
-          />
-        )}
+      
+{/* SIGNATURE */}
+{student?.franchiseSignature && (
+  <img
+    id="sign-img"
+    src={student.franchiseSignature}
+    alt="Franchise signature"
+    className="absolute bottom-[95px] left-[100px] w-[100px]"
+  />
+)}
+
 
         {/* OWNER NAME */}
         {student?.ownerName && (
