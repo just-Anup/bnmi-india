@@ -442,6 +442,27 @@ const handleDownload = async () => {
       }
     }
 
+    
+    // Embed the franchise signature for PDF capture
+    let signatureDataURL = null;
+
+    if (student?.franchiseSignature) {
+      try {
+        signatureDataURL = await convertImageToDataURL(
+          student.franchiseSignature
+        );
+      } catch (error) {
+        console.error("SIGNATURE EMBEDDING ERROR:", error);
+
+        alert(
+          "The franchise signature could not be embedded in the PDF. Check the signature URL and the logo-proxy API."
+        );
+
+        return;
+      }
+    }
+
+
     // 3. Wait for the existing marksheet images.
     const images = Array.from(node.querySelectorAll("img"));
 
@@ -505,6 +526,28 @@ const handleDownload = async () => {
           }
         }
 
+        
+        // Embed the franchise signature in the PDF clone
+        if (signatureDataURL) {
+          const signatureElement = clonedNode.querySelector(
+            'img[alt="Franchise signature"]'
+          );
+
+          if (signatureElement) {
+            signatureElement.setAttribute(
+              "src",
+              signatureDataURL
+            );
+            signatureElement.removeAttribute("crossorigin");
+            signatureElement.removeAttribute("referrerpolicy");
+          } else {
+            throw new Error(
+              "Franchise signature element not found in PDF capture."
+            );
+          }
+        }
+
+        
         // 5. Retain the existing modern CSS color workaround.
         const elements = [
           clonedNode,
