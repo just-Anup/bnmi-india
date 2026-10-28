@@ -39,6 +39,32 @@ export default function PrintMarksheet() {
           cert.studentId
         );
 
+        
+let franchiseData = null;
+
+try {
+  const franchiseEmail =
+    cert.franchiseEmail ||
+    studentData?.franchiseEmail;
+
+  if (franchiseEmail) {
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [
+        Query.equal("email", franchiseEmail),
+        Query.limit(1),
+      ]
+    );
+
+    if (franchiseRes.documents.length > 0) {
+      franchiseData = franchiseRes.documents[0];
+    }
+  }
+} catch (err) {
+  console.error("FRANCHISE SIGNATURE FETCH ERROR:", err);
+}
+
         const resultRes = await databases.listDocuments(
           DATABASE_ID,
           "exam_results",
@@ -81,9 +107,21 @@ export default function PrintMarksheet() {
           showMotherInCertificate:
             cert.showMotherInCertificate ??
             studentData.showMotherInCertificate,
-          logo: cert.logo,
-          ownerName: cert.ownerName,
-          franchiseSignature: cert.franchiseSignature,
+          
+logo: franchiseData?.logo || cert.logo || "",
+ownerName:
+  franchiseData?.ownerName ||
+  franchiseData?.owner ||
+  franchiseData?.name ||
+  cert.ownerName ||
+  "",
+franchiseSignature:
+  franchiseData?.signature ||
+  franchiseData?.franchiseSignature ||
+  cert.franchiseSignature ||
+  studentData?.franchiseSignature ||
+  "",
+
         };
 
         setStudent(finalData);
@@ -940,14 +978,16 @@ const handleDownload = async () => {
         </div>
 
         {/* FRANCHISE SIGNATURE */}
-        {franchiseSign && (
-          <img
-            src={franchiseSign + "&mode=admin"}
-            crossOrigin="anonymous"
-            alt="Franchise signature"
-            className="absolute bottom-[94px] left-[125px] w-[100px]"
-          />
-        )}
+       
+{/* FRANCHISE SIGNATURE */}
+{franchiseSign && (
+  <img
+    src={franchiseSign}
+    alt="Franchise signature"
+    className="absolute bottom-[94px] left-[125px] w-[100px] object-contain"
+  />
+)}
+
 
         {/* OWNER */}
         {student.ownerName && (
