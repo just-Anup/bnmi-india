@@ -5,8 +5,8 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import * as htmlToImage from "html-to-image";
+
 import QRCode from "qrcode";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
@@ -361,297 +361,160 @@ franchiseSignature:
   );
 
 
- 
 
-const convertImageToDataURL = async (url) => {
+const toBase64 = async (url) => {
   if (!url) {
-    throw new Error("Institute logo URL is missing.");
+    throw new Error("Image URL is missing.");
   }
 
+  // Already Base64
   if (url.startsWith("data:image/")) {
     return url;
   }
 
-  // Use our own Next.js endpoint instead of fetching
-  // directly from Appwrite in the browser.
-  const proxyUrl = `/api/logo-proxy?url=${encodeURIComponent(url)}`;
+  // Resolve image URL
+  const absoluteUrl = new URL(url, window.location.origin);
 
-  const response = await fetch(proxyUrl);
+  // Local images can be fetched directly.
+  // External Appwrite images must use our API proxy.
+  const fetchUrl =
+    absoluteUrl.origin === window.location.origin
+      ? absoluteUrl.href
+      : `/api/logo-proxy?url=${encodeURIComponent(
+          absoluteUrl.href
+        )}`;
+
+  const response = await fetch(fetchUrl);
 
   if (!response.ok) {
+    const errorText = await response.text();
+
+    console.error("IMAGE PROXY ERROR:", errorText);
+
     throw new Error(
-      `Logo retrieval failed: ${response.status}`
+      `Image retrieval failed: ${response.status}`
     );
   }
 
   const blob = await response.blob();
 
   if (!blob.type.startsWith("image/")) {
-    throw new Error("The logo response is not an image.");
+    throw new Error("Response is not a valid image.");
   }
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Logo conversion failed."));
-      }
-    };
+    reader.onload = () => resolve(reader.result);
 
     reader.onerror = () => {
-      reject(new Error("Could not read logo image."));
+      reject(new Error("Image conversion failed."));
     };
 
     reader.readAsDataURL(blob);
   });
 };
 
+
+
+
+
 const handleDownload = async () => {
   const node = printRef.current;
 
   if (!node) {
-    alert("Marksheet not found. Please refresh the page.");
+    alert("Marksheet not found.");
     return;
   }
 
+  const originalImages = [];
+
   try {
-    // 1. Wait for fonts.
+    // Wait for fonts
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
 
-    // 2. Embed the logo before capturing the marksheet.
-    let logoDataURL = null;
-
-    if (student?.logo) {
-      try {
-        logoDataURL = await convertImageToDataURL(
-          student.logo
-        );
-      } catch (error) {
-        console.error("LOGO EMBEDDING ERROR:", error);
-
-        alert(
-          "The institute logo could not be embedded in the PDF. Please check the logo URL and its CORS settings."
-        );
-
-        return;
-      }
-    }
-
-    
-    // Embed the franchise signature for PDF capture
-    let signatureDataURL = null;
-
-    if (student?.franchiseSignature) {
-      try {
-        signatureDataURL = await convertImageToDataURL(
-          student.franchiseSignature
-        );
-      } catch (error) {
-        console.error("SIGNATURE EMBEDDING ERROR:", error);
-
-        alert(
-          "The franchise signature could not be embedded in the PDF. Check the signature URL and the logo-proxy API."
-        );
-
-        return;
-      }
-    }
-
-
-    // 3. Wait for the existing marksheet images.
+    // Convert all images into Base64
     const images = Array.from(node.querySelectorAll("img"));
 
-    await Promise.all(
-      images.map(async (img) => {
-        if (!img.complete) {
-          await new Promise((resolve) => {
-            img.addEventListener("load", resolve, {
-              once: true,
-            });
+    for (const img of images) {
+      const originalSrc = img.getAttribute("src");
 
-            img.addEventListener("error", resolve, {
-              once: true,
-            });
-          });
-        }
+      if (!originalSrc || originalSrc.startsWith("data:")) {
+        continue;
+      }
 
-        if (img.naturalWidth > 0) {
-          try {
-            await img.decode();
-          } catch {
-            // Continue; html2canvas will handle the image.
-          }
-        }
-      })
-    );
+      originalImages.push({
+        img,
+        src: originalSrc,
+      });
 
-    // 4. Capture the marksheet.
-    const canvas = await html2canvas(node, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: "#ffffff",
-      logging: false,
-      imageTimeout: 20000,
+      try {
+        const base64 = await toBase64(img.src);
 
-      onclone: (clonedDocument) => {
-        const clonedNode = clonedDocument.querySelector(
-          "[data-marksheet-capture]"
+        img.src = base64;
+
+        await img.decode();
+
+        console.log(
+          "IMAGE CONVERTED:",
+          img.alt || originalSrc
         );
+      } catch (error) {
+        throw new Error(
+          `Failed to load ${img.alt || "marksheet image"}: ${error.message}`
+        );
+      }
+    }
 
-        if (!clonedNode) {
-          throw new Error("Cloned marksheet not found.");
-        }
+    // Generate PNG using the same library as Certificate
+    const dataUrl = await htmlToImage.toPng(node, {
+      quality: 1,
+      pixelRatio: 3,
+      cacheBust: false,
 
-        // Find the logo by its alt text instead of matching
-        // the src URL, which browsers may normalize.
-        if (logoDataURL) {
-          const logoElement = clonedNode.querySelector(
-            'img[alt="Institute logo"]'
-          );
+      width: node.scrollWidth,
+      height: node.scrollHeight,
 
-          if (logoElement) {
-            logoElement.setAttribute("src", logoDataURL);
-            logoElement.removeAttribute("crossorigin");
-            logoElement.removeAttribute("referrerpolicy");
-          } else {
-            throw new Error(
-              "Institute logo element not found in PDF capture."
-            );
-          }
-        }
-
-        
-        // Embed the franchise signature in the PDF clone
-        if (signatureDataURL) {
-          const signatureElement = clonedNode.querySelector(
-            'img[alt="Franchise signature"]'
-          );
-
-          if (signatureElement) {
-            signatureElement.setAttribute(
-              "src",
-              signatureDataURL
-            );
-            signatureElement.removeAttribute("crossorigin");
-            signatureElement.removeAttribute("referrerpolicy");
-          } else {
-            throw new Error(
-              "Franchise signature element not found in PDF capture."
-            );
-          }
-        }
-
-        
-        // 5. Retain the existing modern CSS color workaround.
-        const elements = [
-          clonedNode,
-          ...clonedNode.querySelectorAll("*"),
-        ];
-
-        elements.forEach((el) => {
-          const computed =
-            clonedDocument.defaultView.getComputedStyle(el);
-
-          if (computed.color.includes("lab")) {
-            el.style.setProperty(
-              "color",
-              "#000000",
-              "important"
-            );
-          }
-
-          if (computed.backgroundColor.includes("lab")) {
-            el.style.setProperty(
-              "background-color",
-              "#ffffff",
-              "important"
-            );
-          }
-
-          if (computed.borderColor.includes("lab")) {
-            el.style.setProperty(
-              "border-color",
-              "#000000",
-              "important"
-            );
-          }
-
-          el.style.setProperty(
-            "box-shadow",
-            "none",
-            "important"
-          );
-
-          el.style.setProperty(
-            "text-shadow",
-            "none",
-            "important"
-          );
-
-          el.style.setProperty(
-            "filter",
-            "none",
-            "important"
-          );
-        });
+      style: {
+        transform: "scale(1)",
+        transformOrigin: "top left",
+        overflow: "visible",
       },
     });
 
-    if (!canvas.width || !canvas.height) {
-      throw new Error("The marksheet canvas is empty.");
-    }
-
-    // 6. Convert the canvas into an image.
-    const imageData = canvas.toDataURL(
-      "image/jpeg",
-      0.98
-    );
-
-    // 7. Create the PDF with the same proportions.
-    const pdf = new jsPDF({
-      orientation:
-        canvas.width >= canvas.height
-          ? "landscape"
-          : "portrait",
-      unit: "px",
-      format: [canvas.width, canvas.height],
-      compress: true,
-    });
-
-    pdf.addImage(
-      imageData,
-      "JPEG",
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-      undefined,
-      "FAST"
-    );
-
-    // 8. Download directly, without opening Print.
-    const safeName = (
-      student?.studentName || "student"
-    )
+    // Download PNG
+    const safeName = (student?.studentName || "student")
       .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
       .trim();
 
-    pdf.save(`${safeName}_marksheet.pdf`);
+    const link = document.createElement("a");
+
+    link.download = `${safeName}_marksheet.png`;
+    link.href = dataUrl;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    console.log("MARKSHEET PNG DOWNLOADED");
+
   } catch (error) {
-    console.error("PDF DOWNLOAD ERROR:", error);
+    console.error("MARKSHEET DOWNLOAD ERROR:", error);
 
     alert(
-      error?.message ||
-        "PDF generation failed. Please check the browser c onsole."
+      error.message || "Unable to download marksheet."
     );
+
+  } finally {
+    // Restore original image URLs
+    originalImages.forEach(({ img, src }) => {
+      img.setAttribute("src", src);
+    });
   }
 };
+
 
 
   const getGrade = () => {
@@ -678,12 +541,12 @@ const handleDownload = async () => {
   return (
     <div className="p-10 bg-white">
       {/* DOWNLOAD PDF */}
-      <button
-        onClick={handleDownload}
-        className="bg-green-600 text-white px-6 py-2 mb-6"
-      >
-        Download PDF
-      </button>
+     <button
+  onClick={handleDownload}
+  className="bg-green-600 text-white px-6 py-2 mb-6"
+>
+  Download PNG
+</button>
 
       {/* ADMIN ONLY SUBJECT EDIT */}
       {isAdmin && !loadingUser && (

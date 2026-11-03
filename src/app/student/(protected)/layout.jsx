@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,23 +21,22 @@ export default function StudentLayout({ children }) {
       setStudent(JSON.parse(data));
     }
 
-    // live time
+    // Live time
     const interval = setInterval(() => {
       const now = new Date();
       setTime(now.toLocaleString());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [router]);
 
   if (!student) return null;
 
   return (
     <div className="flex h-screen bg-gray-100">
-
-      {/* 🔷 SIDEBAR */}
+      {/* SIDEBAR */}
       <div
-        className={`bg-gradient-to-b from-[#2d2a1f] to-[#3b3727] text-white 
+        className={`bg-gradient-to-b from-[#2d2a1f] to-[#3b3727] text-white
         ${sidebarOpen ? "w-64" : "w-16"} transition-all duration-300`}
       >
         <div className="p-4 text-center border-b border-gray-600">
@@ -44,29 +44,49 @@ export default function StudentLayout({ children }) {
         </div>
 
         <nav className="p-3 space-y-2 text-sm">
+          <SidebarItem
+            label="Dashboard"
+            onClick={() => router.push("/student/dashboard")}
+          />
 
-          <SidebarItem label="Dashboard" onClick={() => router.push("/student/dashboard")} />
-          <SidebarItem label="My Courses" />
-          <SidebarItem label="Practice MCQ" onClick={() => router.push("/student/question")} />
+          <SidebarItem
+            label="My Courses"
+            onClick={() => router.push("/student/my-courses")}
+          />
+
+          <SidebarItem
+            label="Explore Courses"
+            onClick={() => router.push("/student/explore-courses")}
+          />
+
+          <SidebarItem
+            label="Practice MCQ"
+            onClick={() => router.push("/student/question")}
+          />
+
           <SidebarItem label="Results" />
-          <SidebarItem label="Attendance" />
-          <SidebarItem label="Online Exams" onClick={()=> router.push("/student/exam")}/>
-          <SidebarItem label="Support" />
 
+          <SidebarItem label="Attendance" />
+
+          <SidebarItem
+            label="Online Exams"
+            onClick={() => router.push("/student/exam")}
+          />
+
+          <SidebarItem label="Support" />
         </nav>
       </div>
 
-      {/* 🔷 MAIN AREA */}
-      <div className="flex-1 flex flex-col">
-
-        {/* 🔷 TOP BAR */}
+      {/* MAIN AREA */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* TOP BAR */}
         <div className="bg-[#8a9a00] text-white flex items-center justify-between px-6 py-3 shadow">
-
           <div className="flex items-center gap-3">
             <Menu
               className="cursor-pointer"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             />
+
             <h2 className="font-semibold">Student Dashboard</h2>
           </div>
 
@@ -78,24 +98,30 @@ export default function StudentLayout({ children }) {
               <span>{student.studentName}</span>
             </div>
           </div>
-
         </div>
 
-        {/* 🔷 CONTENT */}
+        {/* CONTENT */}
         <div className="p-6 overflow-y-auto flex-1">
           {children}
         </div>
-
       </div>
     </div>
   );
 }
 
-/* 🔷 SIDEBAR ITEM COMPONENT */
+/* SIDEBAR ITEM COMPONENT */
 function SidebarItem({ label, onClick }) {
   return (
     <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.();
+        }
+      }}
       className="p-3 rounded-lg hover:bg-white/10 cursor-pointer transition"
     >
       {label}
