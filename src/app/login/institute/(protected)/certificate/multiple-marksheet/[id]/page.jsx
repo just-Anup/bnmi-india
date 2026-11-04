@@ -6,7 +6,7 @@ import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import html2canvas from "html2canvas";
 import { useParams } from "next/navigation";
-import jsPDF from "jspdf";
+
 import QRCode from "qrcode";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
@@ -427,203 +427,176 @@ ownerName:
   };
 
   // DOWNLOAD MULTIPLE MARKSHEET AS PDF
-  const handleDownload = async () => {
-    const node = printRef.current;
 
-    if (!node) {
-      alert("Marksheet not found. Please refresh the page.");
-      return;
+const handleDownload = async () => {
+  const node = printRef.current;
+
+  if (!node) {
+    alert("Marksheet not found. Please refresh the page.");
+    return;
+  }
+
+  try {
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
     }
 
-    try {
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
+    // Convert institute logo using the proxy
+    let logoDataURL = null;
 
-      // Convert the logo through the proxy.
-      let logoDataURL = null;
+    if (student?.logo) {
+      logoDataURL = await convertImageToDataURL(student.logo);
+    }
 
-      if (student?.logo) {
-        try {
-          logoDataURL = await convertImageToDataURL(student.logo);
-        } catch (error) {
-          console.error("LOGO EMBEDDING ERROR:", error);
+    // Convert franchise signature using the proxy
+    let signatureDataURL = null;
 
-          alert(
-            "The institute logo could not be embedded in the PDF. Please check the logo URL and /api/logo-proxy route."
-          );
-
-          return;
-        }
-      }
-
-      // Wait for all existing marksheet images.
-      const images = Array.from(node.querySelectorAll("img"));
-
-      await Promise.all(
-        images.map(async (img) => {
-          if (!img.complete) {
-            await new Promise((resolve) => {
-              img.addEventListener("load", resolve, {
-                once: true,
-              });
-
-              img.addEventListener("error", resolve, {
-                once: true,
-              });
-            });
-          }
-
-          if (img.naturalWidth > 0 && img.decode) {
-            try {
-              await img.decode();
-            } catch {
-              // Continue if the browser cannot decode an image.
-            }
-          }
-        })
+    if (student?.franchiseSignature) {
+      signatureDataURL = await convertImageToDataURL(
+        student.franchiseSignature
       );
+    }
 
-      const rect = node.getBoundingClientRect();
+    // Wait for all marksheet images
+    const images = Array.from(node.querySelectorAll("img"));
 
-      // Capture the same marksheet currently displayed on screen.
-      const canvas = await html2canvas(node, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        logging: false,
-        imageTimeout: 20000,
-        width: rect.width,
-        height: rect.height,
-
-        onclone: (clonedDocument) => {
-          const clonedNode = clonedDocument.querySelector(
-            "[data-marksheet-capture]"
-          );
-
-          if (!clonedNode) {
-            throw new Error("Cloned marksheet not found.");
-          }
-
-          // Replace the logo only in the PDF clone.
-          // The actual on-screen logo remains unchanged.
-          if (logoDataURL) {
-            const logoElement = clonedNode.querySelector(
-              'img[alt="Institute logo"]'
-            );
-
-            if (!logoElement) {
-              throw new Error(
-                "Institute logo element not found in PDF capture."
-              );
-            }
-
-            logoElement.setAttribute("src", logoDataURL);
-            logoElement.removeAttribute("crossorigin");
-            logoElement.removeAttribute("referrerpolicy");
-          }
-
-          // Work around unsupported modern CSS lab() colors.
-          const elements = [
-            clonedNode,
-            ...clonedNode.querySelectorAll("*"),
-          ];
-
-          elements.forEach((element) => {
-            const computed =
-              clonedDocument.defaultView.getComputedStyle(element);
-
-            if (computed.color.includes("lab")) {
-              element.style.setProperty(
-                "color",
-                "#000000",
-                "important"
-              );
-            }
-
-            if (computed.backgroundColor.includes("lab")) {
-              element.style.setProperty(
-                "background-color",
-                "#ffffff",
-                "important"
-              );
-            }
-
-            if (computed.borderColor.includes("lab")) {
-              element.style.setProperty(
-                "border-color",
-                "#000000",
-                "important"
-              );
-            }
-
-            element.style.setProperty(
-              "box-shadow",
-              "none",
-              "important"
-            );
-
-            element.style.setProperty(
-              "text-shadow",
-              "none",
-              "important"
-            );
-
-            element.style.setProperty(
-              "filter",
-              "none",
-              "important"
-            );
+    await Promise.all(
+      images.map(async (img) => {
+        if (!img.complete) {
+          await new Promise((resolve) => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", resolve, { once: true });
           });
-        },
-      });
+        }
 
-      if (!canvas.width || !canvas.height) {
-        throw new Error("The marksheet canvas is empty.");
-      }
+        if (img.naturalWidth > 0 && img.decode) {
+          try {
+            await img.decode();
+          } catch {
+            // Continue if image decoding fails
+          }
+        }
+      })
+    );
 
-      // Convert the captured marksheet to an image for the PDF.
-      const imageData = canvas.toDataURL("image/jpeg", 0.98);
+    // Capture marksheet as PNG
+    const canvas = await html2canvas(node, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      logging: false,
+      imageTimeout: 20000,
+      width: node.scrollWidth,
+      height: node.scrollHeight,
 
-      const pdf = new jsPDF({
-        orientation:
-          canvas.width >= canvas.height
-            ? "landscape"
-            : "portrait",
-        unit: "px",
-        format: [canvas.width, canvas.height],
-        compress: true,
-      });
+      onclone: (clonedDocument) => {
+        const clonedNode = clonedDocument.querySelector(
+          "[data-marksheet-capture]"
+        );
 
-      pdf.addImage(
-        imageData,
-        "JPEG",
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-        undefined,
-        "FAST"
-      );
+        if (!clonedNode) {
+          throw new Error("Cloned marksheet not found.");
+        }
 
-      const safeName = (student?.studentName || "student")
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
-        .trim();
+        // Replace institute logo with Base64 image
+        if (logoDataURL) {
+          const logoElement = clonedNode.querySelector(
+            'img[alt="Institute logo"]'
+          );
 
-      // Download directly. Do not open the print dialog.
-      pdf.save(
-        `${safeName || "student"}_multiple_marksheet.pdf`
-      );
-    } catch (error) {
-      console.error("PDF DOWNLOAD ERROR:", error);
+          if (logoElement) {
+            logoElement.src = logoDataURL;
+            logoElement.removeAttribute("crossorigin");
+          }
+        }
 
-      alert(
-        error?.message ||
-          "PDF generation failed. Please check the browser console."
-      );
+        // Replace franchise signature with Base64 image
+        if (signatureDataURL) {
+          const signatureElement = clonedNode.querySelector(
+            'img[alt="Franchise signature"]'
+          );
+
+          if (signatureElement) {
+            signatureElement.src = signatureDataURL;
+            signatureElement.removeAttribute("crossorigin");
+          }
+        }
+
+        // Fix unsupported modern CSS colors
+        const elements = [
+          clonedNode,
+          ...clonedNode.querySelectorAll("*"),
+        ];
+
+        elements.forEach((element) => {
+          const computed =
+            clonedDocument.defaultView.getComputedStyle(element);
+
+          if (computed.color.includes("lab")) {
+            element.style.setProperty(
+              "color",
+              "#000000",
+              "important"
+            );
+          }
+
+          if (computed.backgroundColor.includes("lab")) {
+            element.style.setProperty(
+              "background-color",
+              "#ffffff",
+              "important"
+            );
+          }
+
+          if (computed.borderColor.includes("lab")) {
+            element.style.setProperty(
+              "border-color",
+              "#000000",
+              "important"
+            );
+          }
+
+          element.style.setProperty("box-shadow", "none", "important");
+          element.style.setProperty("text-shadow", "none", "important");
+          element.style.setProperty("filter", "none", "important");
+        });
+      },
+    });
+
+    if (!canvas.width || !canvas.height) {
+      throw new Error("Marksheet canvas is empty.");
     }
-  };
+
+    // Generate PNG
+    const imageData = canvas.toDataURL("image/png");
+
+    // Safe filename
+    const safeName = (student?.studentName || "student")
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+      .trim();
+
+    // Download PNG directly
+    const link = document.createElement("a");
+
+    link.download = `${safeName || "student"}_multiple_marksheet.png`;
+    link.href = imageData;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    console.log("MULTIPLE MARKSHEET PNG DOWNLOADED");
+
+  } catch (error) {
+    console.error("PNG DOWNLOAD ERROR:", error);
+
+    alert(
+      error?.message ||
+      "Unable to download marksheet PNG. Please check the browser console."
+    );
+  }
+};
 
   // =====================================================
   // TOTAL + GRADE
@@ -738,12 +711,12 @@ ownerName:
   return (
     <div className="p-10 bg-white">
       {/* DOWNLOAD BUTTON */}
-      <button
-        onClick={handleDownload}
-        className="bg-green-600 text-white px-6 py-2 mb-6"
-      >
-        Download PDF
-      </button>
+    <button
+  onClick={handleDownload}
+  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 mb-6 rounded"
+>
+  Download PNG
+</button>
 
       {/* ADMIN ONLY SUBJECT EDIT */}
       {isAdmin && !loadingUser && (

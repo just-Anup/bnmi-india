@@ -34,7 +34,10 @@ const emptyCourse = {
 const emptyLesson = {
   title: "",
   description: "",
+  videoType: "youtube",
   videoUrl: "",
+  videoFileId: "",
+  videoBucketId: "",
   order: "1",
   durationSeconds: "",
   isFreePreview: false,
@@ -51,6 +54,10 @@ export default function LearningCoursesAdmin() {
 
   const [editingCourseId, setEditingCourseId] = useState(null);
   const [editingLessonId, setEditingLessonId] = useState(null);
+
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -119,9 +126,11 @@ export default function LearningCoursesAdmin() {
       ...emptyLesson,
       order: String(nextOrder),
     });
-    setEditingLessonId(null);
-  }
 
+    setEditingLessonId(null);
+    setVideoFile(null);
+    setUploadProgress("");
+  }
   async function selectCourse(course) {
     setSelectedCourse(course);
     setError("");
@@ -158,45 +167,82 @@ export default function LearningCoursesAdmin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function saveCourse(event) {
+  async function saveLesson(event) {
     event.preventDefault();
+
+    if (!selectedCourse) return;
+
     setSaving(true);
     setError("");
     setNotice("");
 
     try {
-      const payload = {
-        ...courseForm,
-        price: Number(courseForm.price),
+      let uploadedVideo = {
+        videoFileId: lessonForm.videoFileId || "",
+        videoBucketId: lessonForm.videoBucketId || "",
       };
 
-      const result = await api(COURSE_API, {
-        method: editingCourseId ? "PATCH" : "POST",
+      if (lessonForm.videoType === "appwrite" && videoFile) {
+        uploadedVideo = await uploadLessonVideo();
+      }
+
+      if (
+        lessonForm.videoType === "appwrite" &&
+        !uploadedVideo.videoFileId
+      ) {
+        throw new Error("Please upload a video before saving the lesson.");
+      }
+
+      const payload = {
+        ...lessonForm,
+        courseId: selectedCourse.$id,
+        order: Number(lessonForm.order),
+        durationSeconds: Number(lessonForm.durationSeconds || 0),
+
+        videoFileId:
+          lessonForm.videoType === "appwrite"
+            ? uploadedVideo.videoFileId
+            : "",
+
+        videoBucketId:
+          lessonForm.videoType === "appwrite"
+            ? uploadedVideo.videoBucketId
+            : "",
+
+        videoUrl:
+          lessonForm.videoType === "appwrite"
+            ? ""
+            : lessonForm.videoUrl,
+      };
+
+      await api(LESSON_API, {
+        method: editingLessonId ? "PATCH" : "POST",
         body: JSON.stringify({
           ...payload,
-          ...(editingCourseId ? { id: editingCourseId } : {}),
+          ...(editingLessonId ? { id: editingLessonId } : {}),
         }),
       });
 
       setNotice(
-        editingCourseId
-          ? "Course updated successfully."
-          : "Course created successfully."
+        editingLessonId
+          ? "Lesson updated successfully."
+          : "Lesson added successfully."
       );
 
-      resetCourseForm();
-      await loadCourses();
+      const updatedLessons = await loadLessons(selectedCourse.$id);
 
-      if (selectedCourse?.$id === result.course.$id) {
-        setSelectedCourse(result.course);
-      }
+      const nextOrder = updatedLessons.length
+        ? Math.max(...updatedLessons.map((lesson) => lesson.order)) + 1
+        : 1;
+
+      resetLessonForm(nextOrder);
     } catch (err) {
-      setError(err.message || "Unable to save course.");
+      setError(err.message || "Unable to save lesson.");
     } finally {
       setSaving(false);
+      setUploadingVideo(false);
     }
   }
-
   async function togglePublish(course) {
     setError("");
     setNotice("");
@@ -278,60 +324,97 @@ export default function LearningCoursesAdmin() {
     }
   }
 
+
   function editLesson(lesson) {
     setEditingLessonId(lesson.$id);
 
     setLessonForm({
       title: lesson.title || "",
       description: lesson.description || "",
+      videoType:
+        lesson.videoType === "appwrite"
+          ? "appwrite"
+          : lesson.videoType === "youtube"
+            ? "youtube"
+            : "url",
       videoUrl: lesson.videoUrl || "",
+      videoFileId: lesson.videoFileId || "",
+      videoBucketId: lesson.videoBucketId || "",
       order: String(lesson.order || 1),
       durationSeconds: String(lesson.durationSeconds || ""),
       isFreePreview: Boolean(lesson.isFreePreview),
       status: lesson.status || "draft",
     });
+
+    setVideoFile(null);
+    setUploadProgress("");
   }
 
-  async function saveLesson(event) {
-    event.preventDefault();
+  async function uploadLessonVideo() {
+    if (!videoFile) {
+      throw new Error("Please select a video file.");
+    }
 
-    if (!selectedCourse) return;
+    const allowedTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/x-m4v",
+    ];
 
-    setSaving(true);
-    setError("");
-    setNotice("");
+    const allowedExtensions = [".mp4", ".webm", ".mov", ".m4v"];
+
+    const extension = videoFile.name
+      .toLowerCase()
+      .slice(videoFile.name.lastIndexOf("."));
+
+    if (
+      !allowedExtensions.includes(extension) ||
+      (videoFile.type && !allowedTypes.includes(videoFile.type))
+    ) {
+      throw new Error("Select an MP4, WebM, MOV or M4V video.");
+    }
+
+    if (videoFile.size > 100 * 1024 * 1024) {
+      throw new Error("Video must not exceed 100 MB.");
+    }
+
+    setUploadingVideo(true);
+    setUploadProgress("Uploading video to Appwrite...");
 
     try {
-      const payload = {
-        ...lessonForm,
-        courseId: selectedCourse.$id,
-        order: Number(lessonForm.order),
-        durationSeconds: Number(lessonForm.durationSeconds || 0),
-      };
+      await account.get();
 
-      await api(LESSON_API, {
-        method: editingLessonId ? "PATCH" : "POST",
-        body: JSON.stringify({
-          ...payload,
-          ...(editingLessonId ? { id: editingLessonId } : {}),
-        }),
-      });
+      const jwtResponse = await account.createJWT();
 
-      setNotice(
-        editingLessonId ? "Lesson updated." : "Lesson added."
+      const formData = new FormData();
+      formData.append("video", videoFile);
+
+      const response = await fetch(
+        "/api/admin/learning/upload-video",
+        {
+          method: "POST",
+          headers: {
+            "x-appwrite-jwt": jwtResponse.jwt,
+          },
+          body: formData,
+        }
       );
 
-      const updatedLessons = await loadLessons(selectedCourse.$id);
+      const result = await response.json();
 
-      const nextOrder = updatedLessons.length
-        ? Math.max(...updatedLessons.map((lesson) => lesson.order)) + 1
-        : 1;
+      if (!response.ok) {
+        throw new Error(result.error || "Video upload failed.");
+      }
 
-      resetLessonForm(nextOrder);
-    } catch (err) {
-      setError(err.message || "Unable to save lesson.");
+      setUploadProgress("Video uploaded successfully.");
+
+      return {
+        videoFileId: result.fileId,
+        videoBucketId: result.bucketId,
+      };
     } finally {
-      setSaving(false);
+      setUploadingVideo(false);
     }
   }
 
@@ -600,11 +683,10 @@ export default function LearningCoursesAdmin() {
               {courses.map((course) => (
                 <article
                   key={course.$id}
-                  className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
-                    selectedCourse?.$id === course.$id
+                  className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${selectedCourse?.$id === course.$id
                       ? "border-indigo-500 ring-2 ring-indigo-100"
                       : ""
-                  }`}
+                    }`}
                 >
                   {course.thumbnailUrl ? (
                     <img
@@ -737,11 +819,15 @@ export default function LearningCoursesAdmin() {
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                           {lesson.isFreePreview ? "Free preview" : "Paid lesson"}
-                          {" · "}{lesson.status}
+                          {" · "}
+                          {lesson.videoType === "appwrite" ? "Appwrite Video" : "YouTube"}
+                          {" · "}
+                          {lesson.status}
                           {" · "}{Math.floor((lesson.durationSeconds || 0) / 60)} min
                         </p>
                       </div>
                     </div>
+                    
 
                     <div className="flex gap-2">
                       <button
@@ -789,20 +875,98 @@ export default function LearningCoursesAdmin() {
                 />
               </Field>
 
-              <Field label="Hosted video URL *">
-                <input
-                  required
-                  type="url"
-                  maxLength={2000}
+              <Field label="Video source *">
+                <select
                   className="input"
-                  value={lessonForm.videoUrl}
-                  onChange={(e) =>
-                    setLessonForm({ ...lessonForm, videoUrl: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
+                  value={lessonForm.videoType}
+                  onChange={(e) => {
+                    const type = e.target.value;
+
+                    setLessonForm({
+                      ...lessonForm,
+                      videoType: type,
+                      videoUrl: "",
+                      videoFileId: "",
+                      videoBucketId: "",
+                    });
+
+                    setVideoFile(null);
+                    setUploadProgress("");
+                  }}
+                >
+                  <option value="youtube">YouTube Video</option>
+                  <option value="appwrite">Upload Video to Appwrite</option>
+                </select>
               </Field>
 
+              {lessonForm.videoType === "youtube" && (
+                <Field label="YouTube video URL *">
+                  <input
+                    required
+                    type="url"
+                    maxLength={2000}
+                    className="input"
+                    value={lessonForm.videoUrl}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        videoUrl: e.target.value,
+                      })
+                    }
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                  <p className="mt-1 text-xs font-normal text-slate-500">
+                    Paste the YouTube video link for this lesson.
+                  </p>
+                </Field>
+              )}
+
+              {lessonForm.videoType === "appwrite" && (
+                <div className="md:col-span-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 p-5">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Select video file *
+                  </label>
+
+                  <input
+                    type="file"
+                    accept=".mp4,.webm,.mov,.m4v,video/mp4,video/webm,video/quicktime"
+                    className="mt-3 block w-full text-sm"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setVideoFile(file);
+                      setUploadProgress("");
+                    }}
+                  />
+
+                  {videoFile && (
+                    <div className="mt-3 rounded-lg bg-white p-3 text-sm">
+                      <p className="font-semibold text-gray-800">
+                        {videoFile.name}
+                      </p>
+                      <p className="mt-1 text-gray-500">
+                        {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
+
+                  {!videoFile && lessonForm.videoFileId && (
+                    <p className="mt-3 text-sm text-green-700">
+                      Existing uploaded video is saved. Select another file only
+                      if you want to replace it.
+                    </p>
+                  )}
+
+                  <p className="mt-3 text-xs text-gray-600">
+                    Supported: MP4, WebM, MOV and M4V. Maximum 100 MB per video.
+                  </p>
+
+                  {uploadProgress && (
+                    <p className="mt-3 text-sm font-semibold text-indigo-700">
+                      {uploadProgress}
+                    </p>
+                  )}
+                </div>
+              )}
               <Field label="Lesson order *">
                 <input
                   required
