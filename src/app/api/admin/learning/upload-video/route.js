@@ -1,7 +1,7 @@
 
 import "server-only";
 
-import { Client, ID, Storage, InputFile } from "node-appwrite";
+import { Client, ID, Storage } from "node-appwrite";
 import {
   requireLearningAdmin,
   handleAdminError,
