@@ -480,16 +480,18 @@ const handleDownload = async () => {
     );
 
     // Capture marksheet as PNG
-    const canvas = await html2canvas(node, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: "#ffffff",
-      logging: false,
-      imageTimeout: 20000,
-      width: node.scrollWidth,
-      height: node.scrollHeight,
-
+const canvas = await html2canvas(node, {
+  scale: 3,
+  useCORS: true,
+  allowTaint: false,
+  backgroundColor: "#ffffff",
+  logging: false,
+  imageTimeout: 20000,
+  width: 900,
+  height: 1200,
+  windowWidth: 1200,
+  scrollX: 0,
+  scrollY: 0,
       onclone: (clonedDocument) => {
         const clonedNode = clonedDocument.querySelector(
           "[data-marksheet-capture]"
@@ -522,6 +524,17 @@ const handleDownload = async () => {
             signatureElement.removeAttribute("crossorigin");
           }
         }
+
+        const gradeSummary = clonedNode.querySelector(
+  "[data-grade-summary]"
+);
+
+if (gradeSummary) {
+  gradeSummary.style.setProperty("top", "905px", "important");
+  gradeSummary.style.setProperty("height", "30px", "important");
+  gradeSummary.style.setProperty("display", "flex", "important");
+  gradeSummary.style.setProperty("align-items", "center", "important");
+}
 
         // Fix unsupported modern CSS colors
         const elements = [
@@ -762,13 +775,14 @@ const handleDownload = async () => {
       <div
         ref={printRef}
         data-marksheet-capture
-        style={{
-          width: "900px",
-          minHeight: "1200px",
-          height: "auto",
-          position: "relative",
-          overflow: "visible",
-        }}
+      style={{
+  width: "900px",
+  height: "1200px",
+  minHeight: "1200px",
+  position: "relative",
+  overflow: "hidden",
+  boxSizing: "border-box",
+}}
       >
         {/* TEMPLATE */}
         <img
@@ -975,19 +989,29 @@ const handleDownload = async () => {
           </div>
         </div>
 
-        {/* PERCENTAGE */}
-        <div className="absolute bottom-[260px] left-[350px] font-bold">
-          Percentage: {percentage}%
-        </div>
-
-        {/* GRADE */}
-        <div className="absolute bottom-[260px] left-[250px] font-bold">
-          Grade: {getGrade()}
-        </div>
-
-        <div className="absolute bottom-[260px] left-[600px] font-bold">
-          Total: {total}/{totalOutOf}
-        </div>
+{/* GRADE, PERCENTAGE AND TOTAL */}
+<div
+  data-grade-summary
+  className="absolute"
+  style={{
+    top: "910px",
+    left: "250px",
+    width: "550px",
+    height: "30px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    fontSize: "16px",
+    fontWeight: "bold",
+    lineHeight: "20px",
+    whiteSpace: "nowrap",
+    boxSizing: "border-box",
+  }}
+>
+  <span>Grade: {getGrade()}</span>
+  <span>Percentage: {percentage}%</span>
+  <span>Total: {total}/{totalOutOf}</span>
+</div>
 
         {/* SIGNATURE */}
       

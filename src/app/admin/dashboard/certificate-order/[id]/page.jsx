@@ -417,6 +417,8 @@ order?.createdAt
         return;
       }
 
+
+      
       const certificateId = res.documents[0].$id;
 
       window.open(
